@@ -6,68 +6,113 @@ sidebar_position: 6
 
 ## 次回の内容
 
-**第2回: C言語入門 - 変数と型**
+**第2回: 条件分岐と繰り返し**
 
 次回は以下の内容を学びます：
 
-- 変数の宣言と初期化
-- データ型（`int`, `float`, `double`, `char`）
-- 算術演算子（`+`, `-`, `*`, `/`, `%`）
-- `scanf` を使った入力
-- 簡単な計算プログラム
-
-```c title="次回の予告コード"
-#include <stdio.h>
-
-int main(void) {
-    int age;
-    float height;
-    
-    printf("年齢を入力してください: ");
-    scanf("%d", &age);
-    
-    printf("身長(cm)を入力してください: ");
-    scanf("%f", &height);
-    
-    printf("あなたは %d 歳で、身長は %.1f cm です。\n", age, height);
-    
-    return 0;
-}
-```
+- 比較演算子（`==`, `!=`, `<`, `>`, `<=`, `>=`）
+- if文・if-else文
+- 論理演算子（`&&`, `||`, `!`）
+- while文・for文
+- AOJ ITP1_2～ITP1_3 の問題
 
 ## 今回の課題
 
-### 課題1: 環境構築の確認
-
-以下を確認し、Slackの課題チャンネルでスクリーンショットを提出してください。
-
-1. ターミナルで `gcc --version` を実行した結果
-2. VSCodeがインストールされていることの確認
-
-### 課題2: Hello, World! の実行
-
-1. `hello.c` を作成してコンパイル・実行
-2. 実行結果のスクリーンショットをSlackに投稿
-
-### 課題3: 自己紹介プログラム（任意）
-
-自分の名前、学年、趣味などを表示するプログラムを作成してください。
-
-提出方法：
-- ソースコード（`intro.c`）をSlackに投稿
-- 実行結果のスクリーンショットも添付
-
-:::tip 提出のコツ
-コードを投稿するときは、Slackのコードブロック機能を使いましょう。
-バッククォート3つで囲むとキレイに表示されます：
-
-```
-`​`​`c
-#include <stdio.h>
-// コードをここに
-`​`​`
-```
+:::important 提出方法
+AOJで問題を解いて **AC（Accepted）** を取得してください。  
+AOJのユーザーページで提出状況を確認できます。
 :::
+
+### 必須課題：AOJ ITP1_1 の4問をACする
+
+以下の4問すべてを解いてください：
+
+| 問題番号 | 問題名 | 内容 | リンク |
+|:---------|:-------|:-----|:-------|
+| ITP1_1_A | Hello World | 文字列の出力 | [問題ページ](https://judge.u-aizu.ac.jp/onlinejudge/description.jsp?id=ITP1_1_A) |
+| ITP1_1_B | X Cubic | 入力と計算（3乗） | [問題ページ](https://judge.u-aizu.ac.jp/onlinejudge/description.jsp?id=ITP1_1_B) |
+| ITP1_1_C | Rectangle | 長方形の面積と周長 | [問題ページ](https://judge.u-aizu.ac.jp/onlinejudge/description.jsp?id=ITP1_1_C) |
+| ITP1_1_D | Watch | 秒を時分秒に変換 | [問題ページ](https://judge.u-aizu.ac.jp/onlinejudge/description.jsp?id=ITP1_1_D) |
+
+### 各問題のヒント
+
+#### ITP1_1_A: Hello World
+
+今回の講義で学んだ `printf` を使えばOKです。  
+「C言語の基本」ページのサンプルコードを参考にしてください。
+
+#### ITP1_1_B: X Cubic（立方体）
+
+```c
+// ヒント：3乗の計算
+int x;
+scanf("%d", &x);
+printf("%d\n", x * x * x);
+```
+
+#### ITP1_1_C: Rectangle（長方形）
+
+```c
+// ヒント：2つの値を読み込む
+int a, b;
+scanf("%d %d", &a, &b);
+// 面積 = a * b
+// 周長 = 2 * (a + b)
+```
+
+#### ITP1_1_D: Watch（時計）
+
+```c
+// ヒント：割り算と余りを使う
+int S;
+scanf("%d", &S);
+int h = S / 3600;        // 時間
+int m = (S % 3600) / 60; // 分
+int s = S % 60;          // 秒
+printf("%d:%d:%d\n", h, m, s);
+```
+
+:::tip 出力形式に注意
+AOJは出力形式に厳密です。余計な空白や文字があるとWA（Wrong Answer）になります。  
+問題文のOutput欄をよく読んで、フォーマットを確認しましょう。
+:::
+
+### 提出状況の確認方法
+
+1. AOJにログイン
+2. 右上のユーザー名をクリック → 「Status」
+3. 「Accepted」になっていればOK
+
+### 締め切り
+
+**次回講義の前日 23:59 まで**
+
+## 困ったときは
+
+### よくあるエラー
+
+| エラー | 原因 | 対処法 |
+|:-------|:-----|:-------|
+| CE (Compile Error) | 文法エラー | セミコロン、括弧の対応を確認 |
+| WA (Wrong Answer) | 出力が間違っている | 出力形式を問題文と照らし合わせる |
+| RE (Runtime Error) | 実行時エラー | 0除算、配列の範囲外アクセスなど |
+| TLE (Time Limit Exceeded) | 時間超過 | 今回の問題では起きにくい |
+
+### 質問するときは
+
+```
+【問題番号】
+ITP1_1_B
+
+【やりたいこと】
+入力された整数の3乗を出力したい
+
+【提出結果】
+Wrong Answer
+
+【ソースコード】
+（コードを貼り付け）
+```
 
 ## 自習リソース
 
@@ -83,49 +128,11 @@ int main(void) {
 - [苦しんで覚えるC言語](https://9cguide.appspot.com/)
 - [一週間で身につくC言語の基本](http://c-lang.sevendays-study.com/)
 
-### 練習サイト
+### AOJでさらに練習
 
-- [paiza ラーニング](https://paiza.jp/works)
-- [AtCoder](https://atcoder.jp/) - 競技プログラミング
-
-## 質問の仕方
-
-プログラミングで困ったときは、以下の情報を含めて質問してください：
-
-### 良い質問の例
-
-```
-【やりたいこと】
-Hello, World! と表示したい
-
-【試したこと】
-gcc hello.c -o hello を実行した
-
-【エラーメッセージ】
-hello.c:4:5: error: expected ';' after expression
-
-【ソースコード】
-（hello.c の内容を貼り付け）
-
-【環境】
-macOS, gcc 15.0.0
-```
-
-### 質問するときのポイント
-
-1. **何をしようとしたか**を明確に
-2. **何を試したか**を書く
-3. **エラーメッセージ**は省略せずにコピペ
-4. **ソースコード**を共有する
-5. **環境**（OS、コンパイラのバージョン）を書く
-
-:::warning やってはいけない質問
-❌「動きません」（何が？どう動かない？）
-❌「エラーが出ます」（どんなエラー？）
-❌「教えてください」（何を？）
-
-具体的な情報がないと、助けることができません。
-:::
+今回の課題が簡単だった人は、先の問題に挑戦してみましょう：
+- [ITP1_2（条件分岐）](https://judge.u-aizu.ac.jp/onlinejudge/finder.jsp?course=ITP1)
+- [ITP1_3（繰り返し）](https://judge.u-aizu.ac.jp/onlinejudge/finder.jsp?course=ITP1)
 
 ## 連絡先
 
