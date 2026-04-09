@@ -1,0 +1,192 @@
+---
+sidebar_position: 3
+---
+
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+
+# 環境構築
+
+プログラミングを始めるために必要なツールをインストールします。
+
+## 必要なもの
+
+1. **ターミナル**（コマンドライン）
+2. **Cコンパイラ**（gcc）
+3. **テキストエディタ**（Visual Studio Code）
+
+## OS別セットアップ
+
+<Tabs>
+  <TabItem value="mac" label="macOS" default>
+
+### macOSの環境構築
+
+#### 1. ターミナルを開く
+
+`Finder` > `アプリケーション` > `ユーティリティ` > `ターミナル`
+
+または、`Cmd + Space` で Spotlight を開き、「ターミナル」と入力
+
+#### 2. Xcode Command Line Toolsのインストール
+
+ターミナルで以下のコマンドを実行：
+
+```bash
+xcode-select --install
+```
+
+ダイアログが表示されたら「インストール」をクリック
+
+#### 3. インストール確認
+
+```bash
+gcc --version
+```
+
+以下のような出力が表示されればOK：
+```
+Apple clang version 15.0.0 (clang-1500.0.40.1)
+Target: arm64-apple-darwin23.0.0
+```
+
+  </TabItem>
+  <TabItem value="windows" label="Windows">
+
+### Windowsの環境構築
+
+WindowsではWSL2（Windows Subsystem for Linux）を使用します。
+
+#### 1. WSL2のインストール
+
+PowerShellを**管理者として実行**し、以下のコマンドを入力：
+
+```powershell
+wsl --install
+```
+
+インストール完了後、**PCを再起動**してください。
+
+#### 2. Ubuntuの初期設定
+
+再起動後、自動的にUbuntuが起動します。
+ユーザー名とパスワードを設定してください。
+
+:::warning パスワードについて
+パスワード入力時は画面に何も表示されません（セキュリティのため）。
+そのまま入力してEnterを押してください。
+:::
+
+#### 3. 開発ツールのインストール
+
+Ubuntuのターミナルで以下を実行：
+
+```bash
+sudo apt update
+sudo apt install build-essential -y
+```
+
+#### 4. インストール確認
+
+```bash
+gcc --version
+```
+
+以下のような出力が表示されればOK：
+```
+gcc (Ubuntu 11.4.0-1ubuntu1~22.04) 11.4.0
+```
+
+  </TabItem>
+  <TabItem value="linux" label="Linux">
+
+### Linux（Ubuntu/Debian系）の環境構築
+
+#### 1. ターミナルを開く
+
+`Ctrl + Alt + T` でターミナルを開きます。
+
+#### 2. build-essentialのインストール
+
+```bash
+sudo apt update
+sudo apt install build-essential -y
+```
+
+#### 3. インストール確認
+
+```bash
+gcc --version
+```
+
+以下のような出力が表示されればOK：
+```
+gcc (Ubuntu 11.4.0-1ubuntu1~22.04) 11.4.0
+```
+
+  </TabItem>
+</Tabs>
+
+## Visual Studio Codeのインストール
+
+Visual Studio Code（VSCode）は、最も人気のあるテキストエディタの一つです。
+
+### ダウンロード
+
+[Visual Studio Code公式サイト](https://code.visualstudio.com/) からダウンロード
+
+<Tabs>
+  <TabItem value="mac" label="macOS" default>
+
+1. ダウンロードした `.zip` ファイルを展開
+2. `Visual Studio Code.app` を `アプリケーション` フォルダにドラッグ
+3. アプリケーションから VSCode を起動
+
+  </TabItem>
+  <TabItem value="windows" label="Windows">
+
+1. ダウンロードしたインストーラー（`.exe`）を実行
+2. インストールウィザードに従ってインストール
+3. **「PATHへの追加」にチェック**を入れる（重要！）
+
+:::tip WSL連携
+Windows版VSCodeで WSL 拡張機能をインストールすると、WSL内のファイルを直接編集できます。
+:::
+
+  </TabItem>
+  <TabItem value="linux" label="Linux">
+
+```bash
+# Snapを使ったインストール（推奨）
+sudo snap install code --classic
+
+# または apt を使う場合
+sudo apt install software-properties-common apt-transport-https wget
+wget -q https://packages.microsoft.com/keys/microsoft.asc -O- | sudo apt-key add -
+sudo add-apt-repository "deb [arch=amd64] https://packages.microsoft.com/repos/vscode stable main"
+sudo apt update
+sudo apt install code
+```
+
+  </TabItem>
+</Tabs>
+
+### 推奨拡張機能
+
+VSCodeを起動したら、以下の拡張機能をインストールしましょう。
+
+| 拡張機能 | 説明 |
+|----------|------|
+| **C/C++** | C言語の補完、デバッグ機能 |
+| **Japanese Language Pack** | 日本語化 |
+| **Code Runner** | ワンクリックでコード実行 |
+
+#### インストール方法
+
+1. VSCodeの左サイドバーで `拡張機能` アイコン（四角が4つ）をクリック
+2. 検索ボックスに拡張機能名を入力
+3. 「インストール」ボタンをクリック
+
+---
+
+次のページでは、ターミナルの基本操作を学びます。

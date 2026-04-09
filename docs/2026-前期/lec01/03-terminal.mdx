@@ -1,0 +1,230 @@
+---
+sidebar_position: 4
+---
+
+# ターミナル基礎
+
+プログラミングに必要なターミナル（コマンドライン）の基本操作を学びます。
+
+## ターミナルとは？
+
+ターミナルは、キーボードからコマンド（命令）を入力してコンピュータを操作するツールです。
+
+:::info GUIとCLI
+- **GUI**（Graphical User Interface）: マウスでクリックして操作（Finder, エクスプローラーなど）
+- **CLI**（Command Line Interface）: キーボードでコマンドを入力して操作（ターミナル）
+
+プログラマーはCLIを使うことが多いです。効率的で、自動化しやすいからです。
+:::
+
+## 基本用語
+
+| 用語 | 説明 |
+|------|------|
+| **ディレクトリ** | フォルダのこと |
+| **カレントディレクトリ** | 現在いるフォルダ |
+| **ホームディレクトリ** | ユーザーの基本フォルダ（`~` で表す） |
+| **パス** | ファイルやフォルダの場所を示す文字列 |
+| **絶対パス** | ルートからの完全なパス（例: `/Users/tanaka/Documents`） |
+| **相対パス** | 現在地からの相対的なパス（例: `./Documents`） |
+
+## 基本コマンド
+
+### `pwd` - 現在地を確認
+
+**P**rint **W**orking **D**irectory の略
+
+```bash
+pwd
+```
+
+出力例：
+```
+/Users/tanaka
+```
+
+### `ls` - ファイル一覧を表示
+
+**L**i**S**t の略
+
+```bash
+# 基本的な一覧表示
+ls
+
+# 詳細表示（-l オプション）
+ls -l
+
+# 隠しファイルも表示（-a オプション）
+ls -a
+
+# 組み合わせ
+ls -la
+```
+
+出力例（`ls -l`）：
+```
+total 16
+drwxr-xr-x  3 tanaka  staff   96  4  9 10:00 Documents
+drwxr-xr-x  5 tanaka  staff  160  4  9 10:00 Downloads
+-rw-r--r--  1 tanaka  staff  123  4  9 10:00 memo.txt
+```
+
+### `cd` - ディレクトリ移動
+
+**C**hange **D**irectory の略
+
+```bash
+# Documentsフォルダに移動
+cd Documents
+
+# 一つ上のディレクトリに戻る
+cd ..
+
+# ホームディレクトリに戻る
+cd ~
+# または
+cd
+
+# 絶対パスで移動
+cd /Users/tanaka/Documents
+```
+
+### `mkdir` - ディレクトリ作成
+
+**M**a**K**e **DIR**ectory の略
+
+```bash
+# 「projects」というフォルダを作成
+mkdir projects
+
+# 複数階層を一度に作成（-p オプション）
+mkdir -p projects/c-lang/lesson01
+```
+
+### `touch` - ファイル作成
+
+```bash
+# 空のファイルを作成
+touch hello.c
+
+# 複数ファイルを一度に作成
+touch file1.txt file2.txt file3.txt
+```
+
+### `cat` - ファイル内容を表示
+
+```bash
+# ファイルの中身を表示
+cat hello.c
+```
+
+### `rm` - ファイル/ディレクトリ削除
+
+**R**e**M**ove の略
+
+```bash
+# ファイルを削除
+rm hello.c
+
+# ディレクトリを削除（-r オプション）
+rm -r projects
+
+# 確認なしで削除（注意！）
+rm -rf projects
+```
+
+:::danger 注意
+`rm -rf` は非常に強力で、確認なしにすべて削除します。
+特に `rm -rf /` や `rm -rf ~` は絶対に実行しないでください！
+:::
+
+## 実践演習
+
+以下の手順を実際にやってみましょう。
+
+### 課題: プログラミング用のフォルダを作成する
+
+```bash
+# 1. ホームディレクトリに移動
+cd ~
+
+# 2. 現在地を確認
+pwd
+
+# 3. programming フォルダを作成
+mkdir programming
+
+# 4. programming フォルダに移動
+cd programming
+
+# 5. 現在地を確認
+pwd
+
+# 6. c-lang フォルダを作成
+mkdir c-lang
+
+# 7. フォルダ一覧を確認
+ls
+
+# 8. c-lang フォルダに移動
+cd c-lang
+
+# 9. hello.c ファイルを作成
+touch hello.c
+
+# 10. ファイル一覧を確認
+ls -la
+```
+
+## パスの概念
+
+### 絶対パス vs 相対パス
+
+```
+/Users/tanaka/              # ホームディレクトリ
+├── Documents/
+│   ├── report.txt
+│   └── data/
+│       └── sample.csv
+└── programming/
+    └── c-lang/
+        └── hello.c
+```
+
+現在 `/Users/tanaka/programming/c-lang` にいる場合：
+
+| 対象 | 絶対パス | 相対パス |
+|------|----------|----------|
+| hello.c | `/Users/tanaka/programming/c-lang/hello.c` | `./hello.c` または `hello.c` |
+| programming | `/Users/tanaka/programming` | `..` |
+| Documents | `/Users/tanaka/Documents` | `../../Documents` |
+| sample.csv | `/Users/tanaka/Documents/data/sample.csv` | `../../Documents/data/sample.csv` |
+
+### 特殊なパス記号
+
+| 記号 | 意味 |
+|------|------|
+| `/` | ルートディレクトリ（最上位） |
+| `~` | ホームディレクトリ |
+| `.` | カレントディレクトリ（現在地） |
+| `..` | 親ディレクトリ（一つ上） |
+
+## よく使うキーボードショートカット
+
+| ショートカット | 機能 |
+|---------------|------|
+| `Tab` | コマンドやファイル名の補完 |
+| `Ctrl + C` | 実行中のコマンドを中断 |
+| `Ctrl + L` | 画面をクリア（`clear` コマンドと同じ） |
+| `↑` / `↓` | コマンド履歴の参照 |
+| `Ctrl + A` | 行の先頭に移動 |
+| `Ctrl + E` | 行の末尾に移動 |
+
+:::tip Tab補完を活用しよう
+長いファイル名やコマンドを入力するとき、途中まで入力して `Tab` キーを押すと自動補完されます。
+これを使いこなすと作業効率が大幅に上がります！
+:::
+
+---
+
+次のページでは、いよいよ最初のC言語プログラムを書いてみます。
