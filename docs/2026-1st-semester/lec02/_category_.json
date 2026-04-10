@@ -1,0 +1,8 @@
+{
+    "label": "第2回: 条件分岐と繰り返し",
+    "position": 2,
+    "link": {
+        "type": "generated-index",
+        "description": "if文による条件分岐、while/for文による繰り返し処理を学びます。"
+    }
+}

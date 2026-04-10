@@ -1,0 +1,300 @@
+---
+sidebar_position: 3
+---
+
+# if文（条件分岐）
+
+## if文の基本
+
+条件が**真**のときだけ処理を実行します。
+
+```c
+if (条件) {
+    // 条件が真のとき実行される
+}
+```
+
+### 例：正の数かどうか判定
+
+```c
+#include <stdio.h>
+
+int main(void) {
+    int x;
+    scanf("%d", &x);
+    
+    if (x > 0) {
+        printf("正の数です\n");
+    }
+    
+    return 0;
+}
+```
+
+## if-else文
+
+条件が**真のとき**と**偽のとき**で処理を分けます。
+
+```c
+if (条件) {
+    // 条件が真のとき
+} else {
+    // 条件が偽のとき
+}
+```
+
+### 例：正か負か判定
+
+```c
+#include <stdio.h>
+
+int main(void) {
+    int x;
+    scanf("%d", &x);
+    
+    if (x > 0) {
+        printf("正の数です\n");
+    } else {
+        printf("0以下です\n");
+    }
+    
+    return 0;
+}
+```
+
+## else if：複数の条件
+
+3つ以上の分岐が必要なときは `else if` を使います。
+
+```c
+if (条件1) {
+    // 条件1が真のとき
+} else if (条件2) {
+    // 条件1が偽で、条件2が真のとき
+} else if (条件3) {
+    // 条件1,2が偽で、条件3が真のとき
+} else {
+    // すべての条件が偽のとき
+}
+```
+
+### 例：成績判定
+
+```c
+#include <stdio.h>
+
+int main(void) {
+    int score;
+    scanf("%d", &score);
+    
+    if (score >= 90) {
+        printf("A\n");
+    } else if (score >= 80) {
+        printf("B\n");
+    } else if (score >= 70) {
+        printf("C\n");
+    } else if (score >= 60) {
+        printf("D\n");
+    } else {
+        printf("F\n");
+    }
+    
+    return 0;
+}
+```
+
+:::tip 条件の順番に注意
+`else if` は**上から順番に**評価されます。  
+最初に真になった条件の処理だけが実行されます。
+
+```c
+// 80点の場合
+if (score >= 60) {      // 真！ → "D"が出力されてしまう
+    printf("D\n");
+} else if (score >= 80) { // ここは評価されない
+    printf("B\n");
+}
+```
+
+厳しい条件（大きい値）から順に書きましょう。
+:::
+
+## ネスト（入れ子）
+
+if文の中にif文を書くこともできます。
+
+```c
+#include <stdio.h>
+
+int main(void) {
+    int x;
+    scanf("%d", &x);
+    
+    if (x > 0) {
+        if (x % 2 == 0) {
+            printf("正の偶数\n");
+        } else {
+            printf("正の奇数\n");
+        }
+    } else {
+        printf("0以下\n");
+    }
+    
+    return 0;
+}
+```
+
+:::note ネストを減らすテクニック
+論理演算子を使うとネストを減らせることがあります。
+
+```c
+// ネストあり
+if (x > 0) {
+    if (x < 100) {
+        printf("1-99\n");
+    }
+}
+
+// ネストなし（&&を使用）
+if (x > 0 && x < 100) {
+    printf("1-99\n");
+}
+```
+:::
+
+## AOJの問題を解いてみよう
+
+### ITP1_2_A: Small, Large, or Equal
+
+2つの整数を比較して、大小関係を出力する問題です。
+
+```c
+#include <stdio.h>
+
+int main(void) {
+    int a, b;
+    scanf("%d %d", &a, &b);
+    
+    if (a < b) {
+        printf("a < b\n");
+    } else if (a > b) {
+        printf("a > b\n");
+    } else {
+        printf("a == b\n");
+    }
+    
+    return 0;
+}
+```
+
+### ITP1_2_C: Sorting Three Numbers
+
+3つの整数を小さい順に並べる問題です。
+
+```c
+#include <stdio.h>
+
+int main(void) {
+    int a, b, c;
+    scanf("%d %d %d", &a, &b, &c);
+    
+    // aが最大になるように交換
+    int tmp;
+    if (a < b) {
+        tmp = a; a = b; b = tmp;
+    }
+    if (a < c) {
+        tmp = a; a = c; c = tmp;
+    }
+    // bとcを比較
+    if (b < c) {
+        tmp = b; b = c; c = tmp;
+    }
+    
+    // a >= b >= c の状態
+    // 小さい順に出力
+    printf("%d %d %d\n", c, b, a);
+    
+    return 0;
+}
+```
+
+## 練習問題
+
+### 問題1
+
+整数を入力して、偶数か奇数か表示してください。
+
+```
+入力: 7
+出力: odd
+
+入力: 4
+出力: even
+```
+
+<details>
+<summary>ヒント</summary>
+
+`%` 演算子で2で割った余りを調べます。
+- 余りが0 → 偶数
+- 余りが1 → 奇数
+
+</details>
+
+<details>
+<summary>答え</summary>
+
+```c
+#include <stdio.h>
+
+int main(void) {
+    int n;
+    scanf("%d", &n);
+    
+    if (n % 2 == 0) {
+        printf("even\n");
+    } else {
+        printf("odd\n");
+    }
+    
+    return 0;
+}
+```
+
+</details>
+
+### 問題2
+
+3つの整数を入力して、最大値を出力してください。
+
+```
+入力: 5 2 8
+出力: 8
+```
+
+<details>
+<summary>答え</summary>
+
+```c
+#include <stdio.h>
+
+int main(void) {
+    int a, b, c;
+    scanf("%d %d %d", &a, &b, &c);
+    
+    int max = a;
+    if (b > max) {
+        max = b;
+    }
+    if (c > max) {
+        max = c;
+    }
+    
+    printf("%d\n", max);
+    
+    return 0;
+}
+```
+
+</details>

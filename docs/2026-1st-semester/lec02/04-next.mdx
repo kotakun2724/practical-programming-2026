@@ -1,0 +1,177 @@
+---
+sidebar_position: 5
+---
+
+# 次回予告と課題
+
+## 次回の内容
+
+**第3回: 配列と文字列**
+
+次回は以下の内容を学びます：
+
+- 配列の宣言と使い方
+- 配列とループの組み合わせ
+- 文字列（char配列）の基礎
+- `strlen`、`strcmp` などの文字列関数
+- AOJ ITP1_4 の問題
+
+## 今回の課題
+
+:::important 提出方法
+AOJで問題を解いて **AC（Accepted）** を取得してください。  
+AOJのユーザーページで提出状況を確認できます。
+:::
+
+### 必須課題：AOJ ITP1_2 と ITP1_3
+
+以下の問題をすべて解いてください。
+
+#### ITP1_2（条件分岐）
+
+| 問題番号 | 問題名 | 内容 | リンク |
+|:---------|:-------|:-----|:-------|
+| ITP1_2_A | Small, Large, or Equal | 2つの数の比較 | [問題ページ](https://judge.u-aizu.ac.jp/onlinejudge/description.jsp?id=ITP1_2_A) |
+| ITP1_2_B | Range | 範囲判定 | [問題ページ](https://judge.u-aizu.ac.jp/onlinejudge/description.jsp?id=ITP1_2_B) |
+| ITP1_2_C | Sorting Three Numbers | 3つの数のソート | [問題ページ](https://judge.u-aizu.ac.jp/onlinejudge/description.jsp?id=ITP1_2_C) |
+| ITP1_2_D | Circle in a Rectangle | 円と長方形 | [問題ページ](https://judge.u-aizu.ac.jp/onlinejudge/description.jsp?id=ITP1_2_D) |
+
+#### ITP1_3（繰り返し）
+
+| 問題番号 | 問題名 | 内容 | リンク |
+|:---------|:-------|:-----|:-------|
+| ITP1_3_A | Print Many Hello World | 1000回出力 | [問題ページ](https://judge.u-aizu.ac.jp/onlinejudge/description.jsp?id=ITP1_3_A) |
+| ITP1_3_B | Print Test Cases | 複数ケース処理 | [問題ページ](https://judge.u-aizu.ac.jp/onlinejudge/description.jsp?id=ITP1_3_B) |
+| ITP1_3_C | Swapping Two Numbers | 値の交換 | [問題ページ](https://judge.u-aizu.ac.jp/onlinejudge/description.jsp?id=ITP1_3_C) |
+| ITP1_3_D | How Many Divisors? | 約数の数 | [問題ページ](https://judge.u-aizu.ac.jp/onlinejudge/description.jsp?id=ITP1_3_D) |
+
+### 各問題のヒント
+
+#### ITP1_2_A: Small, Large, or Equal
+
+今回習った `if-else if-else` をそのまま使えます。
+
+#### ITP1_2_B: Range
+
+```c
+// ヒント：&&（AND）を使う
+if (a < b && b < c) {
+    printf("Yes\n");
+}
+```
+
+#### ITP1_2_C: Sorting Three Numbers
+
+3つの値を比較して並べ替えます。講義資料のコードを参考に。
+
+#### ITP1_2_D: Circle in a Rectangle
+
+```c
+// ヒント：円が長方形の内側に収まる条件
+// 円の中心(cx, cy)、半径r
+// 長方形の左下(x1, y1)、右上(x2, y2)
+
+// 左端、右端、下端、上端すべてが範囲内か
+if (cx - r >= x1 && cx + r <= x2 && 
+    cy - r >= y1 && cy + r <= y2) {
+    printf("Yes\n");
+}
+```
+
+#### ITP1_3_A: Print Many Hello World
+
+`for` ループで1000回出力するだけ！
+
+#### ITP1_3_B: Print Test Cases
+
+```c
+// ヒント：0が来るまで繰り返す
+int x, caseNum = 1;
+while (1) {
+    scanf("%d", &x);
+    if (x == 0) break;
+    // 出力処理
+    caseNum++;
+}
+```
+
+#### ITP1_3_C: Swapping Two Numbers
+
+```c
+// ヒント：2つの値を交換する方法
+int tmp = x;
+x = y;
+y = tmp;
+```
+
+#### ITP1_3_D: How Many Divisors?
+
+```c
+// ヒント：約数を数える
+// a から b までの各整数について、c で割り切れるか調べる
+for (int i = a; i <= b; i++) {
+    if (c % i == 0) {
+        count++;
+    }
+}
+```
+
+:::tip 出力形式に注意
+AOJは出力形式に厳密です。余計な空白や文字があるとWA（Wrong Answer）になります。
+:::
+
+### 締め切り
+
+**次回講義の前日 23:59 まで**
+
+## 困ったときは
+
+### よくあるエラー
+
+| エラー | 原因 | 対処法 |
+|:-------|:-----|:-------|
+| CE (Compile Error) | 文法エラー | セミコロン、括弧の対応を確認 |
+| WA (Wrong Answer) | 出力が間違っている | 出力形式を問題文と照らし合わせる |
+| RE (Runtime Error) | 実行時エラー | 0除算、配列の範囲外アクセスなど |
+| TLE (Time Limit Exceeded) | 時間超過 | ループ条件を確認（無限ループ？） |
+
+### 質問するときは
+
+```
+【問題番号】
+ITP1_3_D
+
+【やりたいこと】
+a から b の範囲で c の約数を数えたい
+
+【提出結果】
+Wrong Answer
+
+【ソースコード】
+（コードを貼り付け）
+```
+
+## 自習リソース
+
+### AOJでさらに練習
+
+今回の課題が簡単だった人は、先の問題に挑戦してみましょう：
+- [ITP1_4（計算と配列）](https://judge.u-aizu.ac.jp/onlinejudge/finder.jsp?course=ITP1)
+- [ITP1_5（ループ応用）](https://judge.u-aizu.ac.jp/onlinejudge/finder.jsp?course=ITP1)
+
+### 書籍・Webサイト
+
+- [苦しんで覚えるC言語](https://9cguide.appspot.com/)
+- 『新・明解C言語 入門編』柴田望洋
+
+## 連絡先
+
+- **Slack**: #2026-practical-programming
+- **講師**: 伊藤 航大
+- **SA**: 手塚 大地
+
+質問は Slack で気軽にどうぞ！
+
+---
+
+お疲れ様でした！次回もよろしくお願いします 🚀
