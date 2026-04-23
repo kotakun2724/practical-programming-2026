@@ -1,0 +1,367 @@
+---
+sidebar_position: 2
+---
+
+# 前回課題解説（C/C++）
+
+このページでは、前回課題で扱った **ITP1_2A〜D** と **ITP1_3A〜D** を
+すべて解説します。
+
+## ITP1_2_A: Small, Large, or Equal
+
+2つの整数 `a`, `b` を比較し、大小関係を出力します。
+
+**C**
+
+```c
+#include <stdio.h>
+
+int main(void) {
+    int a, b;
+    scanf("%d %d", &a, &b);
+
+    if (a < b) {
+        printf("a < b\n");
+    } else if (a > b) {
+        printf("a > b\n");
+    } else {
+        printf("a == b\n");
+    }
+
+    return 0;
+}
+```
+
+**C++**
+
+```cpp
+#include <iostream>
+using namespace std;
+
+int main() {
+    int a, b;
+    cin >> a >> b;
+
+    if (a < b) {
+        cout << "a < b" << '\n';
+    } else if (a > b) {
+        cout << "a > b" << '\n';
+    } else {
+        cout << "a == b" << '\n';
+    }
+
+    return 0;
+}
+```
+
+## ITP1_2_B: Range
+
+`a < b < c` が成り立つかを `&&` で判定します。
+
+**C**
+
+```c
+#include <stdio.h>
+
+int main(void) {
+    int a, b, c;
+    scanf("%d %d %d", &a, &b, &c);
+
+    if (a < b && b < c) {
+        printf("Yes\n");
+    } else {
+        printf("No\n");
+    }
+
+    return 0;
+}
+```
+
+**C++**
+
+```cpp
+#include <iostream>
+using namespace std;
+
+int main() {
+    int a, b, c;
+    cin >> a >> b >> c;
+
+    if (a < b && b < c) {
+        cout << "Yes\n";
+    } else {
+        cout << "No\n";
+    }
+
+    return 0;
+}
+```
+
+## ITP1_2_C: Sorting Three Numbers
+
+3つの値を昇順に並べます。ここでは単純な交換で実装します。
+
+**C**
+
+```c
+#include <stdio.h>
+
+int main(void) {
+    int a, b, c, tmp;
+    scanf("%d %d %d", &a, &b, &c);
+
+    if (a > b) {
+        tmp = a;
+        a = b;
+        b = tmp;
+    }
+    if (b > c) {
+        tmp = b;
+        b = c;
+        c = tmp;
+    }
+    if (a > b) {
+        tmp = a;
+        a = b;
+        b = tmp;
+    }
+
+    printf("%d %d %d\n", a, b, c);
+    return 0;
+}
+```
+
+**C++**
+
+```cpp
+#include <iostream>
+using namespace std;
+
+int main() {
+    int a, b, c;
+    cin >> a >> b >> c;
+
+    if (a > b) swap(a, b);
+    if (b > c) swap(b, c);
+    if (a > b) swap(a, b);
+
+    cout << a << ' ' << b << ' ' << c << '\n';
+    return 0;
+}
+```
+
+## ITP1_2_D: Circle in a Rectangle
+
+円の左端・右端・下端・上端が、長方形の内側に収まるかを判定します。
+
+**C**
+
+```c
+#include <stdio.h>
+
+int main(void) {
+    int W, H, x, y, r;
+    scanf("%d %d %d %d %d", &W, &H, &x, &y, &r);
+
+    if (x - r >= 0 && x + r <= W && y - r >= 0 && y + r <= H) {
+        printf("Yes\n");
+    } else {
+        printf("No\n");
+    }
+
+    return 0;
+}
+```
+
+**C++**
+
+```cpp
+#include <iostream>
+using namespace std;
+
+int main() {
+    int W, H, x, y, r;
+    cin >> W >> H >> x >> y >> r;
+
+    if (x - r >= 0 && x + r <= W && y - r >= 0 && y + r <= H) {
+        cout << "Yes\n";
+    } else {
+        cout << "No\n";
+    }
+
+    return 0;
+}
+```
+
+## ITP1_3_A: Print Many Hello World
+
+`for` で 1000 回同じ文字列を出力します。
+
+**C**
+
+```c
+#include <stdio.h>
+
+int main(void) {
+    for (int i = 0; i < 1000; i++) {
+        printf("Hello World\n");
+    }
+    return 0;
+}
+```
+
+**C++**
+
+```cpp
+#include <iostream>
+using namespace std;
+
+int main() {
+    for (int i = 0; i < 1000; i++) {
+        cout << "Hello World\n";
+    }
+    return 0;
+}
+```
+
+## ITP1_3_B: Print Test Cases
+
+`0` が入力されるまで繰り返し、ケース番号つきで出力します。
+
+**C**
+
+```c
+#include <stdio.h>
+
+int main(void) {
+    int x;
+    int case_num = 1;
+
+    while (1) {
+        scanf("%d", &x);
+        if (x == 0) break;
+        printf("Case %d: %d\n", case_num, x);
+        case_num++;
+    }
+
+    return 0;
+}
+```
+
+**C++**
+
+```cpp
+#include <iostream>
+using namespace std;
+
+int main() {
+    int x;
+    int case_num = 1;
+
+    while (true) {
+        cin >> x;
+        if (x == 0) break;
+        cout << "Case " << case_num << ": " << x << '\n';
+        case_num++;
+    }
+
+    return 0;
+}
+```
+
+## ITP1_3_C: Swapping Two Numbers
+
+2つの整数を入力し、`0 0` が来るまで小さい順で出力します。
+
+**C**
+
+```c
+#include <stdio.h>
+
+int main(void) {
+    int x, y, tmp;
+
+    while (1) {
+        scanf("%d %d", &x, &y);
+        if (x == 0 && y == 0) break;
+
+        if (x > y) {
+            tmp = x;
+            x = y;
+            y = tmp;
+        }
+
+        printf("%d %d\n", x, y);
+    }
+
+    return 0;
+}
+```
+
+**C++**
+
+```cpp
+#include <iostream>
+using namespace std;
+
+int main() {
+    int x, y;
+
+    while (true) {
+        cin >> x >> y;
+        if (x == 0 && y == 0) break;
+
+        if (x > y) swap(x, y);
+        cout << x << ' ' << y << '\n';
+    }
+
+    return 0;
+}
+```
+
+## ITP1_3_D: How Many Divisors?
+
+`a` から `b` までの整数 `i` について、`c % i == 0` を満たす個数を数えます。
+
+**C**
+
+```c
+#include <stdio.h>
+
+int main(void) {
+    int a, b, c;
+    int count = 0;
+    scanf("%d %d %d", &a, &b, &c);
+
+    for (int i = a; i <= b; i++) {
+        if (c % i == 0) {
+            count++;
+        }
+    }
+
+    printf("%d\n", count);
+    return 0;
+}
+```
+
+**C++**
+
+```cpp
+#include <iostream>
+using namespace std;
+
+int main() {
+    int a, b, c;
+    int count = 0;
+    cin >> a >> b >> c;
+
+    for (int i = a; i <= b; i++) {
+        if (c % i == 0) {
+            count++;
+        }
+    }
+
+    cout << count << '\n';
+    return 0;
+}
+```
