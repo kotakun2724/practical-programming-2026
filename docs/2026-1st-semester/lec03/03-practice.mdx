@@ -1,0 +1,39 @@
+---
+sidebar_position: 4
+---
+
+# 演習: AOJ ITP1_4 に挑戦
+
+## 今回の範囲で解ける問題
+
+| 問題番号 | 問題名 | 重点ポイント | リンク |
+|:---------|:-------|:-------------|:-------|
+| ITP1_4_A | A / B Problem | `/` と `%`、実数計算 | [問題ページ](https://judge.u-aizu.ac.jp/onlinejudge/description.jsp?id=ITP1_4_A) |
+| ITP1_4_B | Circle | `double`、書式指定 | [問題ページ](https://judge.u-aizu.ac.jp/onlinejudge/description.jsp?id=ITP1_4_B) |
+| ITP1_4_C | Simple Calculator | ループ・条件分岐 | [問題ページ](https://judge.u-aizu.ac.jp/onlinejudge/description.jsp?id=ITP1_4_C) |
+| ITP1_4_D | Min, Max and Sum | 配列、反復処理 | [問題ページ](https://judge.u-aizu.ac.jp/onlinejudge/description.jsp?id=ITP1_4_D) |
+
+## ヒント
+
+### ITP1_4_D: Min, Max and Sum
+
+```c
+long long sum = 0;
+int minv, maxv;
+
+for (int i = 0; i < n; i++) {
+    scanf("%d", &a[i]);
+    if (i == 0) {
+        minv = maxv = a[i];
+    } else {
+        if (a[i] < minv) minv = a[i];
+        if (a[i] > maxv) maxv = a[i];
+    }
+    sum += a[i];
+}
+```
+
+:::tip 出力形式を最後に再確認
+AOJではスペース・改行位置まで採点対象です。
+提出前にサンプル入出力と完全一致しているか確認しましょう。
+:::
