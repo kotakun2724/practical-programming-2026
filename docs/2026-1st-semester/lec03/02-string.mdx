@@ -1,0 +1,62 @@
+---
+sidebar_position: 3
+---
+
+# 文字列の基礎（char配列）
+
+## 文字列は char の配列
+
+C言語では文字列を `char` 配列で表します。
+
+```c
+char s[101];
+```
+
+末尾には文字列終端を表す `\0`（ヌル文字）が入るため、
+長さ100文字まで安全に扱うなら `101` 要素が必要です。
+
+## 文字列の入力と出力
+
+```c
+#include <stdio.h>
+
+int main(void) {
+    char s[101];
+    scanf("%100s", s);
+    printf("%s\n", s);
+    return 0;
+}
+```
+
+`%100s` のように最大文字数を指定すると、安全性が上がります。
+
+## 代表的な文字列関数
+
+`#include <string.h>` を追加して使います。
+
+| 関数 | 説明 | 例 |
+|:-----|:-----|:---|
+| `strlen(s)` | 文字列の長さを返す | `size_t n = strlen(s);` |
+| `strcmp(a, b)` | 文字列を比較する | `if (strcmp(a, b) == 0)` |
+
+## 利用例
+
+```c
+#include <stdio.h>
+#include <string.h>
+
+int main(void) {
+    char a[101], b[101];
+    scanf("%100s %100s", a, b);
+
+    printf("len(a) = %zu\n", strlen(a));
+
+    if (strcmp(a, b) == 0) {
+        printf("same\n");
+    } else {
+        printf("different\n");
+    }
+
+    return 0;
+}
+```
