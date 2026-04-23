@@ -26,6 +26,10 @@ This command generates static content into the `build` directory and can be serv
 
 ## Deployment
 
+This repository is configured to deploy automatically to GitHub Pages via GitHub Actions when `main` (or `master`) is updated.
+
+You can also deploy manually:
+
 Using SSH:
 
 ```bash
