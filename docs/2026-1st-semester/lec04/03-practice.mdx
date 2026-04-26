@@ -1,0 +1,170 @@
+---
+sidebar_position: 5
+---
+
+# 演習: AOJ ITP1_5, ITP1_6 に挑戦
+
+## 今回の範囲で解ける問題
+
+### ITP1_5: パターン出力と関数
+
+| 問題番号 | 問題名 | 重点ポイント | リンク |
+|:---------|:-------|:-------------|:-------|
+| ITP1_5_A | Print a Rectangle | 関数の定義と呼び出し | [問題ページ](https://judge.u-aizu.ac.jp/onlinejudge/description.jsp?id=ITP1_5_A) |
+| ITP1_5_B | Print a Frame | 関数内でのループと条件分岐 | [問題ページ](https://judge.u-aizu.ac.jp/onlinejudge/description.jsp?id=ITP1_5_B) |
+| ITP1_5_C | Print a Chessboard | 関数内での複雑な処理 | [問題ページ](https://judge.u-aizu.ac.jp/onlinejudge/description.jsp?id=ITP1_5_C) |
+| ITP1_5_D | Structured Programming | goto文を避けた構造化プログラミング | [問題ページ](https://judge.u-aizu.ac.jp/onlinejudge/description.jsp?id=ITP1_5_D) |
+
+### ITP1_6: 配列処理と関数
+
+| 問題番号 | 問題名 | 重点ポイント | リンク |
+|:---------|:-------|:-------------|:-------|
+| ITP1_6_A | Reversing Numbers | 配列の操作を関数で実装 | [問題ページ](https://judge.u-aizu.ac.jp/onlinejudge/description.jsp?id=ITP1_6_A) |
+| ITP1_6_B | Finding Missing Cards | 複数の関数を使った分割統治 | [問題ページ](https://judge.u-aizu.ac.jp/onlinejudge/description.jsp?id=ITP1_6_B) |
+
+## ヒント
+
+### ITP1_5_A: Print a Rectangle
+
+複数回呼び出される処理は関数にしましょう。
+
+```c
+void print_rectangle(int h, int w) {
+    for (int i = 0; i < h; i++) {
+        for (int j = 0; j < w; j++) {
+            printf("#");
+        }
+        printf("\n");
+    }
+}
+
+int main() {
+    int h, w;
+    while (scanf("%d %d", &h, &w) != EOF) {
+        if (h == 0 && w == 0) break;
+        print_rectangle(h, w);
+        printf("\n");
+    }
+    return 0;
+}
+```
+
+### ITP1_5_B: Print a Frame
+
+枠の描画は、上下の辺と左右の辺で異なります。
+
+```c
+void print_frame(int h, int w) {
+    // 上の辺
+    for (int j = 0; j < w; j++) {
+        printf("#");
+    }
+    printf("\n");
+
+    // 中央行
+    for (int i = 1; i < h - 1; i++) {
+        printf("#");
+        for (int j = 1; j < w - 1; j++) {
+            printf(".");
+        }
+        printf("#\n");
+    }
+
+    // 下の辺
+    for (int j = 0; j < w; j++) {
+        printf("#");
+    }
+    printf("\n");
+}
+```
+
+### ITP1_5_C: Print a Chessboard
+
+チェッカーボードは、行番号と列番号の偶奇をチェックします。
+
+```c
+void print_chessboard(int h, int w) {
+    for (int i = 0; i < h; i++) {
+        for (int j = 0; j < w; j++) {
+            if ((i + j) % 2 == 0) {
+                printf("#");
+            } else {
+                printf(".");
+            }
+        }
+        printf("\n");
+    }
+}
+```
+
+### ITP1_5_D: Structured Programming
+
+`goto` を使わずに同じ処理を実装するには、関数を活用します。
+
+```c
+void call(int n) {
+    for (int i = 1; i <= n; i++) {
+        int x = i;
+        bool should_print = (x % 3 == 0);
+        
+        if (!should_print) {
+            while (x > 0) {
+                if (x % 10 == 3) {
+                    should_print = true;
+                    break;
+                }
+                x /= 10;
+            }
+        }
+        
+        if (should_print) {
+            printf(" %d", i);
+        }
+    }
+    printf("\n");
+}
+```
+
+### ITP1_6_A: Reversing Numbers
+
+配列の要素を**逆順に出力する関数**を作りましょう。
+
+```c
+void print_reversed(int n, int a[]) {
+    for (int i = n - 1; i >= 0; i--) {
+        if (i < n - 1) printf(" ");
+        printf("%d", a[i]);
+    }
+    printf("\n");
+}
+
+int main() {
+    int n;
+    scanf("%d", &n);
+    int a[n];
+    
+    for (int i = 0; i < n; i++) {
+        scanf("%d", &a[i]);
+    }
+    
+    print_reversed(n, a);
+    return 0;
+}
+```
+
+### ITP1_6_B: Finding Missing Cards
+
+カードの処理を複数の関数に分割します。
+
+- 入力を読み込む関数
+- カードを初期化する関数
+- マークされていないカードを出力する関数
+
+:::tip 出力形式を最後に再確認
+AOJ での採点では、スペースや改行の位置も重要です。
+サンプル入出力と完全に一致しているか確認しましょう。
+:::
+
+---
+
+関数を活用して、きれいで再利用可能なコードを書くことを心がけましょう！

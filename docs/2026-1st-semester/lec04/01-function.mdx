@@ -1,0 +1,102 @@
+---
+sidebar_position: 3
+---
+
+# 関数の基礎
+
+## 関数とは
+
+関数は、**特定の処理をまとめて、名前をつけたもの**です。何度も同じ処理を書く代わりに、
+関数を定義して呼び出すことで、コードを効率化できます。
+
+## 関数の定義
+
+関数は以下の形式で定義します：
+
+```c
+戻り値の型 関数名(引数の型 引数名1, 引数の型 引数名2, ...) {
+    // 処理
+    return 戻り値;
+}
+```
+
+## 簡単な例：加算関数
+
+```c
+#include <stdio.h>
+
+// 関数の定義
+int add(int a, int b) {
+    return a + b;
+}
+
+int main() {
+    int x = 3;
+    int y = 5;
+    int result = add(x, y);
+    printf("%d\n", result);  // 8 と出力
+    return 0;
+}
+```
+
+## 関数の呼び出し
+
+関数を呼び出す時は、関数名と引数を括弧内に指定します：
+
+```c
+result = add(10, 20);
+```
+
+## 戻り値と `return`
+
+- 関数が結果を返す場合は、`return` ステートメントを使います
+- `return` の後の値が戻り値になります
+- 関数の実行は `return` で終了します
+
+```c
+int max(int a, int b) {
+    if (a > b) {
+        return a;  // a を戻して終了
+    } else {
+        return b;  // b を戻して終了
+    }
+}
+```
+
+## 戻り値がない関数
+
+戻り値がない場合は、戻り値の型を `void` にします：
+
+```c
+void print_hello() {
+    printf("Hello, World!\n");
+    return;  // 戻り値がないので return の後に値は書かない
+}
+
+int main() {
+    print_hello();  // 関数を呼び出すだけ
+    return 0;
+}
+```
+
+:::warning 注意事項
+関数の定義は、`main` 関数より前に書くか、
+または関数の宣言（プロトタイプ宣言）を先に書いて、
+定義を後に書く必要があります。
+
+プロトタイプ宣言の例：
+```c
+int add(int a, int b);  // 宣言
+
+int main() {
+    printf("%d\n", add(3, 5));
+    return 0;
+}
+
+int add(int a, int b) {  // 定義
+    return a + b;
+}
+```
+:::
+
+次は、**スコープと変数の有効範囲**について学びましょう。

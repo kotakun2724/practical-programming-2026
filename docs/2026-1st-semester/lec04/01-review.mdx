@@ -1,0 +1,209 @@
+---
+sidebar_position: 2
+---
+
+# 前回課題解説（C/C++）
+
+このページでは、前回課題で扱った **ITP1_4A〜D** をまとめています。
+関数を使った実装にもふれます。
+
+## ITP1_4_A: A / B Problem
+
+2つの整数の除算と剰余を計算する問題です。
+
+**C**
+
+```c
+#include <stdio.h>
+
+int main(void) {
+    int a, b;
+    scanf("%d %d", &a, &b);
+
+    printf("%d %d %.4f\n", a / b, a % b, (double)a / b);
+
+    return 0;
+}
+```
+
+**C++**
+
+```cpp
+#include <iostream>
+#include <iomanip>
+using namespace std;
+
+int main() {
+    int a, b;
+    cin >> a >> b;
+
+    cout << a / b << " " << a % b << fixed << setprecision(4) << (double)a / b << '\n';
+
+    return 0;
+}
+```
+
+## ITP1_4_B: Circle
+
+円の面積と円周を計算する問題です。
+
+**C**
+
+```c
+#include <stdio.h>
+#include <math.h>
+
+int main(void) {
+    double r;
+    scanf("%lf", &r);
+
+    double area = r * r * M_PI;
+    double perimeter = 2 * r * M_PI;
+
+    printf("%.6f %.6f\n", area, perimeter);
+
+    return 0;
+}
+```
+
+**C++**
+
+```cpp
+#include <iostream>
+#include <iomanip>
+#include <cmath>
+using namespace std;
+
+int main() {
+    double r;
+    cin >> r;
+
+    double area = r * r * M_PI;
+    double perimeter = 2 * r * M_PI;
+
+    cout << fixed << setprecision(6) << area << " " << perimeter << '\n';
+
+    return 0;
+}
+```
+
+## ITP1_4_C: Simple Calculator
+
+複数の計算をループで行う問題です。
+
+**C**
+
+```c
+#include <stdio.h>
+
+int main(void) {
+    int a, b;
+    char op;
+
+    while (scanf("%d %c %d", &a, &op, &b) != EOF) {
+        if (op == '+') {
+            printf("%d\n", a + b);
+        } else if (op == '-') {
+            printf("%d\n", a - b);
+        } else if (op == '*') {
+            printf("%d\n", a * b);
+        } else if (op == '/') {
+            printf("%d\n", a / b);
+        }
+    }
+
+    return 0;
+}
+```
+
+**C++**
+
+```cpp
+#include <iostream>
+using namespace std;
+
+int main() {
+    int a, b;
+    char op;
+
+    while (cin >> a >> op >> b) {
+        if (op == '+') {
+            cout << a + b << '\n';
+        } else if (op == '-') {
+            cout << a - b << '\n';
+        } else if (op == '*') {
+            cout << a * b << '\n';
+        } else if (op == '/') {
+            cout << a / b << '\n';
+        }
+    }
+
+    return 0;
+}
+```
+
+## ITP1_4_D: Min, Max and Sum
+
+配列の最小値、最大値、合計を計算する問題です。
+
+**C**
+
+```c
+#include <stdio.h>
+
+int main(void) {
+    int n;
+    scanf("%d", &n);
+
+    int a[n];
+    long long sum = 0;
+    int minv = 0, maxv = 0;
+
+    for (int i = 0; i < n; i++) {
+        scanf("%d", &a[i]);
+        if (i == 0) {
+            minv = maxv = a[i];
+        } else {
+            if (a[i] < minv) minv = a[i];
+            if (a[i] > maxv) maxv = a[i];
+        }
+        sum += a[i];
+    }
+
+    printf("%d %d %lld\n", minv, maxv, sum);
+
+    return 0;
+}
+```
+
+**C++**
+
+```cpp
+#include <iostream>
+#include <algorithm>
+using namespace std;
+
+int main() {
+    int n;
+    cin >> n;
+
+    int a[n];
+    long long sum = 0;
+
+    for (int i = 0; i < n; i++) {
+        cin >> a[i];
+        sum += a[i];
+    }
+
+    int minv = *min_element(a, a + n);
+    int maxv = *max_element(a, a + n);
+
+    cout << minv << " " << maxv << " " << sum << '\n';
+
+    return 0;
+}
+```
+
+---
+
+これらの問題で学んだスキルを、次は**関数を使って実装する形**へ発展させていきます。
