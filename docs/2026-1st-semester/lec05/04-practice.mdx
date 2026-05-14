@@ -1,0 +1,155 @@
+---
+sidebar_position: 5
+---
+
+# 練習問題
+
+ここまで学んだポインタと動的メモリ確保を使って、実際に問題を解いてみましょう。
+
+## 練習 1: swap 関数の実装
+
+次の `swap` 関数を完成させてください。2つの整数の値を入れ替えます。
+
+```c
+#include <stdio.h>
+
+void swap(int *a, int *b) {
+    // ここを実装
+}
+
+int main() {
+    int x = 10, y = 20;
+    swap(&x, &y);
+    printf("%d %d\n", x, y);  // 20 10 と出力されれば正解
+    return 0;
+}
+```
+
+<details>
+<summary>解答例</summary>
+
+```c
+void swap(int *a, int *b) {
+    int tmp = *a;
+    *a = *b;
+    *b = tmp;
+}
+```
+
+</details>
+
+---
+
+## 練習 2: 動的配列で最大値を求める
+
+`n` 個の整数を動的配列で受け取り、最大値を出力するプログラムを書いてください。
+
+```c
+#include <stdio.h>
+#include <stdlib.h>
+
+int main() {
+    int n;
+    scanf("%d", &n);
+
+    int *arr = (int *)malloc(n * sizeof(int));
+    for (int i = 0; i < n; i++) scanf("%d", &arr[i]);
+
+    // 最大値を求める処理を書く
+    int max = arr[0];
+    // ...
+
+    printf("%d\n", max);
+    free(arr);
+    return 0;
+}
+```
+
+<details>
+<summary>解答例</summary>
+
+```c
+int max = arr[0];
+for (int i = 1; i < n; i++) {
+    if (arr[i] > max) max = arr[i];
+}
+```
+
+</details>
+
+---
+
+## AOJ ITP1_7_A: Twice
+
+行列 A（H × W）の各要素を2倍にして出力します。
+
+### 入力形式
+
+```
+H W
+a[0][0] a[0][1] ... a[0][W-1]
+...
+a[H-1][0] ...     a[H-1][W-1]
+```
+
+### 出力形式
+
+各要素を2倍した行列を同じ形式で出力します。
+
+### ヒント
+
+```c
+#include <stdio.h>
+
+int main() {
+    int h, w;
+    scanf("%d %d", &h, &w);
+
+    int a[100][100];
+    for (int i = 0; i < h; i++)
+        for (int j = 0; j < w; j++)
+            scanf("%d", &a[i][j]);
+
+    for (int i = 0; i < h; i++) {
+        for (int j = 0; j < w; j++) {
+            if (j > 0) printf(" ");
+            printf("%d", a[i][j] * 2);
+        }
+        printf("\n");
+    }
+    return 0;
+}
+```
+
+:::tip 出力の空白に注意
+各行の要素間には半角スペースを入れ、行末の余分なスペースに注意しましょう。
+:::
+
+---
+
+## AOJ ITP1_7_B: Matrix Multiplication
+
+行列 A（H × M）と行列 B（M × W）の積 C を求めます。
+
+```
+C[i][j] = sum_{k=0}^{M-1} A[i][k] * B[k][j]
+```
+
+### ヒント
+
+```c
+for (int i = 0; i < h; i++) {
+    for (int j = 0; j < w; j++) {
+        int sum = 0;
+        for (int k = 0; k < m; k++) {
+            sum += a[i][k] * b[k][j];
+        }
+        c[i][j] = sum;
+    }
+}
+```
+
+:::note 3重ループ
+行列積は典型的な3重ループのパターンです。
+`i`（行）・`j`（列）・`k`（内積の和）の3つのインデックスを区別して考えましょう。
+:::

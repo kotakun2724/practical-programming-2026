@@ -1,0 +1,112 @@
+---
+sidebar_position: 6
+---
+
+# 次回予告と課題
+
+## 次回の内容
+**第6回: ソートと探索の基礎（予定）**
+
+次回は以下の内容を学ぶ予定です：
+
+- 計算量の考え方（$O(N)$, $O(N^2)$）
+- 基本ソート（挿入ソート・バブルソート）
+- 線形探索と二分探索
+- 配列・ループを使ったアルゴリズム実装
+
+## 今回の課題
+
+:::important 提出方法
+AOJ で問題を解いて **AC（Accepted）** を取得してください。
+:::
+
+### 必須課題: AOJ ALDS1_1
+
+#### ALDS1_1（初等的アルゴリズム）
+
+| 問題番号 | 問題名 | 内容 | リンク |
+|:---------|:-------|:-----|:-------|
+| ALDS1_1_A | Insertion Sort | 挿入ソートの各ステップ出力 | [問題ページ](https://judge.u-aizu.ac.jp/onlinejudge/description.jsp?id=ALDS1_1_A) |
+| ALDS1_1_B | Greatest Common Divisor | ユークリッドの互除法 | [問題ページ](https://judge.u-aizu.ac.jp/onlinejudge/description.jsp?id=ALDS1_1_B) |
+| ALDS1_1_C | Prime Numbers | 素数判定 | [問題ページ](https://judge.u-aizu.ac.jp/onlinejudge/description.jsp?id=ALDS1_1_C) |
+| ALDS1_1_D | Maximum Profit | 一回の売買での最大利益 | [問題ページ](https://judge.u-aizu.ac.jp/onlinejudge/description.jsp?id=ALDS1_1_D) |
+
+### 各問題のヒント
+
+#### ALDS1_1_A: Insertion Sort
+
+外側ループで挿入位置を進め、内側ループで左へ比較・交換します。
+
+```c
+for (int i = 1; i < n; i++) {
+    int v = a[i];
+    int j = i - 1;
+    while (j >= 0 && a[j] > v) {
+        a[j + 1] = a[j];
+        j--;
+    }
+    a[j + 1] = v;
+}
+```
+
+#### ALDS1_1_B: Greatest Common Divisor
+
+`while (b != 0)` で余りを回していくのが基本です。
+
+#### ALDS1_1_C: Prime Numbers
+
+`2` から `sqrt(n)` までの割り算確認で判定できます。
+
+#### ALDS1_1_D: Maximum Profit
+
+左から走査し、これまでの最小値を更新しながら最大利益を求めます。
+
+### 推奨課題
+
+余裕があれば以下にも挑戦してください：
+
+- ALDS1_2（基本ソート）: [問題一覧](https://judge.u-aizu.ac.jp/onlinejudge/finder.jsp?course=ALDS1)
+- ITP1_8（文字列処理）: [問題一覧](https://judge.u-aizu.ac.jp/onlinejudge/finder.jsp?course=ITP1)
+
+### 締め切り
+
+**次回講義の前日 23:59 まで**
+
+---
+
+## 困ったときは
+
+### よくあるエラー
+
+| エラー | 原因 | 対処法 |
+|:-------|:-----|:-------|
+| TLE | 計算量が大きい | ループの重なりを見直し、不要な処理を減らす |
+| WA | ロジックの更新順序ミス | 変数をいつ更新するかを追跡して確認 |
+| WA | 出力形式の誤り | 空白・改行の位置を問題文と照らし合わせる |
+| CE | 文法エラー | 配列添字とループ境界を確認 |
+
+### 質問するときは
+
+```
+【問題番号】
+ALDS1_1_D
+
+【やりたいこと】
+最大利益の更新タイミングが分からない
+
+【提出結果】
+Wrong Answer
+
+【ソースコード】
+（コードを貼り付け）
+```
+
+## 連絡先
+
+- **Slack**: #2026-practical-programming
+- **講師**: 伊藤 航大
+- **SA**: 手塚 大地
+
+---
+
+お疲れ様でした！ポインタを使った実装力を土台に、次回はアルゴリズムの設計力を強化していきましょう。次回もよろしくお願いします 🚀
