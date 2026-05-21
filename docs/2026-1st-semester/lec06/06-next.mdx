@@ -1,0 +1,144 @@
+---
+sidebar_position: 7
+---
+
+# 次回予告と課題
+
+## 次回の内容
+
+**第7回: 再帰と分割統治法（予定）**
+
+次回は以下の内容を学ぶ予定です：
+
+- 再帰関数の書き方
+- 分割統治法の考え方
+- マージソート / クイックソート（`O(N log N)`）
+- スタックの基礎（再帰呼び出しとの対応）
+
+## 今回の課題
+
+:::important 提出方法
+AOJ で問題を解いて **AC（Accepted）** を取得してください。
+:::
+
+### 必須課題: AOJ ALDS1_2 と ALDS1_4
+
+#### ALDS1_2（基本ソート）
+
+| 問題番号 | 問題名 | 内容 | リンク |
+|:---------|:-------|:-----|:-------|
+| ALDS1_2_A | Bubble Sort | バブルソートと交換回数の出力 | [問題ページ](https://judge.u-aizu.ac.jp/onlinejudge/description.jsp?id=ALDS1_2_A) |
+| ALDS1_2_B | Selection Sort | 選択ソートと交換回数の出力 | [問題ページ](https://judge.u-aizu.ac.jp/onlinejudge/description.jsp?id=ALDS1_2_B) |
+
+#### ALDS1_4（探索）
+
+| 問題番号 | 問題名 | 内容 | リンク |
+|:---------|:-------|:-----|:-------|
+| ALDS1_4_A | Linear Search | 線形探索で個数を数える | [問題ページ](https://judge.u-aizu.ac.jp/onlinejudge/description.jsp?id=ALDS1_4_A) |
+| ALDS1_4_B | Binary Search | 二分探索で個数を数える | [問題ページ](https://judge.u-aizu.ac.jp/onlinejudge/description.jsp?id=ALDS1_4_B) |
+
+### 各問題のヒント
+
+#### ALDS1_2_A: Bubble Sort
+
+`if (a[j-1] > a[j])` で交換した回数をカウントします。出力は「ソート後の配列」と「交換回数」の2行です。
+
+```c
+for (int i = 0; i < n - 1; i++) {
+    for (int j = n - 1; j > i; j--) {
+        if (a[j - 1] > a[j]) {
+            int t = a[j - 1]; a[j - 1] = a[j]; a[j] = t;
+            cnt++;
+        }
+    }
+}
+```
+
+#### ALDS1_2_B: Selection Sort
+
+未整列部分から**最小値の位置**を見つけて、先頭と交換します。
+**実際に交換が起きたとき**だけカウントするのがポイントです（`minj != i` のときのみ `cnt++`）。
+
+```c
+for (int i = 0; i < n - 1; i++) {
+    int minj = i;
+    for (int j = i + 1; j < n; j++) {
+        if (a[j] < a[minj]) minj = j;
+    }
+    if (minj != i) {
+        int t = a[i]; a[i] = a[minj]; a[minj] = t;
+        cnt++;
+    }
+}
+```
+
+#### ALDS1_4_A: Linear Search
+
+`T` の各値について、`S` を線形探索して見つかった個数を数えます。
+
+```c
+int cnt = 0;
+for (int i = 0; i < q; i++) {
+    int key;
+    scanf("%d", &key);
+    for (int j = 0; j < n; j++) {
+        if (s[j] == key) { cnt++; break; }
+    }
+}
+```
+
+#### ALDS1_4_B: Binary Search
+
+`S` がソート済みなので、二分探索で各 `T[i]` を `O(log N)` で判定できます。
+線形探索だと TLE する可能性があるので注意しましょう。
+
+### 推奨課題
+
+余裕があれば以下にも挑戦してください：
+
+- ALDS1_2_C: Stable Sort（バブルソートと選択ソートの安定性比較）
+- ALDS1_2_D: Shell Sort（より高速な改良版ソート）
+- 問題一覧: [ALDS1 コース](https://judge.u-aizu.ac.jp/onlinejudge/finder.jsp?course=ALDS1)
+
+### 締め切り
+
+**次回講義の前日 23:59 まで**
+
+---
+
+## 困ったときは
+
+### よくあるエラー
+
+| エラー | 原因 | 対処法 |
+|:-------|:-----|:-------|
+| TLE | `O(N^2)` など計算量が大きすぎる | 二分探索やソート済み配列を活用する |
+| WA | swap 回数の数え方 | 実際に交換した回数のみカウントしているか確認 |
+| WA | 出力形式の誤り | 空白・改行の位置を問題文と照らし合わせる |
+| CE | 文法エラー | 配列添字やループ境界を確認 |
+
+### 質問するときは
+
+```
+【問題番号】
+ALDS1_4_B
+
+【やりたいこと】
+二分探索で個数を数えたいが、件数が合わない
+
+【提出結果】
+Wrong Answer
+
+【ソースコード】
+（コードを貼り付け）
+```
+
+## 連絡先
+
+- **Slack**: #2026-practical-programming
+- **講師**: 伊藤 航大
+- **SA**: 手塚 大地
+
+---
+
+お疲れ様でした！計算量・ソート・探索は、これからのアルゴリズム学習の土台です。次回は再帰と分割統治法で、より高速なソートに踏み込んでいきましょう。次回もよろしくお願いします 🚀
