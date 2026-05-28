@@ -1,0 +1,234 @@
+---
+sidebar_position: 5
+---
+
+# スタックの基礎
+
+## スタックとは
+
+**スタック（stack）** は、データの出し入れ順が **LIFO（Last In First Out: 後入れ先出し）** のデータ構造です。
+皿を積み上げるように、**最後に置いた皿が最初に取られます**。
+
+```
+push(1)  →  [1]
+push(2)  →  [1, 2]
+push(3)  →  [1, 2, 3]
+pop()    →  3 が返る、stack = [1, 2]
+pop()    →  2 が返る、stack = [1]
+```
+
+## 基本操作
+
+| 操作 | 内容 | 計算量 |
+|:---|:---|:---|
+| `push(x)` | スタックの先頭に `x` を積む | `O(1)` |
+| `pop()` | スタックの先頭を取り出して返す | `O(1)` |
+| `top()` | スタックの先頭を「見るだけ」 | `O(1)` |
+| `empty()` | スタックが空かどうか | `O(1)` |
+
+## 配列での実装
+
+整数を扱う固定長スタックは、**配列 + `top` インデックス**で簡単に作れます。
+
+```c
+#include <stdio.h>
+
+#define MAX 1000
+int stack[MAX];
+int top = 0;          // 次に書き込むインデックス（= 要素数）
+
+void push(int x) {
+    stack[top++] = x;
+}
+
+int pop(void) {
+    return stack[--top];
+}
+
+int empty(void) {
+    return top == 0;
+}
+
+int main(void) {
+    push(1);
+    push(2);
+    push(3);
+    printf("%d\n", pop());  // 3
+    printf("%d\n", pop());  // 2
+    printf("%d\n", pop());  // 1
+    return 0;
+}
+```
+
+:::warning オーバーフロー / アンダーフロー
+- `push` する前に `top < MAX` を確認しないとオーバーフローします
+- `pop` する前に `top > 0` を確認しないとアンダーフローします
+- 本番のプログラムではエラーチェックを必ず入れましょう
+:::
+
+## C++版
+
+```cpp
+#include <iostream>
+#include <stack>
+using namespace std;
+
+int main() {
+    stack<int> s;
+    s.push(1);
+    s.push(2);
+    s.push(3);
+    while (!s.empty()) {
+        cout << s.top() << '\n';  // 3, 2, 1 の順に出力
+        s.pop();
+    }
+    return 0;
+}
+```
+
+C++ の `std::stack` は内部で `std::deque` を使った可変長スタックです。
+
+## 応用例 1: 逆ポーランド記法（RPN）の評価
+
+AOJ `ALDS1_3_A: Stack` で扱う典型問題です。
+`1 2 +` のように **演算子が後ろ** に来る記法を、スタックで評価できます。
+
+### 評価ルール
+
+- 数値が来たらスタックに `push`
+- 演算子が来たら 2 回 `pop` して計算し、結果を `push`
+- 入力を読み終わったとき、スタックの先頭が答え
+
+### 実装
+
+```c
+#include <stdio.h>
+#include <string.h>
+#include <stdlib.h>
+
+int stack[1000];
+int top = 0;
+
+void push(int x) { stack[top++] = x; }
+int  pop(void)   { return stack[--top]; }
+
+int main(void) {
+    char s[16];
+    while (scanf("%s", s) != EOF) {
+        if (s[0] == '+') {
+            int b = pop(), a = pop();
+            push(a + b);
+        } else if (s[0] == '-') {
+            int b = pop(), a = pop();
+            push(a - b);
+        } else if (s[0] == '*') {
+            int b = pop(), a = pop();
+            push(a * b);
+        } else {
+            push(atoi(s));
+        }
+    }
+    printf("%d\n", pop());
+    return 0;
+}
+```
+
+:::tip 引き算と割り算の順序に注意
+`a - b` の `a` は **先に `push` された値**（= 後で `pop` する値）です。
+2回 `pop` した直後は `b = pop(); a = pop();` の順で取り出すと自然です。
+:::
+
+### C++版
+
+```cpp
+#include <iostream>
+#include <stack>
+#include <string>
+using namespace std;
+
+int main() {
+    stack<int> s;
+    string t;
+    while (cin >> t) {
+        if (t == "+" || t == "-" || t == "*") {
+            int b = s.top(); s.pop();
+            int a = s.top(); s.pop();
+            if (t == "+") s.push(a + b);
+            else if (t == "-") s.push(a - b);
+            else s.push(a * b);
+        } else {
+            s.push(stoi(t));
+        }
+    }
+    cout << s.top() << '\n';
+    return 0;
+}
+```
+
+## 応用例 2: かっこ列の対応チェック
+
+`(())(()) ` のような文字列で、かっこが正しく対応しているか判定するときもスタックが定番です。
+
+```c
+int is_balanced(const char *s) {
+    int top = 0;
+    for (int i = 0; s[i]; i++) {
+        if (s[i] == '(') top++;
+        else if (s[i] == ')') {
+            if (top == 0) return 0;  // 閉じすぎ
+            top--;
+        }
+    }
+    return top == 0;  // 残りがあれば NG
+}
+```
+
+## 再帰呼び出しとコールスタック
+
+ここまでで「スタック」の概念を学びました。実は、**関数の再帰呼び出しもスタックで管理されています**。
+これを **コールスタック（呼び出しスタック）** と呼びます。
+
+```c
+int factorial(int n) {
+    if (n <= 1) return 1;
+    return n * factorial(n - 1);
+}
+```
+
+`factorial(3)` を呼ぶと、内部的には次のようにコールスタックが伸び縮みします。
+
+```
+[ factorial(1) ]   ← ベースケースで停止、戻り値 1
+[ factorial(2) ]
+[ factorial(3) ]   ← 一番下が最初に呼ばれた関数
+
+  ↓ factorial(1) が return すると pop
+[ factorial(2) ]   ← 1 を受け取って 2 * 1 = 2 を return
+[ factorial(3) ]
+
+  ↓ さらに pop
+[ factorial(3) ]   ← 2 を受け取って 3 * 2 = 6 を return
+```
+
+呼び出されるたびに `push` され、`return` するたびに `pop` されます。
+**再帰の正体はコールスタックに積まれていく関数呼び出しのこと**だとイメージできれば、再帰の動作を頭の中で追いやすくなります。
+
+:::warning スタックオーバーフロー
+コールスタックは無限ではなく、OS が割り当てたメモリ領域（通常は数 MB）の範囲しか使えません。
+再帰が深すぎる（例: `10^6` 段）と、コールスタックが溢れて **Segmentation Fault** で落ちます。
+深い再帰が必要なときは、自前のスタックを使った**反復版**に書き直す手法もあります。
+:::
+
+## 再帰 ⇄ スタック の相互変換
+
+理論上、**すべての再帰アルゴリズムは、明示的なスタックを使って反復版に書き換えられます**。
+逆に、スタックを使って表現できる処理は、再帰で書ける可能性があります。
+
+| 書き方 | メリット | デメリット |
+|:---|:---|:---|
+| 再帰 | コードが短く、定義に忠実 | コールスタックを使うため深さに限界 |
+| 明示的スタック | 深さの限界を回避できる、状態管理が柔軟 | コードが長くなりがち |
+
+両方を行き来できるようになると、アルゴリズム実装の自由度が一気に上がります。
+
+次は、ここまで学んだ再帰・分割統治・スタックを **練習問題** で確かめましょう。

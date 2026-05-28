@@ -1,0 +1,299 @@
+---
+sidebar_position: 6
+---
+
+# 練習問題
+
+ここまで学んだ再帰・分割統治法・スタックを、実際に手を動かして確かめましょう。
+
+## 練習 1: 階乗を再帰で実装する
+
+`n!` を再帰で計算する関数 `factorial` を完成させてください。
+
+```c
+#include <stdio.h>
+
+long long factorial(int n) {
+    // ここを実装
+    return 0;
+}
+
+int main(void) {
+    printf("%lld\n", factorial(10));  // 3628800
+    return 0;
+}
+```
+
+<details>
+<summary>解答例</summary>
+
+```c
+long long factorial(int n) {
+    if (n <= 1) return 1;
+    return (long long)n * factorial(n - 1);
+}
+```
+
+:::tip オーバーフローに注意
+`int` のままだと `13!` あたりで桁あふれします。
+戻り値も再帰中の計算も `long long` で扱うのが安全です。
+:::
+
+</details>
+
+---
+
+## 練習 2: 1〜N の総和を再帰で計算する
+
+`sum_to(n) = 1 + 2 + ... + n` を再帰で実装してください。
+
+```c
+int sum_to(int n) {
+    // ここを実装
+    return 0;
+}
+```
+
+<details>
+<summary>解答例</summary>
+
+```c
+int sum_to(int n) {
+    if (n <= 0) return 0;
+    return n + sum_to(n - 1);
+}
+```
+
+</details>
+
+---
+
+## 練習 3: 配列内の最大値を再帰で求める
+
+長さ `n` の配列 `a` の中で、最大値を再帰で返してください。
+
+```c
+int max_rec(int *a, int n) {
+    // ここを実装
+    return 0;
+}
+```
+
+<details>
+<summary>解答例</summary>
+
+```c
+int max_rec(int *a, int n) {
+    if (n == 1) return a[0];
+    int m = max_rec(a, n - 1);
+    return (a[n - 1] > m) ? a[n - 1] : m;
+}
+```
+
+「`n - 1` 個までの最大値が分かっているなら、それと末尾を比較するだけ」と考えるのが再帰のコツです。
+
+</details>
+
+---
+
+## 練習 4: マージソートを完成させる
+
+`merge` と `merge_sort` の枠だけ用意しています。中身を埋めてください。
+
+```c
+#include <stdio.h>
+#include <limits.h>
+
+void merge(int *a, int left, int mid, int right) {
+    // ここを実装
+}
+
+void merge_sort(int *a, int left, int right) {
+    if (right - left <= 1) return;
+    int mid = (left + right) / 2;
+    merge_sort(a, left, mid);
+    merge_sort(a, mid, right);
+    merge(a, left, mid, right);
+}
+```
+
+<details>
+<summary>解答例</summary>
+
+```c
+void merge(int *a, int left, int mid, int right) {
+    int n1 = mid - left;
+    int n2 = right - mid;
+    int L[100001], R[100001];
+
+    for (int i = 0; i < n1; i++) L[i] = a[left + i];
+    for (int i = 0; i < n2; i++) R[i] = a[mid + i];
+    L[n1] = INT_MAX;
+    R[n2] = INT_MAX;
+
+    int i = 0, j = 0;
+    for (int k = left; k < right; k++) {
+        if (L[i] <= R[j]) a[k] = L[i++];
+        else              a[k] = R[j++];
+    }
+}
+```
+
+</details>
+
+---
+
+## 練習 5: スタックの push / pop
+
+配列ベースのスタックを完成させてください。
+
+```c
+#include <stdio.h>
+
+int stack[1000];
+int top = 0;
+
+void push(int x) {
+    // ここを実装
+}
+
+int pop(void) {
+    // ここを実装
+    return 0;
+}
+```
+
+<details>
+<summary>解答例</summary>
+
+```c
+void push(int x) { stack[top++] = x; }
+int  pop(void)   { return stack[--top]; }
+```
+
+</details>
+
+---
+
+## AOJ ALDS1_5_B: Merge Sort
+
+マージソートの実装に加え、**マージ時の比較回数**を出力する問題です。
+
+### 入力形式
+
+```
+n
+a_0 a_1 ... a_{n-1}
+```
+
+### 出力形式
+
+1行目に空白区切りのソート後の配列、2行目に**比較回数**を出力します。
+
+### ヒント
+
+「`L[i] <= R[j]` の比較を行う回数」を数えれば OK です。
+番兵を使った実装なら、`for (k = left; k < right; k++)` のループ1回ごとに1回比較が発生します。
+
+```c
+int cnt = 0;
+
+void merge(int *a, int left, int mid, int right) {
+    // ... (上と同じ)
+    for (int k = left; k < right; k++) {
+        cnt++;
+        if (L[i] <= R[j]) a[k] = L[i++];
+        else              a[k] = R[j++];
+    }
+}
+```
+
+最後に `printf("%d\n", cnt);` で比較回数を出力します。
+
+:::tip 大きい N に注意
+`N <= 500000` なので、配列を小さく確保しすぎると Runtime Error になります。
+`L` と `R` のサイズは `N/2 + 1` 以上を確保しましょう（番兵の `INT_MAX` の分も含めて）。
+:::
+
+---
+
+## AOJ ALDS1_3_A: Stack
+
+逆ポーランド記法で書かれた数式を、スタックを使って評価します。
+
+### 入力形式
+
+スペース区切りで `数値` または `+ - *` のいずれかが並びます。
+
+```
+1 2 + 3 4 - *
+```
+
+### ヒント
+
+- 数値が来たら `atoi` で整数化して `push`
+- 演算子が来たら **2回 `pop`** して、`a 演算子 b` の結果を `push`
+- 最後にスタックに残った値が答え
+
+```c
+if (s[0] == '+' || s[0] == '-' || s[0] == '*') {
+    int b = pop();
+    int a = pop();
+    if (s[0] == '+') push(a + b);
+    else if (s[0] == '-') push(a - b);
+    else push(a * b);
+} else {
+    push(atoi(s));
+}
+```
+
+:::warning pop の順序
+2回 `pop` するとき、最初に取り出した方が右側オペランド `b`、次が左側オペランド `a` です。
+`a - b` を `b - a` と書かないよう注意しましょう。
+:::
+
+---
+
+## 発展: AOJ ALDS1_5_C: Koch Curve
+
+コッホ曲線を `n` 段描画する問題です。再帰で**座標を計算**する練習として最適です。
+
+```
+段数 0: 直線
+段数 1: 2点間を3分割し、中央を60度回転させた頂点を追加（4本の直線）
+段数 n: 各線分に対して再帰的に上の処理を繰り返す
+```
+
+ヒント: 三角関数 `sin` / `cos` を使って、ベクトルを 60 度回転させます。
+
+```c
+#include <stdio.h>
+#include <math.h>
+
+void koch(int n, double ax, double ay, double bx, double by) {
+    if (n == 0) return;
+
+    double sx = (2 * ax + bx) / 3;
+    double sy = (2 * ay + by) / 3;
+    double tx = (ax + 2 * bx) / 3;
+    double ty = (ay + 2 * by) / 3;
+
+    double th = 60.0 * M_PI / 180.0;
+    double ux = (tx - sx) * cos(th) - (ty - sy) * sin(th) + sx;
+    double uy = (tx - sx) * sin(th) + (ty - sy) * cos(th) + sy;
+
+    koch(n - 1, ax, ay, sx, sy);
+    printf("%.8f %.8f\n", sx, sy);
+    koch(n - 1, sx, sy, ux, uy);
+    printf("%.8f %.8f\n", ux, uy);
+    koch(n - 1, ux, uy, tx, ty);
+    printf("%.8f %.8f\n", tx, ty);
+    koch(n - 1, tx, ty, bx, by);
+}
+```
+
+座標の出力タイミングが分割統治の構造そのものになっているのが見どころです。
+
+---
+
+実装に慣れてきたら、次のページの**今回の課題**にも挑戦してみましょう！
