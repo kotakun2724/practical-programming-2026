@@ -1,0 +1,8 @@
+{
+    "label": "第14回: 認証応用とまとめ",
+    "position": 14,
+    "link": {
+        "type": "generated-index",
+        "description": "特権昇格、セッションハイジャックなどの高度な攻撃手法を学び、CTF攻略の総まとめを行います。"
+    }
+}

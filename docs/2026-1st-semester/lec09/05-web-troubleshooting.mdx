@@ -1,0 +1,133 @@
+---
+sidebar_position: 5
+draft: true
+---
+
+# トラブルシューティング
+
+このセクションでは、講義中に遭遇しやすいトラブルとその対処法をまとめます。
+
+## HTTPステータスコードの意味
+
+| コード | 意味 | 対処法 |
+|---|---|---|
+| `200` | OK | 正常。リクエストが成功 |
+| `301` | Moved Permanently | リダイレクト。`curl -L` で追従 |
+| `302` | Found | 一時的なリダイレクト。`curl -L` で追従 |
+| `400` | Bad Request | リクエストが不正。パラメータやヘッダーを確認 |
+| `401` | Unauthorized | 認証が必要。Cookieや認証情報を確認 |
+| `403` | Forbidden | アクセス禁止。権限やIP制限を確認 |
+| `404` | Not Found | ページが見つからない。URLを確認 |
+| `500` | Internal Server Error | サーバーエラー。SQL Injection等の脆弱性の可能性 |
+
+## curlのエラーと対処法
+
+### `curl: (7) Failed to connect`
+
+**原因**: サーバーに接続できない
+
+**対処法**:
+- URLが正しいか確認
+- サーバーが起動しているか確認（AlpacaHackのSpawnボタンを押したか）
+- ネットワーク接続を確認
+
+### `curl: (60) SSL certificate problem`
+
+**原因**: SSL証明書の検証に失敗
+
+**対処法**:
+- `-k` オプションで証明書検証をスキップ: `curl -k https://...`
+- または、証明書を正しくインストール
+
+### `curl: (28) Operation timed out`
+
+**原因**: タイムアウト
+
+**対処法**:
+- `--max-time` オプションでタイムアウト時間を延長: `curl --max-time 30 https://...`
+- ネットワーク接続を確認
+
+### `command not found: curl`
+
+**原因**: curlがインストールされていない
+
+**対処法**:
+- Windows: `winget install curl` または Git Bashを使用
+- Mac: `brew install curl`
+- Linux: `sudo apt install curl`
+
+## 開発者ツールのエラーと対処法
+
+### 開発者ツールが表示されない
+
+**原因**: ショートカットが異なる、または無効化されている
+
+**対処法**:
+- Chrome/Edge: `F12` または `Ctrl+Shift+I` (Windows) / `Cmd+Opt+I` (Mac)
+- Firefox: `F12` または `Ctrl+Shift+I`
+- メニューバーから「開発者ツール」を選択
+
+### Networkパネルにリクエストが表示されない
+
+**原因**: ページリロード前にNetworkパネルを開いていない
+
+**対処法**:
+1. Networkパネルを開く
+2. ページをリロード（`F5`）
+3. リクエスト一覧を確認
+
+## 問題が解けない時のヒントの求め方
+
+### 自力で何分考えるべきか
+
+- **Easy問題**: 10-15分
+- **Medium問題**: 20-30分
+
+### ヒントを見る順番
+
+1. 問題文を再読
+2. 「解法のヒント」を確認
+3. 「詳しいヒント」を確認
+4. 解説を確認
+
+### TAに質問する前のチェックリスト
+
+- [ ] 問題文を最後まで読んだか
+- [ ] ヒントを全て確認したか
+- [ ] エラーメッセージをコピーしたか
+- [ ] 試したことをメモしたか
+
+## 質問時の情報提供ガイドライン
+
+質問する際は、以下の情報を含めてください：
+
+```
+【問題名】
+例: Alpaca Rangers 2
+
+【試したこと】
+例: ?img=../../flag.txt を試したが403エラー
+
+【エラーメッセージ】
+例: HTTP/1.1 403 Forbidden
+
+【使用ツール】
+例: curl, ブラウザ開発者ツール
+
+【スクリーンショット】
+（可能であれば）
+```
+
+## オフライン環境での代替手段
+
+### curlが使えない場合
+
+- **PowerShell**: `Invoke-WebRequest`
+- **Python**: `requests` ライブラリ
+- **ブラウザの開発者ツール**: Networkパネルでリクエストをコピー
+
+## 参考リンク
+
+- [curlのマニュアル](https://curl.se/docs/manpage.html)
+- [OWASP ZAP](https://www.zaproxy.org/)
+- [PortSwigger Web Security Academy](https://portswigger.net/web-security)
