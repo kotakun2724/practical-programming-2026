@@ -1,8 +1,8 @@
 {
-    "label": "第8回: CTF導入",
+    "label": "第8回: Introduction to Capture The Flag",
     "position": 8,
     "link": {
         "type": "generated-index",
-        "description": "CTF（Capture The Flag）の概要と、Webセキュリティの基礎を学びます。HTTPプロトコル、ブラウザ開発者ツールの使い方を理解し、CTFへの第一歩を踏み出します。"
+        "description": "2学期の実践的プログラミングの導入"
     }
 }
