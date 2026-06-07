@@ -1,0 +1,123 @@
+---
+sidebar_position: 7
+---
+
+# 演習: ツールとCookie
+
+今回の講義で学んだcurl、Cookie/Sessionの知識を使って、Daily AlpacaHackの問題を解いてみましょう。
+
+## 演習 1: Message For You（Easy）
+
+**問題リンク**: [https://alpacahack.com/daily/challenges/message-for-you](https://alpacahack.com/daily/challenges/message-for-you)
+
+### 問題概要
+
+Flaskアプリで、`GET /` で発行されるsessionクッキーにflagが含まれています。
+
+### 解法のヒント
+
+1. ページにアクセスします
+2. ブラウザの開発者ツールでCookieを確認します
+3. Flaskのsession cookieは `Payload.Timestamp.Signature` の形式です
+4. Payload部分をBase64デコードしてみましょう
+
+<details>
+<summary>詳しいヒント</summary>
+
+Flaskのsession cookieは、以下の形式で構成されています：
+
+```
+Payload.Timestamp.Signature
+```
+
+Payload部分はURL-safe Base64エンコードされており、さらにzlib圧縮されています。
+
+Pythonでデコードする場合：
+
+```python
+import base64, zlib
+
+cookie = "eyJ...（Payload部分）"
+# URL-safe Base64のパディング復元
+padding = 4 - len(cookie) % 4
+if padding != 4:
+    cookie += "=" * padding
+# デコード + 展開
+payload = base64.urlsafe_b64decode(cookie)
+print(zlib.decompress(payload).decode())
+```
+
+</details>
+
+<details>
+<summary>解説</summary>
+
+Flaskのsession cookieは署名によって改竄はできませんが、データ自体は読み取り可能です。
+
+CookieのPayload部分をデコードすることで、flagが平文で含まれていることを確認できます。
+
+Cookieの構造を理解し、デコードできるようになることが重要です。
+
+</details>
+
+### 参考Writeup
+
+- [paulaygroundによるwriteup（GitHub、韓国語）](https://github.com/paulayground/alpacahack/blob/main/web/Message-For-You/write-up.md)
+
+---
+
+## 演習 2: Flag for Switch（Easy）
+
+**問題リンク**: [https://alpacahack.com/daily/challenges/flag-for-switch](https://alpacahack.com/daily/challenges/flag-for-switch)
+
+### 問題概要
+
+特定のUser-Agentでアクセスするとflagが得られます。
+
+### 解法のヒント
+
+1. ページにアクセスして、通常のレスポンスを確認します
+2. User-Agentヘッダーを変更してリクエストを送信してみましょう
+3. curlの `-H` オプションまたは `-A` オプションを使います
+
+<details>
+<summary>詳しいヒント</summary>
+
+curlでUser-Agentを変更：
+
+```bash
+curl https://サーバーのURL -A "Switch"
+```
+
+または
+
+```bash
+curl https://サーバーのURL -H "User-Agent: Switch"
+```
+
+</details>
+
+<details>
+<summary>解説</summary>
+
+ヘッダー偽装の一種であるUser-Agent偽装を使います。
+
+サーバーが特定のUser-Agentからのアクセスのみを許可している場合、User-Agentを変更することでアクセスできます。
+
+</details>
+
+### 参考Writeup
+
+- [baumroll1234によるwriteup（GitHub）](https://github.com/baumroll0928-spec/myRepository/tree/main/Daily_AlpacaHack/m202605/d18_Flag_for_Switch)
+
+---
+
+## まとめ
+
+今回の演習で学んだこと：
+
+1. **Cookieの構造**（Flask session cookie）を理解し、デコードできる
+2. **ヘッダー偽装**（User-Agent）でアクセス制御を回避できる
+3. **curl**でリクエストを細かく制御できる
+
+次回は、より具体的なリクエスト操作（パラメータ改竄、ヘッダー偽装）を学びます。

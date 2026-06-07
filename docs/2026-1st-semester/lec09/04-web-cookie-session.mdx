@@ -1,0 +1,105 @@
+---
+sidebar_position: 4
+---
+
+# CookieとSession
+
+## Cookieとは
+
+**Cookie**は、Webサーバーがブラウザに送信する小さなデータです。
+
+lec08で学んだように、HTTPは**ステートレス**（状態を保持しない）プロトコルなので、Cookieを使って「ログイン中」などの状態を管理します。
+
+## Sessionとは
+
+**Session**は、サーバー側でユーザーの状態を管理する仕組みです。
+
+### Sessionの仕組み
+
+```
+1. ユーザーがログイン
+2. サーバーがセッションIDを生成（例: abc123）
+3. サーバーがセッション情報を保存
+   Session Store: { "abc123": { "user_id": 1, "role": "admin" } }
+4. セッションIDをCookieとしてブラウザに送信
+5. ブラウザは以降のリクエストにCookieを含める
+6. サーバーはCookieのセッションIDからユーザー情報を取得
+```
+
+## Cookieの属性
+
+```
+Set-Cookie: session_id=abc123; Path=/; HttpOnly; Secure; SameSite=Strict
+```
+
+| 属性 | 説明 |
+|---|---|
+| `Path` | Cookieを送信するパス |
+| `HttpOnly` | JavaScriptからのアクセスを禁止（XSS攻撃でCookieを窃取されるのを防ぐ） |
+| `Secure` | HTTPSでのみ送信 |
+| `SameSite` | クロスサイトリクエストでの送信制限（CSRF攻撃を防ぐ） |
+
+## CookieとSessionの違い
+
+| | Cookie | Session |
+|---|---|---|
+| 保存場所 | ブラウザ（クライアント） | サーバー |
+| セキュリティ | 低い（ユーザーが改竄可能） | 高い（サーバー側で管理） |
+| 用途 | セッションIDのやり取り | ユーザー状態の管理 |
+
+## CTFでのポイント
+
+### 1. Cookieの観察
+
+```bash
+curl -v https://target.com
+```
+
+レスポンスヘッダーの `Set-Cookie` を確認します。
+
+### 2. Cookieの改竄
+
+```bash
+curl https://target.com/admin \
+  -b "session_id=abc123; role=admin"
+```
+
+Cookieの値を変更して、権限昇格や認証バイパスを試みます。
+
+### 3. Cookieの構造
+
+Cookieが以下のような形式の場合：
+
+```
+session=eyJ1c2VyX2lkIjoxLCJyb2xlIjoiYWRtaW4ifQ==
+```
+
+これは**Base64エンコード**（バイナリやテキストデータを、英数字のみの安全な文字列に変換する方式）されたJSONです：
+
+```json
+{"user_id":1,"role":"admin"}
+```
+
+デコードして内容を確認し、改竄できるか試みましょう。
+
+## 実践: Cookieを確認する
+
+### 手順
+
+1. 開発者ツールを開く（`F12`）
+2. **Application**パネル > **Cookies**を選択
+3. サイトのCookie一覧を確認
+
+### 確認ポイント
+
+- `session_id`, `PHPSESSID`, `JSESSIONID` などのセッションCookie
+- `role`, `admin`, `user` などの権限関連Cookie
+- Base64形式のCookie（`eyJ...` で始まる）
+
+## まとめ
+
+CookieとSessionは、Webアプリケーションの**状態管理**に不可欠な仕組みです。
+
+Web CTFでは、Cookieの改竄やセッションの乗っ取りが重要な攻撃手法となります。
+
+それでは、学んだツールを使って実際にDaily AlpacaHackの問題を解いてみましょう。

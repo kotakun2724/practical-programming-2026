@@ -1,0 +1,109 @@
+---
+sidebar_position: 3
+---
+
+# curlコマンド
+
+## 前回の振り返り
+
+前回の演習（Bars）では、JavaScriptによるイベント制限を回避してソースコードを取得しました。今回は、curlのより高度な使い方を学びます。
+
+## 今回の目標
+
+1. **curl**の様々なオプションを身につける
+2. **ヘッダー**や**Cookie**を操作してリクエストを送信できるようになる
+
+## curlとは
+
+**curl**は、コマンドラインからHTTPリクエストを送信するツールです。
+
+Web CTFでは、ブラウザでは難しい細かなリクエスト操作を簡単に行うためにcurlを使います。
+
+## 基本的な使い方
+
+### GETリクエスト
+
+```bash
+curl https://example.com
+```
+
+### レスポンスヘッダーも表示
+
+```bash
+curl -i https://example.com
+```
+
+### ヘッダーのみ表示
+
+```bash
+curl -I https://example.com
+```
+
+## 主なオプション
+
+| オプション | 説明 | 例 |
+|---|---|---|
+| `-X` | HTTPメソッドを指定 | `-X POST` |
+| `-H` | ヘッダーを追加 | `-H "Content-Type: application/json"` |
+| `-d` | リクエストボディを指定 | `-d "key=value"` |
+| `-b` | Cookieを指定 | `-b "session=abc123"` |
+| `-c` | Cookieをファイルに保存 | `-c cookies.txt` |
+| `-v` | 詳細な出力（デバッグ用） | `-v` |
+| `-L` | リダイレクトに追従 | `-L` |
+
+## 実践的な使い方
+
+### POSTリクエスト（フォーム送信）
+
+```bash
+curl -X POST https://example.com/login \
+  -d "username=admin&password=password"
+```
+
+### Cookieを使う
+
+```bash
+curl https://example.com/dashboard \
+  -b "session_id=abc123"
+```
+
+### カスタムヘッダーを追加
+
+```bash
+curl https://example.com \
+  -H "X-Custom-Header: value"
+```
+
+## CTFでの活用法
+
+### 1. レスポンスヘッダーの確認
+
+```bash
+curl -I https://target.com
+```
+
+隠れたヘッダーにflagが見つかることがあります。
+
+### 2. 認証が必要なページへのアクセス
+
+```bash
+curl https://target.com/admin \
+  -b "session=abc123"
+```
+
+### 3. ヘッダーの偽装
+
+```bash
+curl https://target.com \
+  -H "X-Forwarded-For: 127.0.0.1"
+```
+
+ローカルからのアクセスのみ許可されているページを突破できることがあります。
+
+## まとめ
+
+curlは、Web CTFにおいて**リクエストを細かく制御**するために必須のツールです。
+
+ブラウザの開発者ツールで確認したリクエストを、curlで再現・修正して送信することで、効率的に脆弱性を探索できます。
+
+次は、**CookieとSession**について学びます。

