@@ -1,0 +1,76 @@
+---
+sidebar_position: 6
+draft: true
+---
+
+# 演習: Web CTF入門
+
+今回の講義で学んだ内容を使って、実際にDaily AlpacaHackの問題を解いてみましょう。
+
+:::info 事前準備
+まだアカウントを持っていない場合は、[https://alpacahack.com/signup](https://alpacahack.com/signup) でアカウントを作成してください。
+:::
+
+## 問題へのアクセス方法
+
+1. 問題リンクにアクセスします
+2. 「Spawn Challenge Server」ボタンをクリックしてサーバーを起動します
+3. 表示されたURLにアクセスして問題を解きます
+4. flagを見つけたら、ページ下部のフォームから送信します
+
+## 演習: Bars（Easy）
+
+**問題リンク**: [https://alpacahack.com/daily/challenges/bars](https://alpacahack.com/daily/challenges/bars)
+
+### 問題概要
+
+Webページにflagが表示されていますが、JavaScriptで右クリック・文字選択・開発者ツール（F12）が無効化されています。
+
+### 解法のヒント
+
+1. ページにアクセスしてみましょう
+2. F12が無効化されていますが、他の方法でソースコードを確認できます
+3. ブラウザのメニューバーから開発者ツールを開く、またはcurlで直接リクエストを送信してみましょう
+
+<details>
+<summary>詳しいヒント</summary>
+
+JavaScriptによるイベント制限は、クライアント側でのみ動作します。
+
+- ブラウザのメニューバーから開発者ツールを開く
+- curlで直接HTTPリクエストを送信する
+- ページを保存してからソースを確認する
+
+などの方法でソースコードを取得できます。
+
+</details>
+
+<details>
+<summary>解説</summary>
+
+JavaScriptによるイベント制限（右クリック禁止、F12禁止等）は、クライアント側でのみ動作するため、別の方法でソースコードを取得すれば回避できます。
+
+```bash
+curl https://サーバーのURL
+```
+
+curlで直接HTTPリクエストを送信すると、JavaScriptが実行されないため、制限にかからずにソースコードを取得できます。
+
+**クライアント側の制限は信頼できない**ことを示す問題です。
+
+</details>
+
+### 参考Writeup
+
+- [作者によるwriteup（Notion）](https://www.notion.so/kakur41-wrteup/Daily-AlpacaHack-3-1-3-7-31cda8520c0280e4b4cffd014262ee3b)
+
+---
+
+## まとめ
+
+今回の演習で学んだこと：
+
+1. **クライアント側の制限**（JavaScriptによるイベント制限）は信頼できない
+2. **curl**を使うと、生のHTTPリクエスト/レスポンスを確認できる
+
+次回は、より高度なcurlの使い方とCookie/Sessionの仕組みについて学びます。

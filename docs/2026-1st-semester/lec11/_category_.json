@@ -1,0 +1,8 @@
+{
+    "label": "第11回: Injection攻撃",
+    "position": 11,
+    "link": {
+        "type": "generated-index",
+        "description": "SQL Injection、Command Injectionの原理と手法を学び、データベースやシステムを標的とする攻撃を理解します。"
+    }
+}

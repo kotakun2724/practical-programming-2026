@@ -1,0 +1,173 @@
+---
+sidebar_position: 3
+draft: true
+---
+
+# パラメータ改竄
+
+## 前回の振り返り
+
+前回の演習（Message For You, Flag for Switch）では、Flaskのsession cookieをデコードし、User-Agentを偽装しました。今回は、パラメータやヘッダーを直接書き換える攻撃を学びます。
+
+## 今回の目標
+
+1. **パラメータ改竄**の仕組みを理解する
+2. **ディレクトリトラバーサル**の手法を学ぶ
+3. **ヘッダー偽装**でアクセス制御を回避する方法を理解する
+
+## パラメータ改竄とは
+
+**パラメータ改竄（Parameter Tampering）** は、HTTPリクエストのパラメータを意図的に変更する攻撃手法です。アプリケーションの意図しない動作を引き起こします。
+
+### 前提条件
+
+この攻撃が成立するには：
+- アプリケーションがクライアント側から送信されたパラメータを信頼している
+- サーバー側での認可チェックが不十分、または欠落している
+- Cookie、フォームデータ、URLパラメータが適切に検証されていない
+
+### 攻撃成功時のレスポンス例
+
+```http
+HTTP/1.1 200 OK
+Content-Type: application/json
+
+{"user": "admin", "role": "administrator", "flag": "FLAG{parameter_tampering_success}"}
+```
+
+### 攻撃失敗時のエラー例
+
+```http
+HTTP/1.1 403 Forbidden
+{"error": "Access denied"}
+```
+
+または
+
+```http
+HTTP/1.1 400 Bad Request
+{"error": "Invalid parameter value"}
+```
+
+### 成功/失敗の判定基準
+
+- **成功**: 管理者権限でのアクセス、flagの表示、意図しないデータの変更
+- **失敗**: 403 Forbidden、400 Bad Request、または通常のエラーページ
+
+## 攻撃の対象となるパラメータ
+
+### 1. URLクエリパラメータ
+
+```
+https://example.com/profile?id=123
+```
+
+`id=123` を `id=1` に変更して、他のユーザーの情報にアクセスできるか試します。
+
+### 2. フォームデータ
+
+```html
+<form method="POST" action="/update">
+  <input type="hidden" name="role" value="user">
+  <input type="text" name="username">
+</form>
+```
+
+`role=user` を `role=admin` に変更します。
+
+### 3. Cookie
+
+```
+Cookie: session_id=abc123; role=user
+```
+
+`role=user` を `role=admin` に変更します。
+
+## 実践: curlでパラメータ改竄
+
+### GETパラメータの変更
+
+```bash
+curl "https://target.com/profile?id=1"
+```
+
+### POSTデータの変更
+
+```bash
+curl -X POST https://target.com/update \
+  -d "username=admin&role=admin"
+```
+
+### Cookieの変更
+
+```bash
+curl https://target.com/admin \
+  -b "role=admin"
+```
+
+## よくある脆弱性パターン
+
+### 1. 認可の不備（Broken Access Control）
+
+**認可（Authorization）**とは「その操作をする権限があるか」のチェックです。これが不十分だと、ユーザーが他のユーザーのリソースにアクセスできてしまいます。
+
+```
+/profile?id=123  →  /profile?id=1  （他人のプロフィールが見える）
+```
+
+### 2. 隠しフィールドの改竄
+
+HTMLの `<input type="hidden">` はユーザーからは見えないだけで、簡単に変更可能。
+
+```html
+<input type="hidden" name="price" value="100">
+```
+
+を `value="1"` に変更して、商品を安く購入できるか試す。
+
+### 3. 権限レベルの変更
+
+Cookieやセッションに権限情報が含まれている場合。
+
+```
+role=user  →  role=admin
+is_admin=0  →  is_admin=1
+```
+
+### 4. ディレクトリトラバーサル
+
+ファイル読み込みのパラメータで、`../` を使って意図しないファイルを読み取る攻撃です。
+
+```
+?file=report.txt  →  ?file=../../etc/passwd
+```
+
+サーバー側で `../` をフィルタリングしていても、不完全なフィルタはバイパスされる可能性があります。
+
+```
+# replace("../", "") に対するバイパス例
+....//....//flag.txt
+# 1回目の置換で真ん中の ../ が削除され、結果として ../ が残る
+```
+
+## 防御方法
+
+### サーバー側での検証
+
+- パラメータの値を必ずサーバー側で検証する
+- セッション情報はサーバー側で管理する
+- 認可チェックは必ずサーバー側で行う
+
+## CTFでのポイント
+
+1. **全てのパラメータを観察する**: URL、フォーム、Cookie
+2. **意味のあるパラメータを探す**: `id`, `user`, `role`, `admin`, `price` など
+3. **境界値を試す**: `0`, `-1`, `9999`, `admin` など
+
+## まとめ
+
+パラメータ改竄は、Web CTFの**最も基本的で重要な攻撃手法**の一つです。
+
+「クライアント側のデータは信頼できない」という原則を理解し、全てのパラメータを疑ってかかりましょう。
+
+次に、HTTPヘッダーの偽装について学びます。

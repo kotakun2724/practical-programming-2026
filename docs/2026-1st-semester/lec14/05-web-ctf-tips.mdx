@@ -1,0 +1,138 @@
+---
+sidebar_position: 5
+draft: true
+---
+
+# CTF攻略Tips
+
+## Web CTFの解き方
+
+### 1. 問題文を注意深く読む
+
+問題文には必ずヒントが含まれています。
+
+- 注目すべき機能や挙動
+- 制約条件
+
+### 2. 実際に触ってみる
+
+与えられたURLにアクセスして、以下のことを確認します。
+
+- どのようなページが表示されるか
+- どのような機能があるか
+- URLの構造（パラメータ、パス）
+- レスポンスヘッダー、Cookie
+
+### 3. 脆弱性を探す
+
+- 入力欄に特殊な文字を入れてみる
+- URLのパラメータを書き換えてみる
+- 隠れたエンドポイントを探してみる
+- エラーメッセージを確認する
+
+### 4. flagを取得する
+
+脆弱性を突いて、隠されたflagを取得します。
+
+## 問題の分類方法
+
+問題の挙動から脆弱性を推測するフロー：
+
+| 問題の挙動 | 疑われる脆弱性 | 最初に試すこと |
+|---|---|---|
+| ログインフォームがある | SQL Injection, NoSQL Injection | `admin'--`, `{"$ne":""}` |
+| ファイル読み込みがある | ディレクトリトラバーサル, LFI | `../`, `....//` |
+| 入力値が画面に表示される | XSS | `<script>alert(1)</script>` |
+| 操作後に別のページに遷移 | CSRF | CSRFトークンの有無確認 |
+| User-AgentやIPでアクセス制御 | ヘッダー偽装 | `X-Forwarded-For`, `User-Agent` |
+| Cookieにデータが含まれる | Cookie改竄, JWT脆弱性 | Base64デコード、構造確認 |
+| コマンド実行の結果が返る | Command Injection | `; ls`, `$(cat /flag)` |
+
+## 脆弱性別のチェックリスト
+
+### 認証・セッション
+
+- [ ] デフォルトの認証情報（admin/admin）
+- [ ] SQL Injection（`admin'--`）
+- [ ] セッションIDの推測
+- [ ] JWTの脆弱性（`alg: none`、弱い秘密鍵）
+
+### 入力値操作
+
+- [ ] パラメータ改竄（`role=user` → `role=admin`）
+- [ ] ヘッダー偽装（`X-Forwarded-For: 127.0.0.1`）
+
+### Injection
+
+- [ ] SQL Injection（`' OR 1=1--`）
+- [ ] Command Injection（`; ls`, `| cat /flag`）
+- [ ] XSS（`<script>alert(1)</script>`）
+
+### アクセス制御
+
+- [ ] 隠れたエンドポイント（`/admin`, `/api/admin`）
+- [ ] IDOR（`/profile?id=1` → `/profile?id=2`）
+- [ ] 特権昇格（`role=user` → `role=admin`）
+
+## ツール選択基準
+
+| 場面 | 推奨ツール | 理由 |
+|---|---|---|
+| 単発のリクエスト送信 | curl | 手軽、スクリプト化可能 |
+| リクエストの改変・繰り返し | curl + 開発者ツール | Networkパネルでリクエストをコピーして編集 |
+| SQL Injectionの自動化 | sqlmap | 自動検出・エクスプロイト |
+| ディレクトリ列挙 | gobuster, dirsearch | 隠しパスの発見 |
+| JWTの解析 | jwt.io, jwt_tool | デコード・改竄・検証 |
+
+## flagの形式と提出方法
+
+### flagの形式
+
+- `flag{...}` — 一般的な形式
+- `Alpaca{...}` — AlpacaHack
+
+### flagが見つからない場合
+
+- flagは通常、`/flag.txt`、`/flag`、環境変数、データベース内に存在
+- ファイル名が異なる場合もある：`flag.txt`, `flag.py`, `flag.json` 等
+
+## 行き詰まったとき
+
+### 1. 問題文を読み直す
+
+見落としているヒントがないか確認します。
+
+### 2. 別のアプローチを試す
+
+同じ脆弱性でも、異なるペイロードや手法を試します。
+
+### 3. 休憩する
+
+長時間考えると、視野が狭くなることがあります。
+
+## まとめ
+
+Web CTFは、**観察力**と**創造力**が重要です。
+
+- 全ての入力欄とパラメータを試す
+- エラーメッセージとレスポンスを詳しく確認する
+- 様々な攻撃手法を組み合わせる
+
+諦めずに、粘り強く取り組みましょう！
+
+## 参考リンク
+
+### 学習リソース
+
+- [PortSwigger Web Security Academy](https://portswigger.net/web-security): 無料のWebセキュリティ学習プラットフォーム
+- [OWASP Top 10](https://owasp.org/www-project-top-ten/): Webアプリケーションのセキュリティリスク一覧
+- [Hack The Box](https://www.hackthebox.com/): CTF練習プラットフォーム
+- [TryHackMe](https://tryhackme.com/): 初心者向けCTF学習プラットフォーム
+
+### キャリアパス
+
+Webセキュリティのスキルは、以下のキャリアで活かせます：
+
+- **セキュリティエンジニア**: 企業のセキュリティインシデント対応
+- **ペネトレーションテスター**: 脆弱性診断の専門家
+- **バグバウンティハンター**: [HackerOne](https://www.hackerone.com/)、[Bugcrowd](https://www.bugcrowd.com/) 等で報酬を得る

@@ -1,0 +1,148 @@
+---
+sidebar_position: 6
+draft: true
+---
+
+# 演習: 総合問題
+
+今回の講義で学んだ全ての知識を使って、Daily AlpacaHackの問題を解いてみましょう。
+
+## 演習 1: Flag for localhost（Easy）
+
+**問題リンク**: [https://alpacahack.com/daily/challenges/flag-for-localhost](https://alpacahack.com/daily/challenges/flag-for-localhost)
+
+### 問題概要
+
+Nginxリバースプロキシ + Expressアプリで、`127.0.0.1` からのアクセスのみflagが表示されます。
+
+### 解法のヒント
+
+1. ページにアクセスします
+2. `127.0.0.1` からのアクセスのみflagが表示されます
+3. `X-Forwarded-For` ヘッダーを偽装してみましょう
+4. Nginxが末尾に実IPを追加しますが、Expressは最左端のIPを参照します
+
+<details>
+<summary>詳しいヒント</summary>
+
+`X-Forwarded-For: 127.0.0.1` ヘッダーを付けてリクエストします。
+
+```bash
+curl https://サーバーのURL \
+  -H "X-Forwarded-For: 127.0.0.1"
+```
+
+Nginxは末尾に実IPを追加しますが、Expressが `trust proxy: true` の場合、最左端のIPを `req.ip` として参照します。
+
+</details>
+
+<details>
+<summary>解説</summary>
+
+IPアドレススプーフィング（`X-Forwarded-For` ヘッダーインジェクション）を使います。
+
+`X-Forwarded-For: 127.0.0.1` を送信することで、ローカルからのアクセスと認識されます。
+
+ヘッダー偽装の代表的な問題です。
+
+</details>
+
+### 参考Writeup
+
+- [nirvanaによるwriteup](https://sl9-1994.github.io/posts/flag_for_localhost/)
+- [tadanobutubutuによるwriteup（GitHub）](https://github.com/tadanobutubutu/flag-for-localhost-solve/blob/main/README.md)
+
+---
+
+## 演習 2: Kakuzuke（Medium）
+
+**問題リンク**: [https://alpacahack.com/daily/challenges/kakuzuke](https://alpacahack.com/daily/challenges/kakuzuke)
+
+### 問題概要
+
+`choice` パラメータ（5文字以下の制約あり）でファイルパスを指定し、`choices/` 以下のファイルを読み出せます。`/flag.txt` を読み取ることが目標です。
+
+### 解法のヒント
+
+1. `express.urlencoded({extended: false})` は同一キーを配列としてパースします
+2. `choice=&choice=/../../../flag.txt` を送信すると、配列が展開されます
+3. 配列は文字列化されると `,/../../../flag.txt` になります（カンマ区切り）
+4. `path.join("choices/", ",/../../../flag.txt")` は `choices/../../../flag.txt` として解釈されます
+5. 5文字制限は配列の長さ（=2）でチェックされるため、各要素の文字数制限を回避できます
+
+<details>
+<summary>詳しいヒント</summary>
+
+`application/x-www-form-urlencoded` で同一キーを複数送信すると、配列としてパースされます。
+
+```
+choice=&choice=/../../../flag.txt
+```
+
+配列はサーバー側で文字列化されると `,/../../../flag.txt` になります。`path.join` はこのカンマをパスの一部として扱い、正規化します。
+
+また、5文字制限は配列の要素数（=2）でチェックされるため、各要素の文字数制限を回避できます。
+
+</details>
+
+<details>
+<summary>解説</summary>
+
+LFI（Local File Inclusion）と、配列を使ったフィルタバイパスの問題です。
+
+`express.urlencoded` の配列パース仕様を悪用することで、5文字の制限を回避してディレクトリトラバーサルを実現できます。
+
+</details>
+
+### 参考Writeup
+
+- [goroshirowによるwriteup（GitHub）](https://github.com/goroshirow/CTF-WriteUps/tree/main/AlpacaHack/2026May/Kakuzuke)
+
+---
+
+## 最終課題: 好きな問題を解く
+
+### 課題
+
+Daily AlpacaHackのWebカテゴリから、まだ解いていない問題を1つ選んで解いてください。
+
+### 演習で使用した問題（復習用）
+
+- **Bars** (Easy): クライアント制限回避
+- **Message For You** (Easy): Flask cookieデコード
+- **Flag for Switch** (Easy): User-Agent偽装
+- **Alpaca Rangers 2** (Easy): ディレクトリトラバーサル
+- **secret-table-2** (Medium): SQL Injection
+- **Alert my Flag** (Medium): XSSフィルターバイパス
+- **One More Login Challenge** (Medium): NoSQL Injection
+- **Flag for localhost** (Easy): XFFヘッダー偽装
+- **Kakuzuke** (Medium): LFI + 配列バイパス
+
+### 未演習の推奨問題（自学用）
+
+- **No Content** (Easy): HTTP 204の仕様、TCPレベルでの観測
+- **Cache Me If You Can** (Easy): HTTPキャッシュの制御
+
+---
+
+## まとめ
+
+全7回の講義で、Web CTFの基礎を学びました。
+
+### 学んだこと
+
+1. **HTTPの基礎**: リクエスト/レスポンス、メソッド、ヘッダー、Cookie
+2. **ツールの使い方**: ブラウザ開発者ツール、curl
+3. **リクエスト操作**: パラメータ改竄、ヘッダー偽装、ディレクトリトラバーサル
+4. **Injection攻撃**: SQL Injection、NoSQL Injection
+5. **XSS**: クロスサイトスクリプティング、フィルターバイパス
+6. **認証**: Cookie、Session、JWT、NoSQL Injection
+7. **高度な攻撃**: 特権昇格、LFI、セッションハイジャック
+
+### これからの学習
+
+- Daily AlpacaHackで毎日問題を解く
+- Writeupを読んで、新しい手法を学ぶ
+- CTFイベントに参加する
+
+**Happy Hacking!**
