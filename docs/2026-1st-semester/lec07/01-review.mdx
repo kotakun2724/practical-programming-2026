@@ -1,0 +1,304 @@
+---
+sidebar_position: 2
+---
+
+# 前回課題解説
+
+このページでは、前回課題で扱った **ALDS1_2_A / ALDS1_2_B / ALDS1_4_A / ALDS1_4_B** をまとめています。
+今回学ぶ「再帰と分割統治法」の前提となる、ソート・探索の考え方を確認しましょう。
+
+## ALDS1_2_A: Bubble Sort
+
+配列を昇順にバブルソートし、**交換回数（swap count）**を出力します。
+内側ループは `j = n - 1; j > i; j--` のように **後ろから前へ** 走査するのが ALDS1_2 の典型実装です。
+
+```c
+#include <stdio.h>
+
+int main(void) {
+    int n;
+    scanf("%d", &n);
+
+    int a[100];
+    for (int i = 0; i < n; i++) scanf("%d", &a[i]);
+
+    int swap_count = 0;
+    for (int i = 0; i < n - 1; i++) {
+        for (int j = n - 1; j > i; j--) {
+            if (a[j - 1] > a[j]) {
+                int t = a[j - 1];
+                a[j - 1] = a[j];
+                a[j] = t;
+                swap_count++;
+            }
+        }
+    }
+
+    for (int i = 0; i < n; i++) {
+        if (i > 0) printf(" ");
+        printf("%d", a[i]);
+    }
+    printf("\n%d\n", swap_count);
+    return 0;
+}
+```
+
+### C++版
+
+```cpp
+#include <iostream>
+#include <vector>
+using namespace std;
+
+int main() {
+    int n;
+    cin >> n;
+
+    vector<int> a(n);
+    for (int i = 0; i < n; i++) cin >> a[i];
+
+    int swap_count = 0;
+    for (int i = 0; i < n - 1; i++) {
+        for (int j = n - 1; j > i; j--) {
+            if (a[j - 1] > a[j]) {
+                swap(a[j - 1], a[j]);
+                swap_count++;
+            }
+        }
+    }
+
+    for (int i = 0; i < n; i++) {
+        if (i > 0) cout << ' ';
+        cout << a[i];
+    }
+    cout << '\n' << swap_count << '\n';
+    return 0;
+}
+```
+
+:::tip ポイント
+`if (a[j-1] > a[j])` の中身で実際に交換した回数だけ `swap_count++` するのが重要です。
+比較回数（条件式の評価回数）ではないので注意しましょう。
+:::
+
+---
+
+## ALDS1_2_B: Selection Sort
+
+未整列部分から**最小値の位置**を見つけて、先頭と交換します。
+**実際に交換が起きたとき**だけカウントするのがポイントです（`minj != i` のときのみ `swap_count++`）。
+
+```c
+#include <stdio.h>
+
+int main(void) {
+    int n;
+    scanf("%d", &n);
+
+    int a[100];
+    for (int i = 0; i < n; i++) scanf("%d", &a[i]);
+
+    int swap_count = 0;
+    for (int i = 0; i < n - 1; i++) {
+        int minj = i;
+        for (int j = i + 1; j < n; j++) {
+            if (a[j] < a[minj]) minj = j;
+        }
+        if (minj != i) {
+            int t = a[i]; a[i] = a[minj]; a[minj] = t;
+            swap_count++;
+        }
+    }
+
+    for (int i = 0; i < n; i++) {
+        if (i > 0) printf(" ");
+        printf("%d", a[i]);
+    }
+    printf("\n%d\n", swap_count);
+    return 0;
+}
+```
+
+### C++版
+
+```cpp
+#include <iostream>
+#include <vector>
+using namespace std;
+
+int main() {
+    int n;
+    cin >> n;
+
+    vector<int> a(n);
+    for (int i = 0; i < n; i++) cin >> a[i];
+
+    int swap_count = 0;
+    for (int i = 0; i < n - 1; i++) {
+        int minj = i;
+        for (int j = i + 1; j < n; j++) {
+            if (a[j] < a[minj]) minj = j;
+        }
+        if (minj != i) {
+            swap(a[i], a[minj]);
+            swap_count++;
+        }
+    }
+
+    for (int i = 0; i < n; i++) {
+        if (i > 0) cout << ' ';
+        cout << a[i];
+    }
+    cout << '\n' << swap_count << '\n';
+    return 0;
+}
+```
+
+:::warning `minj == i` のときは交換しない
+すでに最小値が先頭にあるときに無条件で交換してしまうと、`swap_count` が正解より多くなってしまいます。
+`if (minj != i)` の判定を入れるのを忘れないようにしましょう。
+:::
+
+---
+
+## ALDS1_4_A: Linear Search
+
+`T` の各値について、`S` を線形探索して**見つかった個数**を数えます。
+1つ見つかった時点で `break` するのがポイントです（重複カウントしないため）。
+
+```c
+#include <stdio.h>
+
+int main(void) {
+    int n;
+    scanf("%d", &n);
+
+    int s[10000];
+    for (int i = 0; i < n; i++) scanf("%d", &s[i]);
+
+    int q;
+    scanf("%d", &q);
+
+    int cnt = 0;
+    for (int i = 0; i < q; i++) {
+        int key;
+        scanf("%d", &key);
+        for (int j = 0; j < n; j++) {
+            if (s[j] == key) { cnt++; break; }
+        }
+    }
+
+    printf("%d\n", cnt);
+    return 0;
+}
+```
+
+### C++版
+
+```cpp
+#include <iostream>
+#include <vector>
+using namespace std;
+
+int main() {
+    int n;
+    cin >> n;
+
+    vector<int> s(n);
+    for (int i = 0; i < n; i++) cin >> s[i];
+
+    int q;
+    cin >> q;
+
+    int cnt = 0;
+    for (int i = 0; i < q; i++) {
+        int key;
+        cin >> key;
+        for (int j = 0; j < n; j++) {
+            if (s[j] == key) { cnt++; break; }
+        }
+    }
+
+    cout << cnt << '\n';
+    return 0;
+}
+```
+
+---
+
+## ALDS1_4_B: Binary Search
+
+`S` がソート済みなので、二分探索で各 `T[i]` を `O(log N)` で判定できます。
+線形探索（`O(NM)`）だと TLE する可能性があるので注意しましょう。
+
+```c
+#include <stdio.h>
+
+int main(void) {
+    int n;
+    scanf("%d", &n);
+
+    int s[100000];
+    for (int i = 0; i < n; i++) scanf("%d", &s[i]);
+
+    int q;
+    scanf("%d", &q);
+
+    int cnt = 0;
+    for (int i = 0; i < q; i++) {
+        int key;
+        scanf("%d", &key);
+
+        int lo = 0, hi = n - 1;
+        while (lo <= hi) {
+            int mid = (lo + hi) / 2;
+            if (s[mid] == key) { cnt++; break; }
+            else if (s[mid] < key) lo = mid + 1;
+            else hi = mid - 1;
+        }
+    }
+
+    printf("%d\n", cnt);
+    return 0;
+}
+```
+
+### C++版
+
+```cpp
+#include <iostream>
+#include <vector>
+#include <algorithm>
+using namespace std;
+
+int main() {
+    int n;
+    cin >> n;
+
+    vector<int> s(n);
+    for (int i = 0; i < n; i++) cin >> s[i];
+
+    int q;
+    cin >> q;
+
+    int cnt = 0;
+    for (int i = 0; i < q; i++) {
+        int key;
+        cin >> key;
+        if (binary_search(s.begin(), s.end(), key)) cnt++;
+    }
+
+    cout << cnt << '\n';
+    return 0;
+}
+```
+
+:::tip 終了条件 `lo <= hi` を間違えない
+`lo < hi` にしてしまうと、配列の末尾要素が探索されずに WA になることがあります。
+「`lo` と `hi` が等しいとき、その1要素はまだ未確認」という感覚を持ちましょう。
+:::
+
+---
+
+ここまで学んだソート・探索は **ループだけで書ける** アルゴリズムでした。
+次は、関数が自分自身を呼び出す **再帰** という新しい道具を導入します。
