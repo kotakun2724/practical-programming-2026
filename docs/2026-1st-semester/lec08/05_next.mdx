@@ -9,10 +9,54 @@ draft: true
 
 ### Crypto
 
+- 最大公約数を求めるコードを実装する．
+- 拡張ユークリッドの互助法を理解し，実装する．
+
 ### Web
 
 ## 今回の課題
 
 ### Crypto
 
+1. CryptoHack のアカウント作成
+    - アカウントを作成したら，slack の DM で海賀宛に各アカウントのユーザー ID を送信してください．[演習課題の提出について](./04_practice.mdx#演習課題の提出について) を参照．
+    - https://cryptohack.org/challenges/introduction/ の Finding Flags．
+2. https://alpacahack.com/challenges/welcome
+
+#### ヒント
+1. CryptoHack のアカウント作成
+
+    https://cryptohack.org/register/ からアカウントを作成してください．
+    
+    ![cryptohack sign up](./img/cryptohack_signup.png)
+    
+    > Solve this Roman emperor's cipher:
+    
+    は，"このシーザー暗号を解読してください" と言われています．
+
+    シーザー暗号を解読するコードを自分で作成するか，外部サイト（[CyberChef](https://gchq.github.io/CyberChef/) など）を用いるなどしてください．
+    
+    #### シーザー暗号
+    シーザー暗号は古代ローマの軍事的指導者ガイウス・ユリウス・カエサルによって考案された古典暗号です．
+    
+    アルゴリズムはとてもシンプルで，秘匿したい文（平文）の各文字を辞書順に $n$ 文字分ずらすだけです．
+    つまり，$n$ 文字分を逆にずらすことで復号することができます．
+
+    仮に $n$ がわからなくてもアルファベットは高々26個しか存在しないため，$n$ が1 ~ 26 の全ての場合を試す総当たり攻撃を行えば良い．
+
+    ##### 例 $n=3$ の場合
+
+    ```text
+    | A | B | C |...| Y | Z | <- 平文
+      |   |   |   |   |   | 辞書順に3文字ぶんずらす．
+      ▼   ▼   ▼   ▼   ▼   ▼
+    | D | E | F |...| B | C | <- 暗号文
+    ```
+
+    上の表を用いると
+    平文 "HELLO WORLD" は暗号文 "KHOOR ZRUOG" となる．
+
 ### Web
+
+### 締め切り
+次回講義の前日 23:59 まで．
