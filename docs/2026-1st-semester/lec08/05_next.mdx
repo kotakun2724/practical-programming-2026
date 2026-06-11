@@ -14,6 +14,9 @@ draft: true
 
 ### Web
 
+- curlの便利な使い方
+- Cookie/Sessionの仕組み
+
 ## 今回の課題
 
 ### Crypto
@@ -57,6 +60,33 @@ draft: true
     平文 "HELLO WORLD" は暗号文 "KHOOR ZRUOG" となる．
 
 ### Web
+
+#### 問題リンク
+
+Bars（Easy）: [https://alpacahack.com/daily/challenges/bars](https://alpacahack.com/daily/challenges/bars)
+
+#### 問題概要
+
+Webページにflagが表示されていますが、JavaScriptで右クリック・文字選択・開発者ツール（F12）が無効化されています。
+
+#### ヒント
+
+1. JavaScriptによるイベント制限は、クライアント側でのみ動作します。
+1. F12が無効化されていますが、他の方法でソースコードを確認できます
+
+<details>
+<summary>詳しいヒント</summary>
+
+JavaScriptによるイベント制限（右クリック禁止、F12禁止等）はクライアント側でのみ動作するため、別の方法でソースコードを取得すれば回避できます。
+
+- ブラウザのメニューバーから開発者ツールを開く
+- curlで直接HTTPリクエストを送信する
+- ページを保存してからソースを確認する
+- JavaScriptを無効化する
+
+などの方法でイベント制限を回避できます。
+
+</details>
 
 ### 締め切り
 次回講義の前日 23:59 まで．
