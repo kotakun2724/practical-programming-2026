@@ -1,32 +1,43 @@
 ---
-sidebar_position: 4
+sidebar_position: 6
 draft: true
 ---
 
 # HTTPの基礎
 
+## URLの構造
+
+URLは、Web上のリソース（ページやAPIなど）を指し示すための文字列です。
+
+```
+https://example.com/path/to/page?key=value
+```
+
+| 構成要素 | 説明 |
+|---|---|
+| `https` | プロトコル |
+| `example.com` | ホスト名 |
+| `/path/to/page` | パス |
+| `key=value` | クエリパラメータ（GETパラメータ） |
+
+
 ## HTTPとは
 
-**HTTP（HyperText Transfer Protocol）**は、主にWebブラウザとWebサーバー間で使われるプロトコルです。
+**HTTP（HyperText Transfer Protocol）** は、主にWebブラウザとWebサーバー間で使われるプロトコルです。
 
-## httpはステートレス
+:::info
 
 HTTPは**ステートレス**（状態を保持しない）プロトコルです。つまり、サーバーは「さっきのログイン」と「今のリクエスト」が同じユーザーか分かりません。
 
 そこで**Cookie**という仕組みを使います。Cookieは、サーバーがブラウザに渡す「身分証」のようなものです。
 Cokieについては第9回で解説します。
 
+:::
+
 ## HTTPリクエスト
 
-ブラウザがサーバーに送るメッセージを**リクエスト**と呼びます。
-
-### リクエストの例
-
-```http
-GET /index.html HTTP/1.1
-Host: example.com
-Cookie: session_id=abc123
-```
+クライアントがサーバーに送るメッセージを**リクエスト**と呼びます。
+皆さんがブラウザでURLを入力してページを開くと、ブラウザはサーバーにHTTPのGETリクエストを送ります。
 
 ### 主なHTTPメソッド
 
@@ -45,19 +56,17 @@ Cookie: session_id=abc123
 | `Cookie` | サーバーから発行されたCookie（身分証） |
 | `Content-Type` | リクエストボディの形式 |
 
-## HTTPレスポンス
-
-サーバーがブラウザに返すメッセージを**レスポンス**と呼びます。
-
-### レスポンスの例
+### リクエストの例
 
 ```http
-HTTP/1.1 200 OK
-Content-Type: text/html
-Set-Cookie: session_id=xyz789
-
-<html>...</html>
+GET /index.html HTTP/1.1
+Host: example.com
+Cookie: session_id=abc123
 ```
+
+## HTTPレスポンス
+
+サーバーがクライアントに返すメッセージを**レスポンス**と呼びます。
 
 ### 主なステータスコード
 
@@ -77,26 +86,21 @@ Set-Cookie: session_id=xyz789
 | `Set-Cookie` | Cookieの発行（身分証の配布） |
 | `Location` | リダイレクト先 |
 
-## URLの構造
+### レスポンスの例
 
-```
-https://example.com/path/to/page?key=value
-```
+```http
+HTTP/1.1 200 OK
+Content-Type: text/html
+Set-Cookie: session_id=xyz789
 
-| 構成要素 | 説明 |
-|---|---|
-| `https` | プロトコル |
-| `example.com` | ホスト名 |
-| `/path/to/page` | パス |
-| `key=value` | クエリパラメータ（GETパラメータ） |
+<html>...</html>
+```
 
 ## CTFでのポイント
 
-Web問題では、以下の点を意識しましょう：
+Web問題では、以下の点を意識しましょう
 
 1. **リクエストを観察する**: ブラウザがどんなリクエストを送っているか確認する
 2. **レスポンスを確認する**: ステータスコード、ヘッダー、ボディを詳しく見る
 3. **パラメータを操作する**: URLのパラメータを書き換えてみる
 4. **Cookieを確認する**: どのようなCookieが設定されているか確認する
-
-次は、これらの確認に使う**ブラウザ開発者ツール**の使い方を学びます。
