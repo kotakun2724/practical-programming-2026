@@ -1,0 +1,63 @@
+---
+sidebar_position: 4
+draft: true
+---
+
+# 拡張ユークリッドの互除法 (Extended GCD)
+
+## ベズーの等式 (Bézout's identity)
+
+任意の整数 $a, b$ に対して，次を満たす整数 $x, y$ が存在します．
+
+$$ax + by = \text{gcd}(a, b)$$
+
+この $x, y$ を求めるアルゴリズムが**拡張ユークリッドの互除法**です．
+
+## なぜこれが必要なのか？
+
+暗号学（特に RSA 暗号）において，**逆元 (Modular Inverse)** を求める際に非常に重要になります．
+
+例えば，$ax \equiv 1 \pmod n$ となる $x$ を探したいとき，これは $ax + ny = 1$ という方程式を解くことと同じです（$\text{gcd}(a, n) = 1$ の場合）．
+
+## アルゴリズムの考え方
+
+ユークリッドの互除法の各ステップを逆順にたどることで，$x, y$ を求めることができます．
+
+### 例: $111x + 30y = 3$ を解く
+
+ユークリッドの互除法のステップを振り返ります．
+1. $111 = 3 \times 30 + 21 \implies 21 = 111 - 3 \times 30$
+2. $30 = 1 \times 21 + 9 \implies 9 = 30 - 1 \times 21$
+3. $21 = 2 \times 9 + 3 \implies 3 = 21 - 2 \times 9$
+
+これらを下から順に代入していきます．
+
+- $3 = 21 - 2 \times \mathbf{9}$
+- 2番目の式 $9 = 30 - 1 \times 21$ を代入:
+    - $3 = 21 - 2 \times (30 - 1 \times 21)$
+    - $3 = 3 \times 21 - 2 \times 30$
+- 1番目の式 $21 = 111 - 3 \times 30$ を代入:
+    - $3 = 3 \times (111 - 3 \times 30) - 2 \times 30$
+    - $3 = 3 \times 111 - 11 \times 30$
+
+よって，$x = 3, y = -11$ と求まりました．
+
+## Python での実装
+
+再帰を使うと非常にシンプルに実装できます．
+
+```python
+def extended_gcd(a, b):
+    if a == 0:
+        return b, 0, 1
+    else:
+        g, y, x = extended_gcd(b % a, a)
+        return g, x - (b // a) * y, y
+
+# 使用例
+g, x, y = extended_gcd(111, 30)
+print(f"gcd: {g}, x: {x}, y: {y}")
+# gcd: 3, x: 3, y: -11
+```
+
+この `extended_gcd` 関数は，暗号の実装で何度も登場するので，覚えておくと便利です．

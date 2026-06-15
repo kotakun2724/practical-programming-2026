@@ -1,0 +1,51 @@
+---
+sidebar_position: 2
+draft: true
+---
+
+# 暗号パートの環境構築
+
+暗号パートの演習では Python を多用します．CTF の暗号問題を解くために便利な環境を整えましょう．
+
+## Python の実行環境
+
+基本的には Python 3.10 以上がインストールされている環境であれば問題ありません．
+
+### 推奨 1: Google Colab (最も簡単)
+
+環境構築で悩みたくない場合は，[Google Colab](https://colab.research.google.com/) を使うのが一番簡単です．
+- ブラウザだけで Python が動かせます．
+- 必要なライブラリも簡単にインストールできます．
+
+### 推奨 2: ローカル環境 (VS Code + Python)
+
+自分の PC で動かしたい場合は，Python と VS Code をインストールしてください．
+
+## 必要なライブラリのインストール
+
+暗号の計算（特に RSA 暗号など）を便利にするために，`pycryptodome` というライブラリをよく使います．
+
+ターミナル（または Google Colab のセル）で以下のコマンドを実行してインストールしてください．
+
+```bash
+pip install pycryptodome
+```
+
+### 動作確認
+
+以下のコードを実行して，エラーが出なければ準備完了です．
+
+```python
+from Crypto.Util.number import getPrime, inverse
+
+# 1024ビットの素数を生成してみる
+p = getPrime(1024)
+print(f"p = {p}")
+
+# 逆元の計算ができるか確認
+print(f"inverse(3, 11) = {inverse(3, 11)}") # 3 * 4 = 12 ≡ 1 (mod 11) なので 4 が返ればOK
+```
+
+## SageMath (発展)
+
+さらに高度な暗号の解読には [SageMath](https://www.sagemath.org/) というツールが使われることが多いです．今回の講義では必須ではありませんが，興味がある人は調べてみてください．
