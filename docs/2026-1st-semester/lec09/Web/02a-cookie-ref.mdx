@@ -1,0 +1,397 @@
+---
+sidebar_position: 4
+draft: true
+---
+
+import Terminal from '@site/src/components/Terminal';
+
+# 付録: Cookie 詳細リファレンス
+
+このページは Cookie 仕様についての**リファレンス**です。本文（[Cookie](./cookie)）を読み終えた後に、必要に応じて参照してください。
+
+## 目次
+
+- [1. 構文](#1-構文)
+- [2. 属性リファレンス](#2-属性リファレンス)
+- [3. Cookie 接頭辞](#3-cookie-接頭辞)
+- [4. サイズ・数の制限](#4-サイズ数の制限)
+- [5. JavaScript からの操作](#5-javascript-からの操作)
+- [6. 仕様](#6-仕様)
+- [7. ブラウザ実装の差](#7-ブラウザ実装の差)
+- [8. セキュリティチェックリスト](#8-セキュリティチェックリスト)
+- [9. 参考リンク](#9-参考リンク)
+
+---
+
+## 1. 構文
+
+### `Set-Cookie`（レスポンスヘッダー）
+
+```http
+Set-Cookie: <cookie-name>=<cookie-value>
+Set-Cookie: <cookie-name>=<cookie-value>; <attribute1>; <attribute2>=<value>
+```
+
+1つのレスポンスで複数の Cookie を設定するには、**`Set-Cookie` ヘッダーを複数本並べる**。
+
+```http
+HTTP/2 200 OK
+Set-Cookie: session_id=abc123; Path=/; HttpOnly; Secure; SameSite=Lax
+Set-Cookie: theme=dark; Max-Age=2592000; Path=/
+Set-Cookie: __Host-csrf=xyz; Secure; Path=/
+```
+
+ブラウザの JavaScript からは `Set-Cookie` ヘッダー値は**読めない**（Fetch 仕様で「forbidden response-header name」）。
+
+### `Cookie`（リクエストヘッダー）
+
+```http
+Cookie: <name1>=<value1>; <name2>=<value2>; ...
+```
+
+該当ホストに**保存されている全 Cookie**が、属性（Domain, Path, Secure, SameSite, Expires/Max-Age）の条件を満たすときだけ送られる。
+
+### `<cookie-name>` の制約
+
+- US-ASCII 文字のうち、制御文字（0〜31, 127）と区切り文字 ` ( ) < > @ , ; : \ " / [ ] ? = { }` は使えない
+- `__Secure-` / `__Host-` / `__Http-` / `__Host-Http-` で始まる名前は追加の制約あり（後述）
+
+### `<cookie-value>` の制約
+
+- 任意の US-ASCII 文字（制御文字、空白、`"`、`,`、`;`、`\` を除く）
+- 必要なら**ダブルクォートで囲む**ことができる
+- パーセントエンコーディングは仕様では要求されていないが、多くの実装はそうする
+
+---
+
+## 2. 属性リファレンス
+
+### `Expires=<HTTP-date>`
+
+```
+Set-Cookie: id=a3fWa; Expires=Thu, 31 Oct 2026 07:28:00 GMT
+```
+
+- 形式: RFC 9110 の HTTP-date（`Thu, 31 Oct 2026 07:28:00 GMT` など）
+- 指定がない Cookie = **セッション Cookie**
+- サーバとクライアントで**時刻のずれ**があると想定外の挙動になる。Firefox / Chromium は `Max-Age` に内部変換して補正する
+
+### `Max-Age=<seconds>`
+
+```
+Set-Cookie: id=a3fWa; Max-Age=2592000
+```
+
+- **秒単位**で寿命を指定
+- `0` または負値で**即時削除**
+- `Expires` と両方書かれていれば **`Max-Age` が優先**
+
+### `Domain=<domain-value>`
+
+```
+Set-Cookie: id=a3fWa; Domain=example.com
+```
+
+- どのホストに送るかを指定
+- **省略時**: 発行元ホストのみ。サブドメインには送られない
+- **明示時**: そのドメイン**およびすべてのサブドメイン**に送られる
+- サーバーは**自分が管理するドメインか親ドメイン**にしか設定できない（RFC 6265 §4.1.2.3）
+  - `foo.example.com` のサーバーは `example.com` または `foo.example.com` には設定できるが、`bar.foo.example.com` や `elsewhere.com` には設定**できない**
+  - 違反する Cookie は**ブラウザが拒否**する
+
+### `Path=<path-value>`
+
+```
+Set-Cookie: id=a3fWa; Path=/docs
+```
+
+- Cookie を送る URL の**パスのプレフィックス**。`/` はディレクトリ区切り
+- 例: `Path=/docs` のとき
+  - 一致: `/docs`, `/docs/`, `/docs/Web/`, `/docs/Web/HTTP`
+  - 不一致: `/`, `/docsets`, `/fr/docs`
+- **セキュリティ目的の属性ではない**。同一オリジン内の他パスからの読み取りは防げない
+
+### `Secure`
+
+```
+Set-Cookie: id=a3fWa; Secure
+```
+
+- **HTTPS 接続のときだけ**送る
+- HTTP では Cookie を保存**しない**、または送らない
+- クライアントのディスクに保存されていること自体は防げないため、**機密 Cookie は `HttpOnly` も併せて設定**し、XSS 経由の窃取を防ぐのが推奨
+
+### `HttpOnly`
+
+```
+Set-Cookie: id=a3fWa; HttpOnly
+```
+
+- JavaScript の `document.cookie` から**読めなくする**
+- **`fetch()` / `XMLHttpRequest` で開始したリクエストでは送信される**（Cookie自体はサーバへ飛ぶ）
+- XSS で窃取されるリスクを**緩和**（完全な対策ではない）
+- 機密情報を入れるセッションIDには**必須**
+
+### `SameSite=<Strict|Lax|None>`
+
+```
+Set-Cookie: id=a3fWa; SameSite=Strict
+Set-Cookie: id=a3fWa; SameSite=Lax
+Set-Cookie: id=a3fWa; SameSite=None; Secure
+```
+
+- **サイト間リクエスト**で Cookie を送るかを制御
+- 値:
+  - **`Strict`**: 同一サイト（eTLD+1 まで一致）からのリクエストのみで送る
+  - **`Lax`**: 同一サイト + **トップレベル GET ナビゲーション**で送る（`fetch`/`img`/`iframe`/POST は除外）
+  - **`None`**: 同一サイト・サイト間ともに送る。**`Secure` 必須**（2020年以降のブラウザ要件）
+- ブラウザ既定値: **`Lax`**（属性省略時）
+- 「Lax + POST」の特例: ブラウザによっては、**設定後 2 分以内**に限り、**トップレベルの POST ナビゲーション**（form submit などアドレスバーが遷移するもの）でも Cookie を含める。`fetch()` などのサブリソース POST には適用されない（旧仕様救済）
+
+### `Partitioned`
+
+```
+Set-Cookie: __Host-example=34d8g; SameSite=None; Secure; Path=/; Partitioned
+```
+
+- **CHIPS**（Cookies Having Independent Partitioned State）
+- サードパーティ Cookie を**トップレベルサイトごとに別パーティションで保存**
+- `Secure` 必須
+- サードパーティ Cookie 廃止の流れの中で、追跡を限定的にした選択肢
+
+### `Priority=<Low|Medium|High>`（非標準）
+
+- Chrome のみ実装
+- 容量超過時に**どれを優先的に残すか**のヒント
+- 標準外なので**依存しない**
+
+---
+
+## 3. Cookie 接頭辞
+
+Cookie 名に `__Secure-` などの接頭辞を付けると、ブラウザは**追加要件を強制**する。要件違反の Cookie は**送られても拒否**される。
+
+| 接頭辞 | `Secure` | `HttpOnly` | `Domain` | `Path` | 発行元 |
+|---|---|---|---|---|---|
+| `__Secure-` | 必須 | — | — | — | HTTPS |
+| `__Host-` | 必須 | — | **不可** | `/` 必須 | HTTPS |
+| `__Http-` | 必須 | 必須 | — | — | HTTPS、`Set-Cookie` 経由のみ |
+| `__Host-Http-` | 必須 | 必須 | **不可** | `/` 必須 | HTTPS、`Set-Cookie` 経由のみ |
+
+### ブラウザ対応
+
+`__Secure-` / `__Host-` は全主要ブラウザで対応済み。
+`__Http-` / `__Host-Http-` はまだ**新しい提案**で、ブラウザ実装は限定的。
+
+### 効果の例
+
+```http
+# 受け入れる
+Set-Cookie: __Secure-ID=123; Secure; Domain=example.com
+Set-Cookie: __Host-ID=123; Secure; Path=/
+
+# Secure 属性なし → 拒否
+Set-Cookie: __Secure-id=1
+
+# Path=/ なし → 拒否
+Set-Cookie: __Host-id=1; Secure
+
+# Domain 指定あり → 拒否
+Set-Cookie: __Host-id=1; Secure; Path=/; Domain=example.com
+
+# JavaScript からは作れない（__Http-）
+Set-Cookie: __Http-ID=123; Secure; Domain=example.com
+```
+
+:::tip CTF ヒント
+`__Host-` の制約は**ブラウザが**強制するため、サブドメインから `__Host-` 接頭辞付き Cookie を `Domain` 属性付きで発行しても**拒否**されます。ただしサーバ側でも「`__Host-` 接頭辞付き＝信用」と盲信せず、値の検証（署名・DB 引き直し）は必ず行ってください。
+:::
+
+---
+
+## 4. サイズ・数の制限
+
+### 仕様の下限
+
+- RFC 6265 §6.1: 「**1 つの Cookie は最低 4096 オクテット**を収容できるべき」
+- 多数 Cookie を扱うシナリオで「最低数百」
+
+### 実装ごとの目安
+
+| ブラウザ | 1 Cookie あたり | 1 ドメインあたり |
+|---|---|---|
+| Chrome | ~4096 bytes | ~180 個 |
+| Firefox | ~4096 bytes | ~150 個 |
+| Safari | ~4096 bytes | ~600 個 |
+
+:::note
+この表の数値は実装経験・公開情報に基づく**目安**で、ブラウザのバージョンやリリース形態で変動します。最新の正確な値・出典は各ブラウザのドキュメントを参照してください（本ページ作成時点: 2026 年 6 月）。
+:::
+
+### 超過時の挙動
+
+- **古いものから削除**される
+- **`Set-Cookie` 自体が失敗**する場合もある
+- ヘッダー数自体にも上限があり（1 リクエスト数百ヘッダー）、Cookie が多いと他のヘッダーが送れないこともある
+
+---
+
+## 5. JavaScript からの操作
+
+### `document.cookie`
+
+```javascript
+// 取得（HttpOnly 以外の Cookie が `name=value; name=value; ...` 形式で返る）
+document.cookie                  // "theme=dark; lang=ja"
+
+// 作成 / 更新
+document.cookie = "yummy_cookie=choco";
+document.cookie = "tasty_cookie=strawberry; Max-Age=3600";
+
+// 削除（値を空にして Max-Age=0）
+document.cookie = "yummy_cookie=; Max-Age=0";
+```
+
+**注意**:
+- `HttpOnly` 属性の Cookie は**アクセス不可**
+- `Secure` 属性の Cookie は HTTPS ページからしか設定できない
+- 1回の代入で設定できる属性は限られる（Path, Domain, Max-Age, Expires, Secure, SameSite が設定可能）
+- `SameSite=Strict` / `Lax` は HTTP ページでも設定可能だが、`SameSite=None` を指定する場合は **HTTPS 接続かつ `Secure` 属性が必須**
+
+### `Cookie Store API`（新しい標準）
+
+非同期 API。Service Worker からも使える。
+
+```javascript
+// 取得
+const cookie = await cookieStore.get('session_id');
+console.log(cookie.value);
+
+// 設定
+await cookieStore.set({
+  name: 'session_id',
+  value: 'abc123',
+  expires: Date.now() + 60 * 60 * 1000,  // 1時間後
+  sameSite: 'strict',
+});
+
+// 削除
+await cookieStore.delete('session_id');
+
+// 全件取得
+const all = await cookieStore.getAll();
+```
+
+ブラウザ対応は 2026 年現在、Chrome / Edge / Firefox / Safari で利用可能。
+
+---
+
+## 6. 仕様
+
+| 仕様 | 状態 | 内容 |
+|---|---|---|
+| [RFC 6265](https://datatracker.ietf.org/doc/html/rfc6265) | 標準（Proposed Standard, 2011） | 現行の HTTP Cookie 仕様。属性・送受信・制約。 |
+| [RFC 6265bis](https://datatracker.ietf.org/doc/html/draft-ietf-httpbis-rfc6265bis) | 草案 | SameSite, Cookie prefixes, CHIPS などを取り込んだ次世代版。 |
+
+### 仕様書へのリンク
+
+- [RFC 6265 — HTTP State Management Mechanism](https://datatracker.ietf.org/doc/html/rfc6265)
+- [RFC 6265bis (draft)](https://datatracker.ietf.org/doc/html/draft-ietf-httpbis-rfc6265bis)
+- [Fetch 仕様 — forbidden response-header name](https://fetch.spec.whatwg.org/#forbidden-response-header-name)
+
+---
+
+## 7. ブラウザ実装の差
+
+### `SameSite` の既定値
+
+| ブラウザ | バージョン | 省略時の既定値 |
+|---|---|---|
+| Chrome | 80+ | `Lax` |
+| Firefox | 69+ | `Lax`（`SameSite=Lax by default` 試験運用） |
+| Safari | 13+ | `Lax`（挙動は独自） |
+| Edge | 88+ (Chromium) | `Lax` |
+
+### `SameSite=None` の `Secure` 要件
+
+- Chrome 80+, Firefox、Edge 88+ で **`SameSite=None` の Cookie は `Secure` 属性が必須**
+- `Secure` がない `SameSite=None` Cookie は**保存されない**
+
+### 2 分間の特例 (Lax + POST)
+
+- Chrome は `Lax` 既定の移行期に、**設定後 2 分以内**の Cookie だけは POST にも含めていた
+- 2020 年以降、Chrome は徐々にこの特例を廃止
+
+### セッション復元の挙動
+
+- Chrome, Firefox とも「セッションを閉じる」とき、**セッション Cookie を破棄**
+- 「セッション復元」機能有効時、**タブや Cookie が復元される**ことがある
+- テスト時にハマりやすいので注意
+
+### サードパーティ Cookie のブロック進行
+
+| ブラウザ | 状態 |
+|---|---|
+| Safari（ITP） | デフォルトでサードパーティ Cookie をブロック |
+| Firefox（ETP） | デフォルトでブロック（強化モードで全 Cookie 隔離） |
+| Chrome | 段階的に制限。Privacy Sandbox の置き換え計画進行中 |
+
+---
+
+## 8. セキュリティチェックリスト
+
+### 設定時のチェック
+
+- [ ] **機密データには `HttpOnly`**（XSS 対策）
+- [ ] **HTTPS 限定なら `Secure`**（中間者攻撃対策）
+- [ ] **`SameSite=Lax` 以上**で CSRF 緩和（`None` は `Secure` 必須）
+- [ ] **セッション ID はログインごとに再生成**（セッション固定対策）
+- [ ] **`__Host-` 接頭辞**で「ドメイン全体ではなく特定ホストのみ」を保証
+- [ ] **`__Http-` 接頭辞**で「`Set-Cookie` 経由のみ」を保証（新しいブラウザのみ）
+
+### 保管・運用のチェック
+
+- [ ] **Cookie に直接機密情報（パスワード等）を入れない**（漏洩時の被害最小化）
+- [ ] **Cookie 値をクライアント側で信用しない**（改竄前提で検証）
+- [ ] **サイズを必要最小限**（リクエスト帯域の節約）
+- [ ] **`SameSite=None` の利用は本当に必要か再考**（ブロックされる可能性大）
+- [ ] **GDPR / ePrivacy などの同意 UI**（EU 圏ユーザー向け）
+
+### CTF 攻略時のチェック
+
+- [ ] **`Set-Cookie` の中身を確認**（flag / 権限 / 推測可能な ID）
+- [ ] **`HttpOnly` でない Cookie は改竄前提で試す**
+- [ ] **Base64 / URL-safe Base64 デコード**（`eyJ` で始まる Cookie）
+- [ ] **JWT ならヘッダー・ペイロード・署名を分けて検証**（次ページで詳述）
+- [ ] **Cookie プレフィクス**があれば、**サブドメイン設定や `document.cookie` 経由の設定**を試す
+
+---
+
+## 9. 参考リンク
+
+### MDN
+
+- [HTTP Cookie の使用](https://developer.mozilla.org/ja/docs/Web/HTTP/Cookies)
+- [Set-Cookie ヘッダー](https://developer.mozilla.org/ja/docs/Web/HTTP/Reference/Headers/Set-Cookie)
+- [Cookie ヘッダー](https://developer.mozilla.org/ja/docs/Web/HTTP/Reference/Headers/Cookie)
+- [`Document.cookie`](https://developer.mozilla.org/ja/docs/Web/API/Document/cookie)
+- [Cookie Store API](https://developer.mozilla.org/ja/docs/Web/API/Cookie_Store_API)
+
+### 仕様
+
+- [RFC 6265 — HTTP State Management Mechanism](https://datatracker.ietf.org/doc/html/rfc6265)
+- [RFC 6265bis (draft)](https://datatracker.ietf.org/doc/html/draft-ietf-httpbis-rfc6265bis)
+- [Fetch 仕様](https://fetch.spec.whatwg.org/)
+
+### セキュリティ
+
+- [OWASP — Session Hijacking Attack](https://owasp.org/www-community/attacks/Session_hijacking_attack)
+- [OWASP — Session Fixation](https://owasp.org/www-community/attacks/Session_fixation)
+- [web.dev — SameSite cookies explained](https://web.dev/articles/samesite-cookies-explained)
+- [web.dev — CHIPS (Cookies Having Independent Partitioned State)](https://developer.chrome.com/docs/privacy-sandbox/chips/)
+
+### プライバシー / 規制
+
+- [GDPR](https://gdpr.eu/cookies/)
+- [ePrivacy 指令](https://edpb.europa.eu/eprivacy-directive_en)
+- [Mozilla — Privacy/Cookies](https://www.mozilla.org/en-US/privacy/websites/#cookies)

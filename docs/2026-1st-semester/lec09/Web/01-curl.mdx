@@ -1,0 +1,426 @@
+---
+sidebar_position: 2
+draft: true
+---
+
+import Terminal from '@site/src/components/Terminal';
+
+# curlコマンド
+
+## curlとは
+
+**curl**（Client for URLs）は、コマンドラインからさまざまなプロトコルでリクエストを送信するツールです。
+HTTP / HTTPS だけでなく、FTP, SMTP, SCP, SFTP, LDAP, IMAP, MQTT, WebSocket など**数十種類のプロトコル**に対応しています。
+
+Web CTFでは、ブラウザでは難しい**リクエストの細部まで正確に再現・改変**できるcurlが必須ツールになります。
+今回は HTTP/HTTPS に絞って学びます。
+
+## インストール確認
+
+まずは手元の環境に入っている curl のバージョンを確認しましょう。
+
+<Terminal
+  command="curl --version"
+  output={`curl 8.20.0 (x86_64-pc-linux-gnu) libcurl/8.20.0 OpenSSL/3.6.2 zlib/1.3.2 brotli/1.2.0 zstd/1.5.7 libidn2/2.3.8 libpsl/0.21.5 libssh2/1.11.1 nghttp2/1.69.0 ngtcp2/1.22.1 nghttp3/1.15.0 mit-krb5/1.21.3
+Release-Date: 2026-04-29
+Protocols: dict file ftp ftps gopher gophers http https imap imaps ipfs ipns mqtt mqtts pop3 pop3s rtsp scp sftp smtp smtps telnet tftp ws wss
+Features: alt-svc AsynchDNS brotli GSS-API HSTS HTTP2 HTTP3 HTTPS-proxy IDN IPv6 Kerberos Largefile libz PSL SPNEGO SSL threadsafe TLS-SRP UnixSockets zstd`}
+/>
+
+バージョン番号、リンクしているライブラリ、対応プロトコル、対応機能（Features）が表示されます。
+HTTP/2 や HTTP/3 が使えれば、CTF サーバとの通信でも最新機能が利用できます。
+
+## ヘルプの見方
+
+curl のオプションは膨大（200以上）なので、`--help` には **カテゴリ別表示** の仕組みがあります。
+
+<Terminal
+  command="curl --help"
+  output={`Usage: curl [options...] <url>
+ -d, --data <data>            HTTP POST data
+ -f, --fail                   Fail fast with no output on HTTP errors
+ -I, --head                   Show document info only
+ -H, --header <header/@file>  Pass custom header(s) to server
+ -h, --help <subject>         Get help for commands
+ -o, --output <file>          Write to file instead of stdout
+ -O, --remote-name            Write output to file named as remote file
+ -i, --show-headers           Show response headers in output
+ -s, --silent                 Silent mode
+ -T, --upload-file <file>     Transfer local FILE to destination
+ -u, --user <user:password>   Server user and password
+ -A, --user-agent <name>      Send User-Agent <name> to server
+ -v, --verbose                Make the operation more talkative
+ -V, --version                Show version number and quit
+
+This is not the full help; this menu is split into categories.
+Use "--help category" to get an overview of all categories, which are:
+auth, connection, curl, deprecated, dns, file, ftp, global, http, imap, ldap, 
+output, pop3, post, proxy, scp, sftp, smtp, ssh, telnet, tftp, timeout, tls, 
+upload, verbose.
+Use "--help all" to list all options`}
+/>
+
+`curl --help` だけだと、よく使う代表的オプションしか出てきません。
+末尾のメッセージにある通り、**`curl --help all` で全オプション**を一覧できます。
+Web の話をする時は `curl --help http` のように、**カテゴリを絞る**と見やすいです。
+
+<Terminal
+  command="curl --help http"
+  output={`HTTP options
+     --alt-svc <filename>          Enable alt-svc with this cache file
+     --compressed                  Request compressed response
+     --compressed-ssh              Enable SSH compression
+ -d, --data <data>                 HTTP POST data
+     --data-ascii <data>           HTTP POST ASCII data
+     --data-binary <data>          HTTP POST binary data
+     --data-raw <data>             HTTP POST data, '@' allowed
+     --data-urlencode <data>       HTTP POST data URL encoded
+     --expect100-timeout <seconds>  How long to wait for 100-continue
+ -f, --fail                        Fail fast with no output on HTTP errors
+     --form <name=content>         Specify multipart MIME data
+     --form-escape                 Escape form fields using backslash
+     --form-string <name=string>   Specify multipart MIME data
+ -G, --get                         Put the post data in the URL and use GET
+ -g, --globoff                     Disable URL globbing with {} and []
+ -H, --header <header/@file>       Pass custom header(s) to server
+ -h, --help <subject>              Get help for commands
+     --http0.9                     Allow HTTP/0.9 responses
+ -0, --http1.0                     Use HTTP/1.0
+     --http1.1                     Use HTTP/1.1
+     --http2                       Use HTTP/2`}
+/>
+
+## 基本的な使い方
+
+### 最もシンプルな GET リクエスト
+
+<Terminal
+  command="curl https://example.com"
+  output={`<!doctype html><html lang="en"><head><title>Example Domain</title>...<h1>Example Domain</h1><p>This domain is for use in documentation examples without needing permission. Avoid use in operations.</p>...</html>`}
+/>
+
+デフォルトではレスポンスの **ボディだけ** が出力されます。
+
+### 進捗表示・エラーメッセージを抑止する `-sS`
+
+本番運用ではなく、CTF の探索では**静かに動かしたい**ことがよくあります。
+ただし `-s` だけだと**接続エラーも消える**ので、**`-sS` (silent + show error)** を使うのが定番です。
+
+<Terminal
+  command="curl -sS https://example.com | head -c 80"
+  output={`<!doctype html><html lang="en"><head><title>Example Domain</title><link rel="icon" hre`}
+/>
+
+## レスポンスを見る
+
+### ヘッダーのみ表示: `-I` / `--head`
+
+HTTP レスポンスの **ステータスコードやヘッダーだけ** を見たいときに使います。
+サーバーソフトやキャッシュ情報、隠れたフラグが**レスポンスヘッダーに入っている**問題は CTF で頻出です。
+
+<Terminal
+  command="curl -I https://example.com"
+  output={`HTTP/2 200
+date: Wed, 17 Jun 2026 13:43:44 GMT
+content-type: text/html
+server: cloudflare
+last-modified: Tue, 16 Jun 2026 20:42:11 GMT
+allow: GET, HEAD
+accept-ranges: bytes
+age: 2878
+cf-cache-status: HIT
+cf-ray: a0d27c280a234f3d-NRT`}
+/>
+
+### ヘッダー + ボディ: `-i` / `--include`
+
+ステータスライン・レスポンスヘッダー・ボディを**まとめて**出力します。
+ブラウザの DevTools の "Network" タブをテキストで再現したイメージです。
+
+<Terminal
+  command="curl -i https://example.com"
+  output={`HTTP/2 200
+date: Wed, 17 Jun 2026 13:43:47 GMT
+content-type: text/html
+server: cloudflare
+last-modified: Tue, 16 Jun 2026 20:42:11 GMT
+allow: GET, HEAD
+accept-ranges: bytes
+age: 2881
+cf-cache-status: HIT
+cf-ray: a0d27c392c3b3c09-NRT
+
+<!doctype html><html lang="en"><head><title>Example Domain</title>...`}
+/>
+
+### 詳細ログ: `-v` / `--verbose`
+
+TLS ハンドシェイク、HTTP/2 ストリーム、送信ヘッダー、受信ヘッダーまですべて見られます。
+**「なぜリクエストが届かないのか」** の切り出しに必須です。
+
+<Terminal
+  command="curl -v https://example.com"
+  output={`* Host example.com:443 was resolved.
+* IPv6: 2606:4700:10::6814:179a, 2606:4700:10::ac42:93f3
+* IPv4: 104.20.23.154, 172.66.147.243
+*   Trying [2606:4700:10::6814:179a]:443...
+* ALPN: curl offers h2,http/1.1
+* TLSv1.3 (OUT), TLS handshake, Client hello (1):
+* TLSv1.3 (IN), TLS handshake, Server hello (2):
+* SSL connection using TLS_AES_256_GCM_SHA384 / X25519MLKEM768
+* ALPN: server accepted h2
+* Server certificate:
+*   subject: CN=example.com
+* Established connection to example.com (2606:4700:10::6814:179a port 443)
+* using HTTP/2
+* [HTTP/2] [1] [:method: GET]
+* [HTTP/2] [1] [:path: /]
+* [HTTP/2] [1] [user-agent: curl/8.20.0]`}
+/>
+
+`-vv` で**より詳細**、`-vvv` で**デバッグレベル**まで出力が増えます。
+
+## リクエストのメソッド・ヘッダー・ボディ
+
+### メソッドの指定: `-X` / `--request`
+
+CTFでは `GET` 以外（`POST`, `PUT`, `DELETE`, `PATCH` など）を使う問題がよく出ます。
+
+<Terminal command="curl -X POST https://example.com/api" />
+
+### カスタムヘッダー: `-H` / `--header`
+
+Web CTF の最重要オプションです。Cookie、認証トークン、`Content-Type`、任意のヘッダーを付けられます。
+
+<Terminal command={`curl -H "Content-Type: application/json" -H "X-Forwarded-For: 127.0.0.1" https://example.com/api`} />
+
+`-H` は **複数回指定**できます。`@ファイル名` で**ファイルからヘッダーを読み込む**こともできます。
+
+### ボディ送信: `-d` / `--data`
+
+<Terminal command={`curl -X POST -d "username=admin&password=hoge" https://example.com/login`} />
+
+<Terminal
+  command={`curl -X POST \\
+  -H "Content-Type: application/json" \\
+  -d '{"title":"hello","body":"world","userId":1}' \\
+  https://jsonplaceholder.typicode.com/posts`}
+/>
+
+実行結果（`-i` でレスポンスヘッダーを追加）:
+
+<Terminal
+  command={`curl -X POST -H "Content-Type: application/json" -d '{"title":"hello","body":"world","userId":1}' https://jsonplaceholder.typicode.com/posts -i`}
+  output={`HTTP/2 201
+date: Wed, 17 Jun 2026 13:43:56 GMT
+content-type: application/json; charset=utf-8
+content-length: 69
+location: https://jsonplaceholder.typicode.com/posts/101
+access-control-allow-credentials: true
+x-powered-by: Express
+x-ratelimit-limit: 1000
+
+{
+  "title": "hello",
+  "body": "world",
+  "userId": 1,
+  "id": 101
+}`}
+/>
+
+`-d` を付けると **自動で `Content-Type: application/x-www-form-urlencoded`** になり、**メソッドも `POST` に切り替わる**ので、`-X POST` を明示しなくても同じです。
+
+### URL エンコード: `--data-urlencode`
+
+日本語や記号を含むクエリを手早く作れます。
+
+<Terminal
+  command={`curl -G \\
+  --data-urlencode "q=Hello World!" \\
+  --data-urlencode "lang=日本語" \\
+  https://example.com/search`}
+/>
+
+`-G` を付けるとデータを**クエリ文字列**として URL に付与します。
+
+## Cookie とセッション
+
+CTF のログイン必須問題で必ず使う 3 つのオプションです。
+
+| オプション | 意味 | 例 |
+|---|---|---|
+| `-b` / `--cookie` | Cookie を**送信**（文字列 or ファイル） | `-b "session=abc123"` / `-b cookies.txt` |
+| `-c` / `--cookie-jar` | 受信した Cookie を**ファイルに保存** | `-c cookies.txt` |
+| `-j` / `--junk-session-cookies` | `-b` で読む際に**セッション用 Cookie を捨てる** | `-j -b cookies.txt` |
+
+典型的な流れは次のとおりです。
+
+<Terminal
+  command={`# 1. ログインしてセッション Cookie を取得
+curl -c cookies.txt -d "user=admin&pass=secret" https://target/login
+
+# 2. 保存した Cookie を付けてアクセス
+curl -b cookies.txt https://target/dashboard`}
+/>
+
+`-c` で生成されるファイルは Netscape 形式で、ブラウザや `wget` と互換性があります。
+
+<Terminal
+  command={`curl -c cookies.txt https://www.google.com/ -o /dev/null
+head -10 cookies.txt`}
+  output={`# Netscape HTTP Cookie File
+# https://curl.se/docs/http-cookies.html
+# This file was generated by libcurl! Edit at your own risk.
+
+#HttpOnly_.google.com	TRUE	/	TRUE	1797255864	__Secure-BUCKET	COoF
+#HttpOnly_.google.com	TRUE	/	FALSE	1797515064	NID	532=ZS3i6vYuTzE...
+.google.com	TRUE	/	TRUE	1781704164	__Secure-STRP	ANmZwa0Ps9iwd...`}
+/>
+
+## リダイレクトと出力
+
+### リダイレクトを追従: `-L` / `--location`
+
+ログイン後や旧 URL から新 URL への 301/302 などを**自動で辿ります**。
+
+<Terminal command="curl -L https://example.com/redirect" />
+
+### ボディを保存: `-o` / `--output`
+
+<Terminal
+  command={`curl -o page.html https://example.com
+curl -O https://example.com/path/to/file.zip`}
+/>
+
+### 進捗・統計を表示: `-w` / `--write-out`
+
+ダウンロードしたサイズや所要時間をフォーマットして出力できます。
+
+<Terminal
+  command={`curl -sS -L -o /dev/null -w "URL: %{url_effective}\\nHTTPコード: %{http_code}\\nリダイレクト回数: %{num_redirects}\\nダウンロードサイズ: %{size_download} bytes\\n合計時間: %{time_total} s\\n" https://example.com`}
+  output={`URL: https://example.com/
+HTTPコード: 200
+リダイレクト回数: 0
+ダウンロードサイズ: 559 bytes
+合計時間: 0.091049 s`}
+/>
+
+主な変数:
+- `%{http_code}`: ステータスコード
+- `%{url_effective}`: 最終的にアクセスした URL
+- `%{num_redirects}`: 辿ったリダイレクト数
+- `%{size_download}`: 受信バイト数
+- `%{time_total}`: 合計時間（秒）
+- `%{content_type}`: レスポンスの Content-Type
+
+## 認証と User-Agent
+
+### Basic 認証: `-u` / `--user`
+
+<Terminal command="curl -u admin:password https://example.com/admin" />
+
+### User-Agent の指定: `-A` / `--user-agent`
+
+Bot 判定で弾かれるページや、ブラウザ判定で挙動が変わるアプリでは User-Agent の偽装が突破口になります。
+
+<Terminal command={`curl -A "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36" https://example.com`} />
+
+## 失敗時の挙動
+
+| オプション | 意味 |
+|---|---|
+| `-f` / `--fail` | HTTP エラー（4xx, 5xx）が出たら**ボディを出さずに非ゼロで終了** |
+| `--fail-with-body` | HTTP エラーでもボディは出すが**終了コードは非ゼロ** |
+| `-S` / `--show-error` | `-s` 併用時でも**エラーメッセージを表示** |
+| `--retry 3` | 一時的な失敗を**3回まで再試行** |
+| `--retry-delay 1` | 再試行の間に**1秒待つ** |
+| `-m 10` / `--max-time 10` | **10秒でタイムアウト** |
+
+シェルスクリプトで扱いやすい書き方:
+
+<Terminal
+  command={`if ! curl -sf https://example.com/health; then
+  echo "サーバーが調子悪い"
+  exit 1
+fi`}
+/>
+
+## HTTP バージョン
+
+| オプション | 意味 |
+|---|---|
+| `--http1.1` | HTTP/1.1 を強制 |
+| `--http2` | HTTP/2 を要求（ネゴ失敗で 1.1 にフォールバック） |
+| `--http2-prior-knowledge` | アップグレードなしで HTTP/2 を直接使う |
+| `--http3` | HTTP/3 を要求 |
+| `--http3-only` | HTTP/3 のみ（失敗したら諦める） |
+
+ALPN ネゴシエーションや HTTP/2 の挙動を理解するうえで、curl で明示的にバージョンを固定して試すのは有効です。
+
+## CTFでの活用パターン
+
+### 1. 隠れたヘッダーを探す
+
+<Terminal command="curl -i https://target/" />
+
+`X-Flag-*`, `X-Admin-*`, `Server`, `Set-Cookie` あたりは要チェック。
+
+### 2. メソッドを書き換える
+
+<Terminal command="curl -X OPTIONS -i https://target/api" />
+<Terminal command="curl -X PUT    -i https://target/api/user/1" />
+
+### 3. アクセス元を偽装する
+
+<Terminal command={`curl -H "X-Forwarded-For: 127.0.0.1" https://target/admin`} />
+<Terminal command={`curl -H "X-Real-IP: 127.0.0.1"        https://target/admin`} />
+
+ローカル限定ページを突破できることがあります。
+
+### 4. ログイン後にリダイレクトを追う
+
+<Terminal
+  command={`curl -c cookies.txt -L -d "user=admin&pass=guess" https://target/login
+curl -b cookies.txt -L                  https://target/home`}
+/>
+
+### 6. セッション Cookie だけ切り捨てる: `-j`
+
+ファイルから読み込んだ Cookie のうち、**有効期限が設定されていない（セッション中だけ生きる）Cookie だけを捨てる**オプションです。
+ブラウザを閉じて再起動したのと同じ状態でリクエストを送りたいときに使います。
+
+<Terminal
+  command={`# cookies_test.txt に persistent / session の両方の Cookie が入っていると仮定
+curl -sS -b /tmp/cookies_test.txt -v https://example.com -o /dev/null 2>&1 | grep -i "^> Cookie:"`}
+  output={`> Cookie: persistent_cookie=persistent_value; session_cookie=session_value`}
+/>
+
+<Terminal
+  command={`curl -sS -j -b /tmp/cookies_test.txt -v https://example.com -o /dev/null 2>&1 | grep -i "^> Cookie:"`}
+  output={`> Cookie: persistent_cookie=persistent_value`}
+/>
+
+上の実行では `session_cookie=...` が消え、`persistent_cookie=...` だけが残ります。
+
+### 5. ワンライナーで総当たり
+
+<Terminal
+  command={`for path in admin flag.txt robots.txt .env; do
+  printf "%s -> " "$path"
+  curl -sS -o /dev/null -w "%{http_code}\\n" "https://target/$path"
+done`}
+/>
+
+## まとめ
+
+curl は**Web CTF の必須ツール**です。最低限、以下を覚えておけば大抵の問題は解けます。
+
+- `-i` / `-I` / `-v` でレスポンスを覗く
+- `-X` でメソッドを変える
+- `-H` でヘッダーを追加・偽装する
+- `-d` でボディを送る
+- `-b` / `-c` で Cookie を扱う
+- `-L` でリダイレクトを辿る
+- `-sS -f -o /dev/null -w "..."` でスクリプトに組み込む
+
+迷ったら **`curl --help <カテゴリ>`** で使い方を確認する癖をつけましょう。

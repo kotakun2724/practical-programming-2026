@@ -1,0 +1,210 @@
+---
+sidebar_position: 3
+draft: true
+---
+
+import Terminal from '@site/src/components/Terminal';
+
+# Cookie
+
+**Cookie**（ウェブ Cookie、ブラウザー Cookie）は、サーバーがブラウザーに送信する小さなデータです。
+ブラウザーはこれを保存し、**同じサーバーに次回以降リクエストする際、自動で送信**します。
+
+HTTP プロトコルは**既定でステートレス**（リクエスト同士が独立）なので、ログイン状態やカートの中身のような「セッション」を実現するために、Cookie がほぼ必須の仕組みとして使われています。
+
+## 基本的なやりとり
+
+Cookie は **サーバー → ブラウザ** と **ブラウザ → サーバー** の2方向で現れます。
+
+```
+# 1. ブラウザがサーバーに最初のリクエストを送る
+GET / HTTP/2
+Host: example.com
+
+# 2. サーバーが Set-Cookie で Cookie を返す
+HTTP/2 200 OK
+Set-Cookie: session_id=abc123; Path=/; HttpOnly; Secure; SameSite=Lax
+
+# 3. 同じサーバーへの以降のリクエストで、ブラウザが自動で Cookie を付ける
+GET /dashboard HTTP/2
+Host: example.com
+Cookie: session_id=abc123
+```
+
+:::note
+HTTP/2 では `Host` ヘッダは `:authority` 擬似ヘッダで運ばれ、レスポンスステータス行もバイナリフレームで表現されます。以下では HTTP/1.1 風に簡略化して書いています。
+:::
+
+実例（GitHub に対する `curl -I`）:
+
+<Terminal
+  command="curl -sS -I -L https://github.com 2>&1 | grep -i set-cookie"
+  output={`set-cookie: _gh_sess=...; path=/; HttpOnly; secure; SameSite=Lax
+set-cookie: _octo=GH1.1....; expires=Thu, 17 Jun 2027 ...; domain=.github.com; path=/; secure; SameSite=Lax
+set-cookie: logged_in=no; expires=Thu, 17 Jun 2027 ...; domain=.github.com; path=/; HttpOnly; secure; SameSite=Lax`}
+/>
+
+3本の `Set-Cookie` が並んでいるのが分かります。`Set-Cookie` ヘッダは**1本のレスポンスに複数並べられます**（1本1Cookie）。
+
+## Cookie の属性
+
+`Set-Cookie` には、**Cookie 単体の名前と値**に加えて、有効期間・送信条件・JavaScript からの可視性などを制御する**属性**が付きます。
+
+```http
+Set-Cookie: name=value; 属性1; 属性2=値; ...
+```
+
+### 属性一覧
+
+| 属性 | 値 | 効果 |
+|---|---|---|
+| `Expires` | HTTP-date | Cookie の**削除日時**を GMT で指定。クライアント側の日時と差異が出る可能性があるため、最近は `Max-Age` が推奨。 |
+| `Max-Age` | 秒数 | Cookie の**寿命**を秒で指定。`Expires` と両方書かれていれば `Max-Age` が優先。 |
+| `Domain` | ドメイン名 | Cookie を**どのホストに送るか**。省略時は発行元ホストのみ。サブドメインも対象に含めるには明示的に書く。 |
+| `Path` | パス | Cookie を**どの URL パスに送るか**。省略時は発行元のパス。`/` 区切りで前方一致。 |
+| `Secure` | （なし） | **HTTPS のときだけ** Cookie を送信。HTTP では送らない。 |
+| `HttpOnly` | （なし） | **JavaScript からアクセス不可**にする（`document.cookie` 不可）。XSS での窃取を防ぐ。 |
+| `SameSite` | `Strict` / `Lax` / `None` | **サイト間リクエストで Cookie を送るか**。CSRF 緩和に効く。 |
+| `Partitioned` | （なし） | **CHIPS**（Cookies Having Independent Partitioned State）。サードパーティストレージをパーティションで分離。`Secure` 必須。 |
+| `Priority` | `Low` / `Medium` / `High` | （非標準・Chrome のみ）Cookie 容量超過時の優先度。 |
+
+### Cookie の接頭辞（プレフィクス）
+
+**Cookie 名**に `__Secure-` / `__Host-` などの接頭辞を付けると、ブラウザーは**追加の条件を強制**します。
+要件を満たさない Cookie は**送られても拒否**されます。
+
+| 接頭辞 | 必須条件 |
+|---|---|
+| `__Secure-` | `Secure` 属性が付いていること。HTTPS 接続から発行されていること。 |
+| `__Host-` | `__Secure-` の条件 + `Domain` 属性なし + `Path=/` |
+| `__Http-` | HTTPS + `Secure` + `HttpOnly` すべて必須。**`Set-Cookie` ヘッダー経由でしか設定できない**（`document.cookie` からは作れない）。 |
+| `__Host-Http-` | `__Host-` + `__Http-` の両方の条件。 |
+
+GitHub の例で実際に `__Secure-` 接頭辞が使われているのを見られます:
+
+<Terminal
+  command="curl -sS -I -L https://github.com 2>&1 | grep -i set-cookie"
+  output={`set-cookie: _gh_sess=...; path=/; HttpOnly; secure; SameSite=Lax
+set-cookie: _octo=GH1.1....; expires=...; domain=.github.com; path=/; secure; SameSite=Lax
+set-cookie: __Secure-BUCKET=...; ...; Secure; HttpOnly`}
+/>
+
+`__Secure-BUCKET` にも `HttpOnly` が付いていますが、これは GitHub が**追加で** XSS 対策をしているだけで、`__Secure-` 接頭辞自体は `HttpOnly` を**要求しません**（`HttpOnly` を要求するのは `__Http-` / `__Host-Http-` のみ）。
+
+:::tip
+CTFで「`__Host-` 接頭辞付きの Cookie だけ信用できる」前提のアプリを見たときは、**ブラウザが Domain 属性の指定を拒否している**おかげで、サブドメインから発行された同名 Cookie が**混入しない**ことが保証されていると分かります。サーバ側でも**値の検証（署名・トークン照合など）**を怠らないようにしましょう。
+:::
+
+## セッション Cookie vs 永続 Cookie
+
+`Expires` と `Max-Age` の両方とも**指定されていない** Cookie は、**セッション Cookie** です。
+ブラウザを閉じたとき（セッション終了時）に削除されます。サーバー側は ID を覚えておく必要があるので、**本物のセッション管理にはサーバー側のストアが必須**です（詳しくは次ページ）。
+
+それ以外（`Expires` または `Max-Age` が指定されている）は**永続 Cookie**で、ブラウザを閉じても残り、有効期限まで送信されます。
+
+| 種類 | 例 |
+|---|---|
+| セッション Cookie | `Set-Cookie: session_id=abc123; Path=/; HttpOnly` |
+| 永続 Cookie | `Set-Cookie: theme=dark; Max-Age=2592000; Path=/` （30日間） |
+
+:::warning
+多くのブラウザーには**セッション復元**機能があり、ブラウザを閉じて再起動してもセッション Cookie が**生き残ることがあります**。テスト時には意識しておく必要があります。
+:::
+
+## サイズと数の上限
+
+RFC 6265 は「Cookie 1個あたり最低 4096 バイトまで対応すべき」と定めています。
+実ブラウザーは概ねこのあたりに収まり、おおむね:
+
+- 1 Cookie あたり **~4KB**
+- 1 ドメインあたり **数百個**
+
+を超えると**古いものから破棄**されたり、**保存自体が拒否**されたりします。
+Cookie に大きなデータを入れたい誘惑に駆られますが、**リクエストごとに自動送信される**ため帯域・パフォーマンス両面で悪影響です。
+大きなデータは IndexedDB / Web Storage を使いましょう。
+
+## SameSite の挙動まとめ
+
+| 値 | 同じサイト内 | 別サイト → 普通に遷移 | 別サイト → `fetch`/img/script | 別サイト → POST |
+|---|---|---|---|---|
+| `Strict` | ✅ 送る | ❌ 送らない | ❌ 送らない | ❌ 送らない |
+| `Lax` | ✅ 送る | ✅ 送る | ❌ 送らない | ❌ 送らない（一部例外あり） |
+| `None`（`Secure` 必須） | ✅ 送る | ✅ 送る | ✅ 送る | ✅ 送る |
+
+`SameSite` 属性が**指定されていない** modern ブラウザーの既定値は **`Lax`** です。
+
+## ブラウザでの確認方法
+
+### Chrome / Edge の DevTools
+
+1. `F12` で DevTools を開く
+2. **Application** タブ → 左サイドバーの **Storage** > **Cookies** を選択
+3. ドメインごとの Cookie 一覧（名前、値、Domain、Path、Expires、Size、HttpOnly、Secure、SameSite）が表示される
+
+### Firefox
+
+1. `F12` で DevTools を開く
+2. **ストレージ**タブ → **Cookie** を選択
+3. 同じく一覧表示
+
+### コンソールからのクイック確認
+
+```javascript
+// JavaScript からは HttpOnly 以外の Cookie が見える
+console.log(document.cookie);
+// 例: "theme=dark; lang=ja"
+```
+
+`HttpOnly` の Cookie は `document.cookie` にも**出てきません**。`curl -I` や DevTools の **Cookies** パネルでないと確認できません。
+
+## CTF での着眼点
+
+### 1. `Set-Cookie` を必ず確認する
+
+flag が **Cookie 値そのもの**に入っている問題は CTF の入門で頻出です。
+
+```bash
+curl -I https://target/   # ヘッダーだけ
+curl -i https://target/   # ヘッダー + ボディ
+```
+
+### 2. 権限・状態を表す Cookie 名に着目する
+
+- `session`, `PHPSESSID`, `JSESSIONID`, `connect.sid` … セッションID
+- `role`, `admin`, `is_admin`, `user_id` … 権限・本人特定
+- `lang`, `theme`, `currency` … 表示設定
+- `eyJ...` 形式 … **Base64 (URL-safe) の JSON**。**デコードできる**＝**改竄のリスクがある**。
+
+`role=user` を `role=admin` に書き換えるだけで突破できる問題は典型例です。
+
+### 3. HttpOnly じゃない Cookie は改竄できる
+
+`HttpOnly` 属性がない Cookie は、ブラウザの DevTools で**値を直接書き換え**られます。
+サーバー側で値の検証（署名・DB引き直し）をしていないアプリは突破できます。
+
+```bash
+# curl で任意の Cookie を付ける
+curl https://target/admin -b "role=admin; user_id=1"
+```
+
+### 4. 署名付き Cookie の構造を読む
+
+Flask の `session` Cookie や JWT は、`ヘッダー.ペイロード.署名` の形式です。
+**ペイロード部分は Base64 デコードすれば中身が読めます**（次のセッションで詳述）。
+
+### 5. SameSite=None + Secure の意味
+
+`SameSite=None` の Cookie は**サードパーティ Cookie**として動作します。
+最近のブラウザーは**サードパーティ Cookie をブロック**する方向なので、`SameSite=None; Secure` がないと CTF プラットフォーム上でログインセッションが維持できないことがあります。AlpacaHack 等で「ログイン状態が切れる」現象に出くわしたら、まずここを疑います。
+
+## まとめ
+
+- Cookie は **HTTP をステートフルにする仕組み**で、サーバー発行の `Set-Cookie` と、ブラウザが自動で付ける `Cookie` ヘッダーの往復で動く
+- 属性（`Expires`/`Max-Age`, `Domain`, `Path`, `Secure`, `HttpOnly`, `SameSite`, `Partitioned`, 接頭辞）で**寿命・送信条件・可視性**を細かく制御する
+- サイズ・数に上限がある（1個 ~4KB、1ドメイン数百個）
+- セッション Cookie は**ブラウザ終了で消える**、永続 Cookie は**期限まで残る**
+- CTF では `Set-Cookie` の観察、Cookie 値の Base64 デコード、HttpOnly でない値の改竄が基本テク
+
+詳細な属性リファレンス・仕様・ブラウザ実装の差は **[付録: Cookie 詳細リファレンス](./02a-cookie-ref)** にまとめます。
+
+次は、**Session**（サーバー側でユーザー状態を管理する仕組み）を学びます。

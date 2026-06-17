@@ -1,0 +1,91 @@
+.terminal {
+  border-radius: 8px;
+  overflow: hidden;
+  margin: 1rem 0 1.5rem;
+  border: 1px solid var(--ifm-color-emphasis-300);
+  background: #1e1e1e;
+  color: #f5f5f5;
+  font-family: var(--ifm-font-family-monospace);
+  font-size: 0.9rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.5rem 0.85rem;
+  background: #2d2d2d;
+  border-bottom: 1px solid #3a3a3a;
+}
+
+.dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.dotRed {
+  background: #ff5f57;
+}
+
+.dotYellow {
+  background: #febc2e;
+}
+
+.dotGreen {
+  background: #28c840;
+}
+
+.title {
+  margin-left: 0.5rem;
+  color: #b0b0b0;
+  font-size: 0.78rem;
+  letter-spacing: 0.02em;
+}
+
+.body {
+  padding: 0.85rem 1rem 1rem;
+}
+
+.line {
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+}
+
+.command {
+  color: #f5f5f5;
+  flex: 1;
+  min-width: 0;
+  white-space: pre-wrap;
+  word-break: break-all;
+}
+
+.prompt {
+  color: #6ee7b7;
+  font-weight: 600;
+  user-select: none;
+  flex-shrink: 0;
+}
+
+.output {
+  margin: 0.4rem 0 0;
+  padding: 0;
+  background: transparent;
+  color: #d4d4d4;
+  white-space: pre-wrap;
+  word-break: break-word;
+  font-family: inherit;
+  font-size: inherit;
+}
+
+.output code {
+  background: transparent;
+  color: inherit;
+  padding: 0;
+  font-family: inherit;
+  font-size: inherit;
+  white-space: pre-wrap;
+}
