@@ -90,23 +90,6 @@ $$
 
 よって，$\text{gcd}(111, 30) = 3$ です．
 
-## Python での実装
+## アルゴリズムの実装に向けて
 
-ループ処理や再帰関数を用いて実装することができます．
-
-```python
-# while ループを用いた実装
-def gcd(a, b):
-    while b:
-        tmp = a
-        a = b
-        b = tmp % b
-    return a
-```
-
-また，Python の標準ライブラリ `math` にも `gcd` 関数が用意されています．
-
-```python
-import math
-print(math.gcd(111, 30)) # 3
-```
+このアルゴリズムは，ループや再帰を用いて実装することができます．
