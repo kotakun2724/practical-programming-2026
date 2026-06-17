@@ -1,8 +1,0 @@
-{
-    "label": "第9回: Web基礎とツール",
-    "position": 9,
-    "link": {
-        "type": "generated-index",
-        "description": "curlコマンド、Cookie/Sessionの仕組みを学び、Web CTFに必要なツール群を身につけます。"
-    }
-}
