@@ -1,0 +1,8 @@
+{
+    "label": "Cryptography",
+    "position": 1,
+    "link": {
+        "type": "generated-index",
+        "description": "基本的な数学を学びます．"
+    }
+}
