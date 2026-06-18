@@ -1,0 +1,375 @@
+---
+sidebar_position: 6
+---
+
+import Terminal from '@site/src/components/Terminal';
+
+# 付録: Session 詳細リファレンス
+
+本文（[Session](./session)）を読み終えた後のリファレンスです。サーバーサイドセッション、JWT、攻撃手法、フレームワーク別実装、仕様リンクを網羅します。
+
+## 目次
+
+- [1. サーバーサイドセッションストア](#1-サーバーサイドセッションストア)
+- [2. セッションID の要件](#2-セッションid-の要件)
+- [3. JWT 詳細](#3-jwt-詳細)
+- [4. フレームワーク別実装](#4-フレームワーク別実装)
+- [5. 攻撃リファレンス](#5-攻撃リファレンス)
+- [6. ベストプラクティス](#6-ベストプラクティス)
+- [7. 参考リンク](#7-参考リンク)
+
+---
+
+## 1. サーバーサイドセッションストア
+
+### 種類と特徴
+
+| ストア | 速度 | 永続化 | 主な用途 |
+|---|---|---|---|
+| プロセスメモリ（dict など） | ◎ | × | 単一プロセス開発・テスト |
+| Redis | ◎ | ○ | 本番Web アプリの定番。TTL が便利 |
+| Memcached | ◎ | ×（揮発） | キャッシュ層。揮発前提 |
+| RDB（PostgreSQL / MySQL） | △ | ◎ | 監査ログと一緒に管理したい場合 |
+| DynamoDB / Firestore | ○ | ◎ | マネージドでスケーラブル |
+
+### Redis を使った最小例
+
+```python
+import redis
+import secrets
+
+r = redis.Redis(host="localhost", port=6379)
+
+# セッション作成
+sid = secrets.token_urlsafe(32)  # 256 bit のエントロピー
+r.hset(f"session:{sid}", mapping={
+    "user_id": 42,
+    "role": "user",
+})
+r.expire(f"session:{sid}", 3600)  # 1時間で失効
+
+# セッション参照
+session = r.hgetall(f"session:{sid}")
+```
+
+Redis をセッションストアに使う場合、本番では **Redis の認証 + TLS** を必ず有効にし、Cookie から得た ID を **直接キー名に埋め込む** 形にすると SQLi 風インジェクションの心配もありません（Redis コマンドは区切り文字で分割されるため）。
+
+### 注意点
+
+- **揮発性メモリに依存しすぎない**: Memcached のみだとプロセス再起動で全セッション消失
+- **ID にユーザー情報を含めない**: セッションID は意味のないランダム値にする（PII 漏洩防止）
+- **権限情報を DB に直接保存しない**: ストアはあくまでセッションと権限の**対応表**。権限の正本は DB
+
+---
+
+## 2. セッションID の要件
+
+OWASP Session Management Cheat Sheet に基づく:
+
+| 項目 | 要件 |
+|---|---|
+| **エントロピー** | 最低 **64 ビット**（理想は **128 ビット**以上） |
+| **乱数生成** | **CSPRNG**（暗号学的乱数）を使う |
+| **文字数の目安** | 64 bit なら hex 16 文字 / Base64 (URL-safe) 12 文字以上。128 bit なら hex 32 文字 / Base64 (URL-safe) 22 文字以上。 |
+| **意味** | 意味のない値（PII を含まない） |
+| **Cookie 名** | デフォルト名（`PHPSESSID` など）を**避ける**。`__Host-` 接頭辞推奨 |
+| **保存** | ログに出力しない / URL に含めない / Referer で漏れない |
+
+### 64 bit エントロピーの目安
+
+OWASP の試算: 10,000 回/秒の試行で 100,000 有効セッションがある環境でも、64 bit エントロピーがあれば総当たりに **約 585 年** かかる。
+しかし、これは実装が正しく**エントロピーを維持できている**前提であり、**実装ミスで実エントロピーが下がると一気に危険**になります。
+
+### ブルートフォース対策
+
+- レートリミット（同一IPから短時間に大量リクエストを弾く）
+- 異常検知（短時間に複数 ID を試す IP をブロック）
+- 一定回数失敗で**アカウントをロック**（ID 推測ではなくパスワード推測対策）
+
+---
+
+## 3. JWT 詳細
+
+### 構造（RFC 7519）
+
+JWT は **3 つの Base64URL エンコードされた部分**を `.` で繋いだものです。
+
+```
+<header>.<payload>.<signature>
+```
+
+例:
+
+<Terminal
+  command="node -e &quot;const h = Buffer.from(JSON.stringify({alg:'HS256', typ:'JWT'})).toString('base64url'); const p = Buffer.from(JSON.stringify({sub:'1234567890', name:'John Doe', iat:1516239022})).toString('base64url'); console.log(h + '.' + p + '.signature');&quot;"
+  output={`eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.signature`}
+/>
+
+### 3 つの部分をデコードしてみる
+
+<Terminal
+  command={`node -e "
+const token = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.signature';
+const [h, p] = token.split('.');
+console.log('--- Header ---');
+console.log(JSON.parse(Buffer.from(h, 'base64url').toString()));
+console.log('--- Payload ---');
+console.log(JSON.parse(Buffer.from(p, 'base64url').toString()));
+"`}
+  output={`--- Header ---
+{ alg: 'HS256', typ: 'JWT' }
+--- Payload ---
+{ sub: '1234567890', name: 'John Doe', iat: 1516239022 }`}
+/>
+
+ペイロードは**ただの Base64**で暗号化されていません。**中身は丸見え**です。
+
+### Registered Claims (RFC 7519 §4.1)
+
+| Claim | 意味 | 例 |
+|---|---|---|
+| `iss` | Issuer（発行者） | `"https://auth.example.com"` |
+| `sub` | Subject（主体） | `"user_42"` |
+| `aud` | Audience（受信者） | `"https://api.example.com"` |
+| `exp` | Expiration（失効時刻、UNIX 秒） | `1715000000` |
+| `nbf` | Not Before（この時刻以前は無効） | `1714996400` |
+| `iat` | Issued At（発行時刻） | `1714996400` |
+| `jti` | JWT ID（リプレイ防止用一意ID） | `"abc123"` |
+
+### 署名アルゴリズム (alg)
+
+- **HS256 / HS384 / HS512**: HMAC + SHA。**共有鍵** を使用
+- **RS256 / RS384 / RS512**: RSA 署名。**秘密鍵/公開鍵** ペア
+- **ES256 / ES384 / ES512**: ECDSA 署名
+- **PS256 / PS384 / PS512**: RSA-PSS 署名
+- **none**: **署名なし**。Unsecured JWT (RFC 7519 §6)
+
+:::danger
+**`alg: none` を許容する実装は脆弱**。`{"alg":"none"}` に書き換えて署名を空文字列にすると、検証なしでも通ってしまう実装がある（[CVE 多数](https://github.com/search?q=alg%3Dnone+jwt&type=issues)）。
+:::
+
+### RFC 8725 (JWT Best Current Practices) の主な推奨
+
+1. **アルゴリズムを明示** する（`alg: none` を許可しない、`HS256` と `RS256` の混同を防ぐ）
+2. **キー長を十分** に（HS256 なら 256bit 以上の鍵）
+3. **入力検証** を厳格に（型、サイズ、必須クレーム）
+4. **`kid` ヘッダで鍵を特定** する場合はディレクトリトラバーサルに注意
+5. **暗号と署名の混同** を防ぐ（`alg: HS256` を RSA の公開鍵で検証するのは危険）
+
+### JWT を "セッション" として使う際の注意点
+
+| メリット | デメリット |
+|---|---|
+| サーバーが状態を持たない → スケールしやすい | **失効が難しい**（ログアウトしても次の `exp` まで有効） |
+| クロスドメインで使いやすい | ペイロードが**クライアントに見える**（機密情報を入れない） |
+| ライブラリが豊富 | 署名検証のバグが**致命傷** |
+
+失効させたい場合は**短命 access トークン + 長命 refresh トークン** の組み合わせや、**サーバーサイドのブラックリスト** で補完します。
+
+---
+
+## 4. フレームワーク別実装
+
+### Flask（Python）
+
+- **標準の `session`**: 署名付き Cookie（[itsdangerous](https://itsdangerous.palletsprojects.com/) で HMAC 署名）
+  - 形式: `payload.timestamp.signature`、payload は `Base64(zlib.compress(json))`
+  - 秘密鍵: `app.secret_key`
+  - **クライアントが中身を読める** が、**改竄すると署名検証で弾かれる**
+- **Flask-Login**: サーバーサイドセッション。`session_id` を Cookie に保存し、サーバーストアで管理
+
+```python
+from flask import Flask, session
+
+app = Flask(__name__)
+app.secret_key = b"..."  # 推測不可能な長い鍵
+
+@app.route("/login")
+def login():
+    session["user_id"] = 42       # 署名して Cookie に保存される
+    return "logged in"
+
+@app.route("/logout")
+def logout():
+    session.clear()               # Cookie を空にする
+    return "logged out"
+```
+
+### Express（Node.js）
+
+- **express-session**: サーバーサイドセッション。デフォルトはメモリストア、本番では **Redis ストア** 推奨
+- **cookie-session**: 署名付き Cookie。状態は持たない
+
+```javascript
+// express-session
+const session = require("express-session");
+app.use(session({
+  secret: "...",
+  resave: false,
+  saveUninitialized: false,
+  cookie: { httpOnly: true, secure: true, sameSite: "lax", maxAge: 3600000 },
+}));
+
+// cookie-session
+const cookieSession = require("cookie-session");
+app.use(cookieSession({
+  name: "session",
+  keys: ["..."],   // 署名鍵
+  httpOnly: true,
+  secure: true,
+}));
+```
+
+### Rails（Ruby）
+
+- **デフォルトの Session Store は `CookieStore`（クライアント側）**。`config.session_store` で `:cookie_store` / `:active_record_store` / `:redis_session_store` などに切り替え可能
+- **CookieStore**: クライアント側にデータを保存。**AES-256-CBC で暗号化 + HMAC 署名**。サーバー側に状態は持たない
+- **ActiveRecordStore / RedisSessionStore**: サーバー側にセッションを保存する選択肢
+- 暗号化鍵は `config/credentials.yml.enc` の `secret_key_base` から派生（`Rails.application.config.session_store :cookie_store, key: "_myapp_session"`）
+
+```ruby
+# config/initializers/session_store.rb
+Rails.application.config.session_store :cookie_store, key: "_myapp_session"
+```
+
+### ASP.NET
+
+- **`Session["user_id"] = 42`** でサーバーサイドセッション
+- プロセス内（InProc）が既定。本番では **State Server** や **SQL Server** モード
+- Cookie 名は既定で `ASP.NET_SessionId`（推測されやすい）
+
+### Spring（Java）
+
+- **`HttpSession`**: サーブレット標準のサーバーサイドセッション
+- **`@SessionAttribute`**: コントローラーメソッドの引数にバインド
+- Spring Security が `JSESSIONID` を発行
+
+---
+
+## 5. 攻撃リファレンス
+
+### 5.1 セッションID 推測攻撃
+
+- **エントロピーが低い / 連番** → ブルートフォースや数列インクリメントで他人の ID にヒット
+- **対策**: 暗号学的乱数で 64 bit 以上のエントロピー
+
+### 5.2 セッション固定攻撃 (Session Fixation)
+
+- 攻撃者が**事前に用意した ID** を被害者に使わせ、被害者がログインした後でその ID を**そのまま使う**
+- Permissive な実装だと、攻撃者が用意した ID でも新規セッションが作られるため被害者のセッションと**衝突**する
+- **対策**: ログイン時に**必ず新しい ID を再生成**（OWASP 必須）
+
+### 5.3 セッションハイジャック
+
+- ネットワーク盗聴（HTTP / 弱い TLS）、XSS、物理アクセス、共有端末などから ID を窃取
+- **対策**: `Secure` + `HttpOnly` + `SameSite=Strict/Lax`、HSTS、CSRF 対策
+
+### 5.4 セッションリプレイ
+
+- 盗んだトークンをそのまま再送
+- **対策**:
+  - ワンタイムトークン（CSRF トークン）
+  - `jti` クレーム + サーバ側の使用済みリスト
+  - 短命 access トークン
+
+### 5.5 CSRF (Cross-Site Request Forgery)
+
+- 被害者のブラウザに保存された Cookie を、攻撃者のサイトからのリクエストに**自動付与**させる
+- サーバー側では正規ユーザーからのリクエストと区別できない
+- **対策**:
+  - `SameSite=Strict/Lax` Cookie
+  - CSRF トークン（フォームに埋める・カスタムヘッダで送る）
+  - Origin / Referer の検証
+
+### 5.6 JWT 固有の攻撃
+
+| 攻撃 | 概要 | 対策 |
+|---|---|---|
+| `alg: none` | 署名検証をバイパス | `alg: none` を**拒否**。許可リスト方式 |
+| 鍵混同 (algorithm confusion) | RS256 公開鍵を HS256 の秘密鍵として使う | アルゴリズムを**明示**。鍵と alg を**紐付け** |
+| `kid` インジェクション | ディレクトリトラバーサル・SQLi・コマンドインジェクション | `kid` をサニタイズ。**静的マップ**を使う |
+| 短すぎる HS256 鍵 | 鍵をブルートフォースで特定 | **鍵長 ≥ 256 bit** |
+| `exp` 未検証 | 古いトークンが永久に通る | ライブラリ任せにせず**必ず検証** |
+| トークン漏洩 | XSS・ログ・Referer | `HttpOnly` Cookie + 短命トークン |
+
+### 5.7 攻撃検出
+
+- 同一セッションID で**異なる IP/UA** を観測したらアラート
+- 短時間に**多数 ID** を試す IP をブロック
+- ログイン成功率の異常な低下を検出（ID 推測試行の兆候）
+
+---
+
+## 6. ベストプラクティス
+
+OWASP Session Management Cheat Sheet と RFC 8725 を要約:
+
+### 設定
+
+- [ ] セッションID は **CSPRNG** で **64 bit 以上**（理想 128 bit）のエントロピー
+- [ ] Cookie 名は**意味のない**名前（フレームワーク既定を避ける）
+- [ ] `__Host-` 接頭辞 + `Secure` + `HttpOnly` + `SameSite=Strict/Lax`
+- [ ] `Domain` 属性は**設定しない**（サブドメインに漏れないように）
+- [ ] HTTPS のみで運用。**HSTS** を有効化
+- [ ] セッションID は**絶対に URL に含めない**
+
+### ライフサイクル
+
+- [ ] ログイン・ログアウト・権限変更・パスワード変更で**必ず再生成**
+- [ ] **アイドルタイムアウト**（例: 30 分）と**絶対タイムアウト**（例: 8 時間）の両方を設定
+- [ ] ログアウト時は**サーバーストアからも削除**
+- [ ] 管理者操作のような**高リスク操作の前には再認証**を要求
+
+### 監視・検知
+
+- [ ] セッションID の生成・使用・破棄を**ログに記録**
+- [ ] 同一 ID で異なる IP / UA のアクセスを**アラート**
+- [ ] レートリミットでブルートフォース対策
+- [ ] 失効後のトークン使用を**ブラックリスト**で検出
+
+### クライアント側
+
+- [ ] 認証情報を **`localStorage` / `sessionStorage` に入れない**（XSS で全漏洩）
+  - 代わりに `HttpOnly; Secure; SameSite=Strict` Cookie を使う
+- [ ] ログアウト時にサーバーに**通知**してセッションを破棄
+- [ ] 自動ログインを提供するなら**再認証**も組み合わせる
+
+---
+
+## 7. 参考リンク
+
+### 一次資料
+
+- [RFC 6265 — HTTP State Management Mechanism (Cookie)](https://datatracker.ietf.org/doc/html/rfc6265)
+- [RFC 6265bis (draft)](https://datatracker.ietf.org/doc/html/draft-ietf-httpbis-rfc6265bis)
+- [RFC 7519 — JSON Web Token (JWT)](https://datatracker.ietf.org/doc/html/rfc7519)
+- [RFC 8725 — JWT Best Current Practices](https://datatracker.ietf.org/doc/html/rfc8725)
+- [RFC 6750 — OAuth 2.0 Bearer Token Usage](https://datatracker.ietf.org/doc/html/rfc6750)
+
+### セキュリティガイド
+
+- [OWASP — Session Management Cheat Sheet](https://cheatsheetseries.owasp.org/cheatsheets/Session_Management_Cheat_Sheet.html)
+- [OWASP — Authentication Cheat Sheet](https://cheatsheetseries.owasp.org/cheatsheets/Authentication_Cheat_Sheet.html)
+- [OWASP — Cross-Site Request Forgery Prevention Cheat Sheet](https://cheatsheetseries.owasp.org/cheatsheets/Cross-Site_Request_Forgery_Prevention_Cheat_Sheet.html)
+- [OWASP — JSON Web Token Cheat Sheet (Java)](https://cheatsheetseries.owasp.org/cheatsheets/JSON_Web_Token_for_Java_Cheat_Sheet.html)
+- [OWASP — Cookie Theft Mitigation](https://cheatsheetseries.owasp.org/cheatsheets/Cookie_Theft_Mitigation_Cheat_Sheet.html)
+
+### フレームワーク別ドキュメント
+
+- [Flask — Sessions](https://flask.palletsprojects.com/en/stable/quickstart/#sessions)
+- [itsdangerous — 署名/暗号化ライブラリ](https://itsdangerous.palletsprojects.com/)
+- [Express — express-session](https://github.com/expressjs/session)
+- [Rails — ActionDispatch::Session](https://api.rubyonrails.org/classes/ActionDispatch/Session.html)
+- [Spring — HttpSession](https://docs.spring.io/spring-framework/docs/current/javadoc-api/org/springframework/web/bind/annotation/SessionAttribute.html)
+
+### MDN
+
+- [HTTP Cookie の使用](https://developer.mozilla.org/ja/docs/Web/HTTP/Cookies)
+- [Set-Cookie ヘッダー](https://developer.mozilla.org/ja/docs/Web/HTTP/Reference/Headers/Set-Cookie)
+- [Web Storage API](https://developer.mozilla.org/ja/docs/Web/API/Web_Storage_API)
+
+### JWT 関連
+
+- [jwt.io — JWT のデバッグツール](https://jwt.io/)
+- [Auth0 — JWT 入門](https://auth0.com/learn/json-web-tokens)
+- [PortSwigger — JWT attacks](https://portswigger.net/web-security/jwt)

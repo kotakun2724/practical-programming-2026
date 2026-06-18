@@ -1,8 +1,8 @@
 {
-    "label": "第9回: Web基礎とツール",
-    "position": 9,
-    "link": {
-        "type": "generated-index",
-        "description": "curlコマンド、Cookie/Sessionの仕組みを学び、Web CTFに必要なツール群を身につけます。"
-    }
+  "label": "第9回: CTF実践 (Web / Crypto)",
+  "position": 9,
+  "link": {
+    "type": "generated-index",
+    "description": "CryptoではRSA暗号の土台となる最大公約数・拡張ユークリッドの互除法を学び、Webではcurl・Cookie/SessionといったHTTPの仕組みを通してWeb CTFの基本ツールを扱います。"
+  }
 }
