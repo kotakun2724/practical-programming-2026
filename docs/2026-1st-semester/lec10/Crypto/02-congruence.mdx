@@ -1,0 +1,103 @@
+---
+sidebar_position: 3
+draft: true
+---
+
+# 整数の合同
+
+$m$ を $0$ でない任意の整数，$a, b$ を任意の整数とする．$a - b$ が $m$ で割り切れる時，$a,b$ は $m$ を法として**合同**であると言い，$a \equiv b \pmod m$ と表記する．
+
+これは $a$ を $m$ で割った余りと $b$ を $m$ で割った余りが等しいことを同じことを言っています．
+
+つまり，命題
+
+$a \equiv b \pmod m \iff a, b$ それぞれを $m$ で割った余りは等しい．
+
+が成り立ちます．
+
+### 例
+
+- $5 \equiv 9 \pmod 4$
+- $100 \equiv 2 \pmod 7$
+
+## 性質
+
+1.  $a, a', b, b'$ を任意の整数とする．$m$ を $0$ でない任意の整数とし，$a \equiv a' \pmod m, \ b \equiv b' \pmod m$ なら，
+    - $a + a' \equiv b + b' \pmod m$
+    - $ab \equiv a'b' \pmod m$
+
+    ### 例
+    - $11 \equiv 1 \pmod 5, \ 7 \equiv 2 \pmod 5$
+      $$
+      \begin{align*}
+        (11 + 7) &\equiv (1 + 2) &\pmod 5\\
+        18 &\equiv 3 &\pmod 5
+      \end{align*}
+      $$
+    - $8 \equiv 2 \pmod 3, \ 10 \equiv 1 \pmod 3$
+      $$
+      \begin{align*}
+        (8 \cdot 10) &\equiv (2 \cdot 1) &\pmod 3\\
+        80 &\equiv 2 &\pmod 3
+      \end{align*}
+      $$
+
+2.  $a, b$ を任意の整数，$n, m$ を $0$ でない任意の整数とし，$n \mid m$ ($n$ は $m$ の約数である)とする．
+    $a \equiv b \pmod m \implies a \equiv b \pmod n$ である．
+
+    <details>
+    <summary>証明</summary>
+
+    $n \mid m$ とする．$a \equiv b \pmod m$ であるから定義から $m \mid (a-b)$．
+
+    $n \mid m \mid (a-b)$ より，$n \mid (a-b)$ が言えるので，$a \equiv b \pmod n$．
+
+    </details>
+
+    ### 例
+    - $29 \equiv 5 \pmod {12}$ \
+      $(29 - 5) % 12 = 0$ なので上式は正しい．$2 \mid 12,\ 3 \mid 12,\ 4 \mid 12,\ 6 \mid 12$ なので，
+      - $29 \equiv 5 \pmod {2}$
+      - $29 \equiv 5 \pmod {3}$
+      - $29 \equiv 5 \pmod {4}$
+      - $29 \equiv 5 \pmod {6}$
+
+3.  $a, b$ を任意の整数，$n, m$ を $0$ でない任意の整数とする．この時，$a \equiv b \pmod n \implies am \equiv bm \pmod {nm}$．
+    
+    <details>
+    <summary>証明</summary>
+
+    $a \equiv b \pmod n$ なので，$n \mid (a-b)$．$nm \mid (a-b)m$ なので，$am \equiv bm \pmod {nm}$である．
+
+    </details>
+    
+    ### 例
+    - $7 \equiv 2 \pmod 5$
+      $$
+      \begin{align*}
+        (7 \cdot 3) &\equiv (2 \cdot 3) &\pmod {(5 \cdot 3)} \\
+        21 &\equiv 6 &\pmod {15}
+      \end{align*}
+      $$
+
+## 高いべきの余り
+
+例えば，$16^{4}$ を $13$ で割った余りを求めたいとします．
+
+愚直に $16^{4}$ を計算して $13$ で割る方法もありますが，効率が悪いです．（手計算をする労力を想像してみてください）
+
+ここで，[性質 1](#性質) を使用します．
+
+$16 \equiv 3 \pmod {13}$ と $16 \equiv 3 \pmod {13}$ に対し[性質 1](#性質)を使用すると，$16^{2} \equiv 3^{2} = 9 \pmod {13}$．
+
+さらに，同様に[性質 1](#性質)を適用させると $16^{4} \equiv 9^{2} = 81 \equiv 3 \pmod {13}$ となり，$16^{4} \equiv 3 \pmod {13}$ であることがわかります．
+
+## Python での求め方
+
+Python では built-in 関数で `pow()` 関数が用意されています．
+
+`pow()` 関数は引数を2~3個取ります．
+
+二引数 `pow(a, b)` の場合は，$a$ の $b$ 乗($a^{b}$)を返します．
+
+三引数 `pow(a, b, c)` の場合は，$a$ の $b$ 乗に対する $c$ の余り($a^{b} \bmod c$)を返します．
