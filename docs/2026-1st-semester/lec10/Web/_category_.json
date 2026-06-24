@@ -1,8 +1,8 @@
 {
   "label": "Web",
-  "position": 10,
+  "position": 2,
   "link": {
     "type": "generated-index",
-    "description": "HTTPリクエストのパラメータ改竄、ヘッダー偽装、レスポンス操作を学び、Webアプリケーションの脆弱性を探る技術を身につけます。"
+    "description": "HTTPリクエストの改ざんと代表的な脆弱性パターンを学び、Webアプリケーションのアクセス制御の弱点を探る技術を身につけます。"
   }
 }

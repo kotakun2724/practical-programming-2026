@@ -1,0 +1,82 @@
+---
+sidebar_position: 2
+---
+
+import Terminal from '@site/src/components/Terminal';
+
+# リクエストの改ざん
+
+HTTPはステートレスで、リクエスト単体では「誰が送ってきたか」を持ちません。サーバーが判断に使う値は **すべてクライアント側から送られる** ため、書き換え可能です。
+
+クライアント側からの値を意図的に書き換える攻撃を、総称して **パラメータ改竄（Parameter Tampering）** と呼びます。
+
+厳密には、パラメータ改竄は URL・フォーム・Cookie などの **ボディやクエリに含まれる値** を指し、ヘッダーの偽装は **HTTPヘッダー偽装** として別扱いするのが一般的です。しかし、サーバー側から見れば **どれも「クライアントが送ってくる値」** で、書き換え可能という点では変わりません。本講では攻撃者の視点から、これらをまとめて扱います。
+
+> **「クライアントから送られる値は、全部書き換えられる」**
+
+これが今回の大前提です。主な改ざん対象は以下の4つです。
+
+## 改ざんの対象
+
+### 1. URLクエリパラメータ
+
+```
+https://example.com/profile?id=123
+```
+
+`id=123` を `id=1` に変更して、他のユーザーの情報にアクセスできるか試します。
+
+### 2. フォームデータ
+
+```html
+<form method="POST" action="/update">
+  <input type="hidden" name="role" value="user">
+</form>
+```
+
+`role=user` を `role=admin` に変更します。`<input type="hidden">` は見えないだけで、簡単に書き換え可能です。
+
+### 3. Cookie
+
+```
+Cookie: session_id=abc123; role=user
+```
+
+`role=user` を `role=admin` に変更します。
+
+### 4. HTTPヘッダー
+
+ヘッダーもクライアント側から自由に設定できます。アクセス制御に使われていると突破されます。
+
+| ヘッダー | 説明 | 偽装例 |
+|---|---|---|
+| `X-Forwarded-For` | クライアントの元IP | `127.0.0.1` |
+| `Referer` | 前のページのURL | `https://target.com/login` |
+| `User-Agent` | ブラウザの種類 | `Googlebot/2.1` |
+
+`X-Forwarded-For` は、 **リバースプロキシ** （クライアントからのリクエストを内部サーバーに取り次ぐ中継サーバー）環境で、アプリケーションがクライアントの実際のIPを知るために使われます。
+
+## curlでの書き換え
+
+<Terminal command={`curl "https://target.com/profile?id=1"`} />
+
+<Terminal
+  command={`curl -X POST https://target.com/update \\
+  -d "username=admin&role=admin"`}
+/>
+
+<Terminal command={`curl https://target.com/admin -b "role=admin"`} />
+
+<Terminal
+  command={`curl https://target.com/admin \\
+  -H "X-Forwarded-For: 127.0.0.1" \\
+  -H "User-Agent: Googlebot/2.1"`}
+/>
+
+## CTFでのポイント
+
+1. **全ての値を観察する**: URL、フォーム、Cookie、ヘッダー
+2. **意味のあるパラメータを探す**: `id`, `user`, `role`, `admin`, `price` など
+3. **境界値を試す**: `0`, `-1`, `9999`, `admin` など
+
+次に、これらの改ざんで突ける **代表的な脆弱性パターン** を見ていきます。
