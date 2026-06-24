@@ -1,8 +1,8 @@
 {
-    "label": "第10回: リクエスト操作",
-    "position": 10,
-    "link": {
-        "type": "generated-index",
-        "description": "HTTPリクエストのパラメータ改竄、ヘッダー偽装、レスポンス操作を学び、Webアプリケーションの脆弱性を探る技術を身につけます。"
-    }
+  "label": "第10回: CTF実践 (Web / Crypto)",
+  "position": 10,
+  "link": {
+    "type": "generated-index",
+    "description": "CryptoではRSA暗号の土台となる合同式・モジュラー逆数を学び、Webではパラメータ改竄・HTTPヘッダー偽装などリクエスト操作の攻撃手法を扱います。"
+  }
 }
