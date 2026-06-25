@@ -1,0 +1,53 @@
+---
+sidebar_position: 5
+draft: true
+---
+
+# 次回予告と課題
+
+## 次回の内容
+
+- オイラーの $\varphi$ 関数
+- オイラーの定理
+
+## 今回の課題
+
+以下の3問を解いてください．
+
+| プラットフォーム | 問題セット | 問題名 | 内容 | リンク |
+|:-----------------|:---------|:-------|:-----|:-------|
+| CryptoHack | General | Modular Arithmetic 1 | 整数の合同 | [問題ページ](https://cryptohack.org/challenges/general/) |
+| CryptoHack | General | Modular Arithmetic 2 | 整数の合同 | [問題ページ](https://cryptohack.org/challenges/general/) |
+| CryptoHack | General | Modular Inverting | モジュラー逆数 | [問題ページ](https://cryptohack.org/challenges/general/) |
+
+### 各問題のヒント
+
+#### 1. Modular Arithmetic 1
+
+$x, y$ を求め，どちらか小さい方を flag として提出する問題です．
+
+#### 1. Modular Arithmetic 2
+
+Modular Arithmetic 1 と同じように解くことはできます．
+
+ですが，わざわざコードを書いたり手計算をする必要がありますか？という問題です．
+
+#### 2. Modular Inverting
+
+モジュラー逆数を求める問題です．
+
+[モジュラー逆数を求める方法](./03-invert.mdx#モジュラー逆数を求める方法) の2つの方法，どちらでも求めることができます．
+
+## 締め切り
+
+**次回講義の前日 23:59 まで**
+
+## 困ったときは
+
+### よくあるエラー
+
+| エラー | 原因 | 対処法 |
+|:-------|:-----|:-------|
+| `RecursionError` | 再帰が深すぎる | 非常に大きな数を扱う場合、ループによる実装を検討するか `sys.setrecursionlimit` を調整する（今回の課題規模なら再帰で問題ありません） |
+| `TypeError` | 演算の型の不一致 | Python 3 の `/` は小数になります。整数同士の割り算（商）を求めたい場合は `//` を使いましょう。 |
+| Flag が通らない | 出力形式ミス | $x$ と $y$ のうち「小さい方」を答えているか再確認してください。負の数の方が小さいことに注意。 |

@@ -1,0 +1,127 @@
+---
+sidebar_position: 2
+draft: true
+---
+
+# 前回課題解説
+
+## Greatest Common Divisor
+
+> Now calculate $\gcd (a,b)$ for $a=66528, b=52920$ and enter it below.
+
+$66528$ と $52920$ の最大公約数 $\gcd(66528, 52920)$ を求める問題でした．
+
+ループを用いた実装．
+
+```python
+def gcd(a, b):
+    if a < b:
+        a, b = b, a
+    while b != 0:
+        next_b = a % b
+        if next_b == 0:
+            return b
+        a = b
+        b = next_b
+```
+
+再帰を用いた実装．
+
+```python
+def recur_gcd(a, b):
+    if a % b == 0:
+        return b
+    if a < b:
+        a, b = b, a
+    return recur_gcd(b, a % b)
+```
+
+両者とも方針は，$a > b$ の状態を常に保ちながら，余りが $a / b$ の余りが $0$ になるまで割り続けるというものです．
+
+```shell
+$ python solve.py 
+input two numbers -> 66528 52920
+1512
+```
+
+## Extended GCD
+
+> Using the two primes $p=26513, q=32321$, find the integers $u, v$ such that
+> 
+> $$
+> p \cdot u+q \cdot v= \gcd(p,q)
+> $$
+> 
+> Enter whichever of $u$ and $v$ is the lower number as the flag.
+
+$$
+26513 \cdot u + 32321 \cdot v = \gcd (26513, 32321)
+$$
+
+となるような，$u, v$ を求め，どちらか小さい方を flag として提出する問題でした．
+
+ループを用いた実装．
+
+```python
+def egcd(a, b):
+  x, g, v, w = 1, a, 0, b
+  while w != 0:
+      q = g // w
+      t = g % w
+  
+      s = x - q*v
+  
+      x, g = v, w
+  
+      v, w = s, t
+  y = (g-a*x)//b
+  return g, a, b
+```
+
+再帰を用いた実装．
+
+```python
+def recur_egcd(a, b):
+    if b == 0:
+        return a, 1, 0
+    else:
+        q = a // b
+        r = a % b
+        g, x, y = recur_egcd(b, r)
+        return g, y, x-q*y
+```
+
+再帰のみの解説をします．
+
+- `recur_egcd(a, 0)` の場合
+
+  $\gcd(a, 0) = a \cdot x$ であり，$\gcd(a, 0) = a, x = 1, y = 0$ としています．
+  
+  全ての整数は $0$ を割り切ると考えれば $\gcd (a, 0)$ は $a$ となります．
+
+- `recur_egcd(a, b)` の場合
+
+  $a$ を $b$ で割った商を $q$，余りを $r$ とします．
+  すなわち，$a = bq + r$ です．
+
+  拡張ユークリッドの拡張の手順は，ユークリッドの拡張の逆になるので，`recur_egcd(b, r)` の結果はもうわかっていると仮定します．
+
+  つまり，$\gcd(b, r) = bx' + ry'$ の各値はわかっています．ここで，以下のような式変形を行います．
+
+  $$
+  \begin{align}
+    \gcd(b, r) &= bx' + ry' \\
+    &= bx' + (a-bq)y' \\
+    &= ay' + b(x' - qy')
+  \end{align}
+  $$
+
+  式(3) が $\gcd (a, b) = ax + by$ の形をしていることがわかります．
+
+  このため，$x = y', y = x' - qy'$ として返せばよいです．
+
+```shell
+$ python solve.py
+Input two numbers -> 26513 32321
+g: 1, x: 10245, y: -8404
+```
