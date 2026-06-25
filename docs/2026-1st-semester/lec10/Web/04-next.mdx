@@ -1,0 +1,188 @@
+---
+sidebar_position: 4
+---
+
+import Terminal from '@site/src/components/Terminal';
+
+# 演習: リクエスト操作
+
+今回の講義で学んだパラメータ改竄とヘッダー偽装を使って、Daily AlpacaHackの問題を解いてみましょう。
+
+## 演習 1: Alpaca Rangers 2（Easy）
+
+**問題リンク**: [https://alpacahack.com/daily/challenges/alpaca-rangers-2](https://alpacahack.com/daily/challenges/alpaca-rangers-2)
+
+### 問題概要
+
+`?img=red.png` のように画像ファイルを指定して表示するWebアプリです。`../` は `replace` 関数でサニタイズされていますが、不十分です。
+
+### 解法のヒント
+
+1. パラメータでファイル名を指定できます
+2. `../` はフィルタリングされていますが、`replace` 関数の動作を確認しましょう
+
+<details>
+<summary>詳しいヒントと解説</summary>
+
+ディレクトリトラバーサルのフィルタバイパス問題です。
+
+`replace("../", "")` は `../` を空文字列に置換します。`....//` と入力すると、1回目の置換で中央の `../` が削除され、結果として `../` が残ります。
+
+```
+?img=....//....//flag.txt
+```
+
+**不完全なサニタイゼーション** の危険性を示す問題です。
+
+</details>
+
+### 参考Writeup
+
+- [nozokareによるwriteup（GitHub）](https://github.com/nozokare/my-alpaca-ctf/tree/main/2026-05/02-daily-alpaca-rangers-2)
+
+---
+
+## 演習 2: Alpaca Rangers（Medium）
+
+**問題リンク**: [https://alpacahack.com/daily/challenges/alpaca-rangers](https://alpacahack.com/daily/challenges/alpaca-rangers)
+
+### 問題概要
+
+Alpaca Rangers シリーズの第1作です。PHP製の画像ビューアで、`img` パラメータで指定したファイルを `file_get_contents()` で読み込んで表示します。フラグは `/flag.txt` にあります。
+
+### 解法のヒント
+
+1. ファイル名を指定するパラメータを見つけましょう
+2. `..` を含むパスはフィルタリングされています。他の方法で絶対パスを指定できないか考えましょう
+3. PHPの `file_get_contents()` はストリームラッパーをサポートしています
+
+<details>
+<summary>詳しいヒントと解説</summary>
+
+ディレクトリトラバーサル（LFI）の問題です。演習 1 と異なり、`..` は `str_contains()` でしっかりフィルタリングされています。しかし、バリデーションは `..` の有無しかチェックしておらず、PHPの **ストリームラッパー** を使えばバイパスできます。
+
+`file:///flag.txt` は：
+
+- `/` で始まらない（`f` で始まる） → 絶対パスチェックを通過
+- `..` を含まない → トラバーサルチェックを通過
+- しかし `file_get_contents()` は `file://` スキームとして解釈し、`/flag.txt` の内容を読み取る
+
+```
+?img=file:///flag.txt
+```
+
+レスポンス中の Data URI からBase64部分をデコードするとフラグが得られます。別解として `php://filter/resource=/flag.txt` でも可能です。 **パスをパラメータで受け取る実装** の危険性を示す問題です。
+
+</details>
+
+### 参考Writeup
+
+- [tchenによるwriteup（GitHub）](https://github.com/tepel-chen/My-CTF-Challs/tree/main/Daily%20AlpacaHack/Alpaca%20Rangers)
+
+---
+
+## 演習 3: Flag for localhost（Easy）
+
+**問題リンク**: [https://alpacahack.com/daily/challenges/flag-for-localhost](https://alpacahack.com/daily/challenges/flag-for-localhost)
+
+### 問題概要
+
+「localhost からアクセスするとフラグがもらえる」というWebアプリです。
+
+### 解法のヒント
+
+1. ページにアクセスして、通常レスポンスを確認します
+2. 「localhost」からのアクセスが必要です
+3. IPアドレスを偽装するヘッダーを思い出しましょう
+
+<details>
+<summary>詳しいヒントと解説</summary>
+
+`X-Forwarded-For` ヘッダーでIPアドレスを偽装する問題です。
+
+<Terminal
+  command={`curl <サーバーのURL> \\
+  -H "X-Forwarded-For: 127.0.0.1"`}
+/>
+
+サーバーが `X-Forwarded-For` を信頼してアクセス制御を行っていると、ヘッダー1つでlocalhostからのアクセスとして扱われます。今回の講義で扱った **HTTPヘッダー偽装** の典型例です。
+
+</details>
+
+### 参考Writeup
+
+- [nozokareによるwriteup（GitHub）](https://github.com/nozokare/my-alpaca-ctf/tree/main/2026-06/06-daily-flag-for-localhost)
+
+---
+
+## 演習 4: Another Login Challenge（Medium）
+
+**問題リンク**: [https://alpacahack.com/daily/challenges/another-login-challenge](https://alpacahack.com/daily/challenges/another-login-challenge)
+
+### 問題概要
+
+Express製のログインフォームです。`admin` ユーザーが登録されていますが、パスワードはランダムな32バイトなので推測不可能です。
+
+### 解法のヒント
+
+1. ブラウザのフォームには `username` と `password` が両方 `required` です
+2. curlなら `password` を送信しないリクエストが作れます
+3. JavaScriptのオブジェクトで、 `users[username]` の `username` に `toString` や `constructor` のような **プロトタイプから継承されたプロパティ名** を入れるとどうなるでしょうか
+4. その戻り値は truthy ですが、 `password` プロパティは持っていません
+
+<details>
+<summary>詳しいヒントと解説</summary>
+
+JavaScriptの **プロトタイプチェーン** を利用したログイン回避問題です。
+
+サーバーのコードは以下のようになっています：
+
+```javascript
+const user = users[username];
+if (!user || user.password !== password) {
+  return res.send("invalid credentials");
+}
+res.send(FLAG);
+```
+
+`username` に `toString` を指定し、 `password` を送信しない（undefinedにする）と：
+
+- `users["toString"]` = `Object.prototype.toString`（関数なので truthy、 `!user` は `false`）
+- `user.password` = `undefined`（ `Object.prototype.toString` には `password` がない）
+- `password` = `undefined`（送信していない）
+- `undefined !== undefined` = `false` → ログイン成功
+
+<Terminal
+  command={`curl -X POST <サーバーのURL> \\
+  -d "username=toString"`}
+/>
+
+`toString` 以外にも、 `constructor` や `__proto__` など `Object.prototype` から継承されたプロパティ名なら同様に bypass できます。ブラウザのフォームでは `password` が `required` なので送信せざるを得ませんが、curlなら省略できます。 **「クライアントが送る値を工夫する」** という今回のテーマそのものです。
+
+</details>
+
+### 参考Writeup
+
+- [tchenによるwriteup（GitHub）](https://github.com/tepel-chen/My-CTF-Challs/tree/main/Daily%20AlpacaHack/Another%20Login%20Challenge)
+
+---
+
+## 次回予告
+
+次回は **Injection 攻撃** （SQL Injection、Command Injection）を扱います。
+
+- ユーザー入力を **そのまま** システムに流してしまう脆弱性を突く、代表的な Web 攻撃
+- `'; DROP TABLE users; --` のような有名な "Bobby Tables" 攻撃の正体
+- 防御側の基本的な考え方（ **パラメータ化クエリ / エスケープ** ）
+
+## 締め切り
+
+**次回講義の前日 23:59 まで**
+
+## まとめ
+
+1. **ディレクトリトラバーサル** で意図しないファイルを読み取れる
+2. **フィルタのバイパス** で不完全なサニタイゼーションを回避できる
+3. **ヘッダー偽装** でアクセス制御を回避できる
+4. **パラメータの工夫** でサーバーのロジックを崩せる
+5. **クライアント側のデータは信頼できない**
