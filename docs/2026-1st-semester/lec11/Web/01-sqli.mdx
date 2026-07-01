@@ -1,13 +1,10 @@
 ---
-sidebar_position: 3
-draft: true
+sidebar_position: 2
 ---
 
+import Terminal from '@site/src/components/Terminal';
+
 # SQL Injection
-
-## 前回の振り返り
-
-前回の演習では、`....//` でreplace関数のフィルタをバイパスするディレクトリトラバーサルを学びました。今回は、データベースを標的とするSQL Injectionを学びます。
 
 ## 今回の目標
 
@@ -22,37 +19,15 @@ draft: true
 ### 前提条件
 
 この攻撃が成立するには：
+
 - WebアプリケーションがSQLデータベースを使用している
 - 入力値がSQLクエリに文字列結合されている
 - 適切な入力検証やパラメータ化が行われていない
 
-### 攻撃成功時のレスポンス例
-
-```http
-HTTP/1.1 200 OK
-Content-Type: application/json
-
-{"user": "admin", "flag": "FLAG{sql_injection_success}"}
-```
-
-### 攻撃失敗時のエラー例
-
-```http
-HTTP/1.1 500 Internal Server Error
-{"error": "SQL syntax error near ''"}
-```
-
-### 成功/失敗の判定基準
+### 攻撃成功/失敗の判定
 
 - **成功**: flagが含まれたレスポンス、または認証バイパス後の管理画面
-- **失敗**: SQLエラー、403 Forbidden、または通常のエラーページ
-
-### 検出方法（防御側）
-
-- SQLエラーログの確認
-- WAF（Web Application Firewall）のログ
-- データベースの監査ログ
-- 不自然なクエリパターンの検出
+- **失敗**: SQLエラー（`500 Internal Server Error`、`SQL syntax error`）、`403 Forbidden`、または通常のエラーページ
 
 ## SQLの基本（前提知識）
 
@@ -146,16 +121,16 @@ UNION SELECT table_name, null FROM information_schema.tables --
 
 ### 認証バイパス
 
-```bash
-curl -X POST https://target.com/login \
-  -d "username=admin'--&password=anything"
-```
+<Terminal
+  command={`curl -X POST https://target.com/login \\
+  -d "username=admin'--&password=anything"`}
+/>
 
 ### UNION Injection
 
-```bash
-curl "https://target.com/profile?id=1+UNION+SELECT+1,2--"
-```
+<Terminal
+  command={`curl "https://target.com/profile?id=1+UNION+SELECT+1,2--"`}
+/>
 
 ### よく使うペイロード
 
@@ -180,7 +155,27 @@ admin' --
 実行(クエリ, 入力)
 ```
 
-パラメータ化では、入力が常に「値」として扱われ、「SQL構造の一部」として解釈されません。
+パラメータ化では、入力が常に「値」として扱われ、「SQL構文の一部」として解釈されません。
+
+:::note 防御側の視点
+
+### 検出方法
+
+- SQLエラーログの確認
+- WAF（Web Application Firewall）のログ
+- データベースの監査ログ
+- 不自然なクエリパターンの検出
+
+### 関連する攻撃 Successful Response Example
+
+```http
+HTTP/1.1 200 OK
+Content-Type: application/json
+
+{"user": "admin", "flag": "FLAG{sql_injection_success}"}
+```
+
+:::
 
 ## CTFでのポイント
 
@@ -190,8 +185,6 @@ admin' --
 
 ## まとめ
 
-SQL Injectionは、データベースを標的とする最も古典的かつ危険な攻撃手法です。
-
-パラメータ化クエリを使用することで、完全に防御可能です。
+SQL Injectionは、データベースを標的とする最も古典的かつ危険な攻撃手法です。パラメータ化クエリを使用することで、完全に防御可能です。
 
 次は、同じInjection系の**Command Injection**について学びます。SQL Injectionがデータベースを対象とするのに対し、Command InjectionはサーバーのOSを対象とします。
