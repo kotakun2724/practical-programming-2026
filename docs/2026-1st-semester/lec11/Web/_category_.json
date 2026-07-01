@@ -1,0 +1,8 @@
+{
+  "label": "Web",
+  "position": 2,
+  "link": {
+    "type": "generated-index",
+    "description": "SQL Injection と Command Injection の原理・手法を学び、データベースやOSコマンドを標的とする攻撃を理解します。"
+  }
+}
