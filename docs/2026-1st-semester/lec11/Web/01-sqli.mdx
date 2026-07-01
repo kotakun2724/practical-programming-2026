@@ -67,9 +67,7 @@ SELECT * FROM users WHERE username='admin'-- ' AND password='(任意)'
 
 `-- ` （半角スペース付き）はSQLのコメントアウトなので、パスワードチェックが無視されます。
 
-## SQL Injectionの種類
-
-### 1. 認証バイパス
+## 認証バイパス
 
 ログインフォームで、パスワードチェックを回避します。
 
@@ -83,7 +81,7 @@ admin' #
 - `#` はMySQLのコメント
 - `' OR '1'='1` は常に真になる条件
 
-### 2. UNION Injection
+## UNION Injection
 
 `UNION`句を使って、他のテーブルのデータを抽出します。
 
@@ -91,7 +89,9 @@ admin' #
 SELECT name, description FROM products WHERE id=1 UNION SELECT username, password FROM users --
 ```
 
-#### カラム数の特定
+`UNION` は2つの `SELECT` 結果を **縦に結合する** 演算子です。元クエリと **列数・型を一致させる** 必要があるため、まずは次セクション以降でその準備手法（`ORDER BY` でカラム数を特定 → `sqlite_master` でテーブル構造を取得）を学びます。
+
+## カラム数の特定（ORDER BY）
 
 ```
 ORDER BY 1   → OK
@@ -99,11 +99,11 @@ ORDER BY 2   → OK
 ORDER BY 3   → エラー → カラム数は2
 ```
 
-#### データベースの構造を取得
+## データベースの構造を取得
 
 テーブル名やカラム名が分からない場合、データベースのメタ情報から取得できます。
 
-**SQLiteの場合:**
+### SQLiteの場合
 
 ```sql
 UNION SELECT group_concat(sql), null FROM sqlite_master --
@@ -111,7 +111,7 @@ UNION SELECT group_concat(sql), null FROM sqlite_master --
 
 `sqlite_master` はSQLiteのシステムテーブルで、全テーブルの定義（CREATE文）が格納されています。`group_concat()` は複数の行を1つの文字列に結合する関数です。
 
-**MySQLの場合:**
+### MySQLの場合
 
 ```sql
 UNION SELECT table_name, null FROM information_schema.tables --
