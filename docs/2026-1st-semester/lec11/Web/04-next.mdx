@@ -24,41 +24,24 @@ import Terminal from '@site/src/components/Terminal';
 4. `sqlite_master` からテーブル名・カラム名を取得します
 
 <details>
-<summary>詳しいヒント</summary>
+<summary>詳しいヒントと解説</summary>
 
-UNION Injection を使います。
+UNION Injection を使います。SQL Injection の基本的なテクニックを以下の順序で進めます：
 
-まず、`UNION SELECT null, null-- ` でカラム数を特定します（2 カラム）。
-
-次に、`sqlite_master` から全テーブルの SQL 定義を取得します：
-
-```sql
-UNION SELECT group_concat(sql), null FROM sqlite_master-- 
-```
-
-これで秘密のテーブル名とカラム名が分かるので、そこから flag を取得します。
-
-</details>
-
-<details>
-<summary>解説</summary>
-
-SQL Injection の基本的なテクニックを使います：
-
-1. カラム数の特定: `UNION SELECT null, null-- `
-2. テーブル情報の取得: `UNION SELECT group_concat(sql), null FROM sqlite_master-- `
-3. 秘密のテーブル名・カラム名を確認
-4. データの抽出: `UNION SELECT flag_column, null FROM secret_table-- `
+1. **カラム数の特定**: `UNION SELECT null, null-- ` でカラム数を確認します（2 カラム）
+2. **テーブル情報の取得**: `UNION SELECT group_concat(sql), null FROM sqlite_master-- ` で全テーブルの SQL 定義を取得します
+3. **秘密のテーブル名・カラム名を確認** し、実際の flag を抽出します
+4. **データの抽出**: `UNION SELECT flag_column, null FROM secret_table-- `
 
 SQLite では `sqlite_master` テーブルから全てのテーブル定義を取得できます。
 
-</details>
-
-### よくあるミス
+**よくあるミス**:
 
 - `UNION SELECT` のカラム数が一致しないとエラーになります。`null` の数を調整してください
 - `--` の後に **半角スペース** が必要です（`-- ` ）
 - SQLite では `sqlite_master`、MySQL では `information_schema.tables` を使います
+
+</details>
 
 ### 参考Writeup
 
