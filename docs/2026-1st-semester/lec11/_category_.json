@@ -1,8 +1,8 @@
 {
-    "label": "第11回: Injection攻撃",
-    "position": 11,
-    "link": {
-        "type": "generated-index",
-        "description": "SQL Injection、Command Injectionの原理と手法を学び、データベースやシステムを標的とする攻撃を理解します。"
-    }
+  "label": "第11回: CTF実践 (Web / Crypto)",
+  "position": 11,
+  "link": {
+    "type": "generated-index",
+    "description": "Cryptoではオイラーの定理とオイラーのφ関数を学び、WebではSQL Injection・Command Injectionといったユーザー入力をシステムに流す脆弱性を突く攻撃手法を扱います。"
+  }
 }
