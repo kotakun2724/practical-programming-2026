@@ -1,0 +1,109 @@
+---
+sidebar_position: 4
+---
+
+import Terminal from '@site/src/components/Terminal';
+
+# 演習: Injection 攻撃
+
+今回の講義で学んだ SQL Injection と Command Injection を使って、Daily AlpacaHack の問題を解いてみましょう。
+
+## 演習 1: secret-table-2（Medium）
+
+**問題リンク**: [https://alpacahack.com/daily/challenges/secret-table-2](https://alpacahack.com/daily/challenges/secret-table-2)
+
+### 問題概要
+
+ログインフォームで、秘密のテーブルから flag を取得します。テーブル名やカラム名は不明ですが、SQL Injection で情報を取得できます。
+
+### 解法のヒント
+
+1. ページにアクセスして、機能を観察します
+2. ログインフォームに SQL Injection を試してみます
+3. `UNION SELECT` でカラム数を特定します
+4. `sqlite_master` からテーブル名・カラム名を取得します
+
+<details>
+<summary>詳しいヒントと解説</summary>
+
+UNION Injection を使います。SQL Injection の基本的なテクニックを以下の順序で進めます：
+
+1. **カラム数の特定**: `UNION SELECT null, null-- ` でカラム数を確認します（2 カラム）
+2. **テーブル情報の取得**: `UNION SELECT group_concat(sql), null FROM sqlite_master-- ` で全テーブルの SQL 定義を取得します
+3. **秘密のテーブル名・カラム名を確認** し、実際の flag を抽出します
+4. **データの抽出**: `UNION SELECT flag_column, null FROM secret_table-- `
+
+SQLite では `sqlite_master` テーブルから全てのテーブル定義を取得できます。
+
+**よくあるミス**:
+
+- `UNION SELECT` のカラム数が一致しないとエラーになります。`null` の数を調整してください
+- `--` の後に **半角スペース** が必要です（`-- ` ）
+- SQLite では `sqlite_master`、MySQL では `information_schema.tables` を使います
+
+</details>
+
+### 参考Writeup
+
+- [goroshirowによるwriteup（GitHub）](https://github.com/goroshirow/CTF-WriteUps/tree/main/AlpacaHack/2026May/secret-table-2)
+
+---
+
+## 演習 2: curl as a service（Medium）
+
+**問題リンク**: [https://alpacahack.com/daily/challenges/curl-as-a-service](https://alpacahack.com/daily/challenges/curl-as-a-service)
+
+### 問題概要
+
+「This is a service that executes curl command!」— ユーザーが入力した引数を `curl` に渡して実行する Web サービスです。flag は **SSH サービスを提供している別コンテナ** にあります。
+
+### 解法のヒント
+
+1. どんな入力を受け付けているか、ページを観察します
+2. `curl` に **任意の引数** を渡せることに注目します
+3. `curl` は HTTP 以外にも様々なプロトコルをサポートしています（`file://`, `scp://`, `sftp://`, `gopher://` など）
+4. flag を持つコンテナは **SSH サービス** を提供しています
+
+<details>
+<summary>詳しいヒントと解説</summary>
+
+典型的な Command Injection では `; cat /flag.txt` のような **シェルメタ文字** で別コマンドを繋ぎますが、この問題は単純に `curl <入力>` を実行しているわけではありません。ポイントは **`curl` 自体の機能（引数インジェクション）** です。
+
+`curl` は `scp://user:pass@host:port/path` のような URL を渡すと、**SSH プロトコル** でファイル取得を試みます。flag コンテナが SSH を公開しているので、`curl` のプロトコル機能を経由して flag を読めます。
+
+チラシの裏：
+
+- まず `file:///etc/passwd` などで `curl` がローカルファイルも読めることを確認
+- SSH 先のホスト名・ユーザ名・パスワードは問題付属のソースコード（`docker-compose.yml` 等）を確認
+- `curl scp://<user>:<pass>@<host>:<port>/path/to/flag` で取得
+
+`os.system` のような **シェルを経由する実装** であれば `;` による古典的コマンド注入も成立しますが、`execve` 系で **引数を配列で渡している** 場合はシェルメタ文字が効かず、代わりに **curl の `-o` 等のオプションを突破できるか** が鍵になります。本問は **「コマンドを呼ぶ＝コマンドの機能も全部ユーザーに開放する」** ことを示す好例です。
+
+</details>
+
+### 参考Writeup
+
+- [goroshirowによるwriteup（GitHub）](https://github.com/goroshirow/CTF-WriteUps/tree/main/AlpacaHack/2026May/curl%20as%20a%20service)
+
+---
+
+## 次回予告
+
+次回は **XSS（Cross-Site Scripting）** と **CSRF（Cross-Site Request Forgery）** を扱います。
+
+- Injection 攻撃が **サーバー側のデータベースやOS** を標的にしたのに対し、XSS は **他のユーザーのブラウザ** を標的にする
+- **反射型 XSS** と **保存型 XSS** の違い、**Cookie の窃取** や **CSP** などの緩和策
+- CSRF はユーザーの **ログイン状態を悪用** して意図しないリクエストを送らせる
+
+## 締め切り
+
+**次回講義の前日 23:59 まで**
+
+## まとめ
+
+1. **SQL Injection** でデータベースの情報を不正に取得できる
+2. **`sqlite_master`**（SQLite）や **`information_schema`**（MySQL）でテーブル情報を取得できる
+3. **Command Injection** でサーバー OS 上で任意のコマンドを実行できる（RCE）
+4. どちらも **「ユーザー入力をそのままシステムに流す」** ことが根本原因
+5. 防御の基本は **パラメータ化クエリ / エスケープ / 厳密な入力検証 / OSコマンドを呼ばない・シェルを経由しない**
+6. **クライアント側のデータは信頼できない**（lec10 からの継続テーマ）
