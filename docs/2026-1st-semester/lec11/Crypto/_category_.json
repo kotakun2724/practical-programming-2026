@@ -1,0 +1,8 @@
+{
+    "label": "Cryptography",
+    "position": 1,
+    "link": {
+        "type": "generated-index",
+        "description": "RSA 暗号において重要なオイラーの定理，オイラーのトーシェント関数を学びます．"
+    }
+}

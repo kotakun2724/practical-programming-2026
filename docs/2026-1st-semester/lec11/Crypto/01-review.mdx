@@ -1,0 +1,82 @@
+---
+sidebar_position: 2
+---
+
+# 前回課題解説
+
+## Modular Arithmetic 1
+
+> Calculate the following integers:
+> 
+> $$
+> \begin{align*}
+>   & 11 \equiv x \bmod 6 \\
+>   & 8146798528947 \equiv y \bmod 17
+> \end{align*}
+> $$
+> 
+> The solution is the smaller of the two integers, $(x,y)$, you obtained after reducing by the modulus.
+
+$$
+\begin{align*}
+  & 11 \equiv x \bmod 6 \\
+  & 8146798528947 \equiv y \bmod 17
+\end{align*}
+$$
+
+について，$x, y$ を求め，どちらか小さい方を flag として提出する問題でした．
+
+```python
+print(min(11 % 6, 8146798528947 % 17))
+```
+
+```shell
+$ python solve.py
+4
+```
+
+## Modular Arithmetic 2
+
+> Now take the prime $p = 65537$. Calculate $273246787654^{65536} \mod {65537}$.
+
+$273246787654^{65536} \mod {65537}$ を計算結果を flag として提出する問題でした．
+
+Modular Arithmetic 1 と同じように何かしらコードを書いて計算結果を求めることもできますが，もっと簡単にかつ早く求めることができます．
+
+法 $m = 65537$ と指数 $e = 65536$ を比べると $e = p - 1$ かつ，$m$ は素数なのでフェルマーの小定理を用いることができるとわかります．
+
+従って，$273246787654^{65536} \equiv 1 \pmod {65537}$．
+
+## Modular Inverting
+
+> What is the inverse element: $d = 3^{−1}$ such that $3 \cdot d \equiv 1 \mod {13}$?
+
+法 $13$ 上の $3$ のモジュラー逆数を求める問題です．
+
+- 拡張ユークリッドの互除法
+
+  第9回演習で実装した拡張ユークリッドの互除法を用います．
+
+  ```python
+  def recur_egcd(a, b):
+      if b == 0:
+          return a, 1, 0
+      else:
+          q = a // b
+          r = a % b
+          g, x, y = recur_egcd(b, r)
+          return g, y, x-q*y
+  ```
+  
+  `recur_egcd(a, b)` に第一引数として $3$，第二引数として $13$ を渡した場合，返り値の二つ目（$x$ にあたる）が $3$ のモジュラー引数となります．
+
+- フェルマーの小定理
+
+  $13$ は素数なのでフェルマーの小定理が使えます．
+  フェルマーの小定理より $a^{p-2} \equiv a^{-1} \bmod p$．
+  
+  ```python
+  pow(3, 11, 13)
+  ```
+
+  問題文をちゃんと読めば，フェルマーの小定理を使用するのが想定解法であることがわかります．
