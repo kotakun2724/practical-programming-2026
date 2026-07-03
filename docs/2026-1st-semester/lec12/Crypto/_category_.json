@@ -1,0 +1,8 @@
+{
+    "label": "Cryptography",
+    "position": 1,
+    "link": {
+        "type": "generated-index",
+        "description": "公開鍵暗号方式の代表例である RSA 暗号方式の仕組みと、その実装方法を学びます．"
+    }
+}

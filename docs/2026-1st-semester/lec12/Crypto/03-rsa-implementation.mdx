@@ -1,0 +1,137 @@
+---
+sidebar_position: 4
+---
+
+# RSA 暗号の実装と文字列の扱い
+
+数学的な概念が理解できたら，実際に Python を使って RSA 暗号の動作を確認してみましょう．
+
+## 1. 小さな数での RSA 暗号の実装
+
+まずは手軽に計算できるように，小さな素数を使って「鍵生成」「暗号化」「復号」の流れをシミュレーションします．
+
+```python
+# 1. 鍵生成
+p = 61
+q = 53
+N = p * q                # N = 3233
+phi = (p - 1) * (q - 1)  # phi = 3120
+
+# phi と互いに素な e を選ぶ
+e = 17
+
+# d (e の mod phi における逆元) を計算
+d = pow(e, -1, phi)      # d = 2753
+
+print(f"公開鍵: (e={e}, N={N})")
+print(f"秘密鍵: (d={d}, N={N})")
+
+# ----------------------------------------
+# 2. 暗号化
+# 平文 m (0 <= m < N)
+m = 65  # 'A' の ASCII コード
+c = pow(m, e, N)
+print(f"平文: {m} -> 暗号文: {c}")
+
+# ----------------------------------------
+# 3. 復号
+decrypted_m = pow(c, d, N)
+print(f"暗号文: {c} -> 復号された平文: {decrypted_m}")
+```
+
+### 実行結果
+
+```shell
+$ python rsa_tiny.py
+公開鍵: (e=17, N=3233)
+秘密鍵: (d=2753, N=3233)
+平文: 65 -> 暗号文: 2790
+暗号文: 2790 -> 復号された平文: 65
+```
+
+平文 `65` が `2790` という暗号文に暗号化され，それを秘密鍵 $d$ を使って復号すると正しく `65` に戻ることが確認できました．
+
+---
+
+## 2. 文字列（テキスト）を暗号化する方法
+
+実際の通信では，数値ではなく「Hello」などの文字列を暗号化する必要があります．
+RSA 暗号は数学的な剰余演算（ $\bmod N$ ）を行うため，**文字列を巨大な整数に変換**し，暗号化・復号を行った後に，再び文字列へと戻します．
+
+### Python 組み込み関数での変換
+
+Python の組み込みメソッド `int.from_bytes()` と `int.to_bytes()` を使うと，文字列（バイト列）と整数の相互変換ができます．
+
+```python
+message = "HELLO_RSA"
+# 1. 文字列をバイト列に変換
+message_bytes = message.encode('utf-8')
+print("バイト列:", message_bytes)
+
+# 2. バイト列を整数に変換 (Big Endian)
+m = int.from_bytes(message_bytes, byteorder='big')
+print("整数表現:", m)
+
+# 3. 整数をバイト列に戻す
+restored_bytes = m.to_bytes((m.bit_length() + 7) // 8, byteorder='big')
+# 4. バイト列を文字列に戻す
+restored_message = restored_bytes.decode('utf-8')
+print("復元文字列:", restored_message)
+```
+
+```shell
+$ python convert.py
+バイト列: b'HELLO_RSA'
+整数表現: 3326168585489709121
+復元文字列: HELLO_RSA
+```
+
+---
+
+## 3. PyCryptodome (CryptoHack推奨ライブラリ) での変換
+
+CTF や CryptoHack では，バイト列と整数の変換をより簡単に行うために `pycryptodome` ライブラリの `Crypto.Util.number` モジュールがよく使われます．
+
+すでに前回の環境構築で `pycryptodome` をインストールしている場合は，以下の関数を使うことで非常にスッキリと記述できます．
+
+* `bytes_to_long(bytes)` : バイト列を整数に変換する
+* `long_to_bytes(int)` : 整数をバイト列に変換する
+
+### 実装コード例
+
+```python
+from Crypto.Util.number import bytes_to_long, long_to_bytes
+
+# 大きめの素数を用意
+p = 1000000000000000000000000000000000000000000000000000000000000000000000000000000000000000103  # ダミーの素数
+q = 1000000000000000000000000000000000000000000000000000000000000000000000000000000000000000137  # ダミーの素数
+N = p * q
+phi = (p - 1) * (q - 1)
+e = 65537
+d = pow(e, -1, phi)
+
+# 平文メッセージ
+message = b"flag{rsa_is_awesome}"
+
+# 1. メッセージを整数にする
+m = bytes_to_long(message)
+print(f"平文(整数): {m}")
+
+# 2. 暗号化
+c = pow(m, e, N)
+print(f"暗号文: {c}")
+
+# 3. 復号
+decrypted_m = pow(c, d, N)
+
+# 4. 整数を元のバイト列に戻す
+decrypted_message = long_to_bytes(decrypted_m)
+print(f"復号メッセージ: {decrypted_message.decode('utf-8')}")
+```
+
+:::warning 注意点
+
+平文を整数にした値 $m$ が $N$ 以上になってしまうと（ $m \ge N$ ）， $\bmod N$ で情報が切り落とされてしまい，正しく復号できなくなります．
+そのため，暗号化する平文の長さ（バイトサイズ）は， $N$ のバイトサイズ未満にする必要があります．
+
+:::
