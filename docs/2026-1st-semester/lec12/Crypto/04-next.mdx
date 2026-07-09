@@ -6,46 +6,33 @@ sidebar_position: 5
 
 ## 次回の内容
 
-- RSA 暗号に対する攻撃手法（暗号の解読）
-  - $N$ が小さい場合の素因数分解攻撃（factordb等の利用）
-  - 公開指数 $e$ が極端に小さい場合の攻撃（Low Public Exponent Attack / Broadcast Attack）
-
-次回は，安全だと思われている RSA 暗号がどのような設定ミスや実装不備によって破られてしまうのか，その攻撃手法を学びます．
+- RSA 暗号の脆弱性について．
+- RSA 暗号を題材にした CTF の問題を解く．
 
 ---
 
 ## 今回の課題
 
-以下の 4 問を解いてください．
+以下の2問を解いてください．
 
 | プラットフォーム | 問題セット | 問題名 | 内容 | リンク |
 |:-----------------|:---------|:-------|:-----|:-------|
-| CryptoHack | RSA | RSA Starter 1 | モジュラー冪乗の計算 | [問題ページ](https://cryptohack.org/challenges/rsa/) |
-| CryptoHack | RSA | RSA Starter 2 | 公開鍵による暗号化の実践 | [問題ページ](https://cryptohack.org/challenges/rsa/) |
-| CryptoHack | RSA | RSA Starter 3 | 秘密鍵 $d$ の生成と復号の実践 | [問題ページ](https://cryptohack.org/challenges/rsa/) |
-| CryptoHack | RSA | Monoprime | $N$ が素数1つの場合の RSA | [問題ページ](https://cryptohack.org/challenges/rsa/) |
+| CryptoHack       | RSA      | Public Keys   | RSA 暗号の公開鍵を求め，暗号化する| https://cryptohack.org/challenges/rsa/        |
+| CryptoHack       | RSA      | RSA Decryption   | 暗号文が与えられるので，復号する| https://cryptohack.org/challenges/rsa/        |
 
 ### 各問題のヒント
 
-#### 1. RSA Starter 1
-数値の $101^{17} \bmod 22663$ を計算する問題です．
-Python の `pow(base, exp, mod)` を使って計算しましょう．
+#### 1. Public Keys
 
-#### 2. RSA Starter 2
-平文整数 $12$ を，公開鍵 $e = 65537, N = 17 \times 23$ を用いて暗号化した値を求める問題です．
-暗号化の数式 $c \equiv m^e \pmod N$ をそのまま Python で計算するだけです．
+問題文で与えられたパラメータを用いて $12$ を暗号化します．
 
-#### 3. RSA Starter 3
-与えられた $p, q, e$ から秘密鍵 $d$ を求め，それを使って暗号文 $c$ を復号する問題です．
-- $\varphi(N) = (p-1)(q-1)$
-- $d = \text{pow}(e, -1, \varphi(N))$
-- $m = \text{pow}(c, d, N)$
-- 復号された整数 $m$ を， `long_to_bytes` などを用いて文字列（バイト列）に変換すると flag が得られます．
+暗号文を flag として提出する問題です．
 
-#### 4. Monoprime
-通常， RSA 暗号の $N$ は二つの素数の積 $N = pq$ ですが，この問題では $N$ が**一つの素数 $p$ そのもの**（ $N = p$ ）になっています．
-$N = p$ が素数であるため，オイラーの $\varphi$ 関数は $\varphi(N) = N - 1$ となります．
-これを用いれば，通常と同様に秘密鍵 $d$ を求めて復号することができます．
+#### 2. RSA Decryption
+
+$N$ の素因数 $p, q$ は前回演習課題の Private Keys の $p,q$ です．
+
+与えられた暗号文 $c$ を復号した結果を flag として提出する問題です．
 
 ---
 

@@ -1,0 +1,317 @@
+<mxfile host="Electron" pages="3">
+  <diagram name="ページ-1" id="90Dek2I7_wBsY0jRSX8I">
+    <mxGraphModel dx="1174" dy="829" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1169" pageHeight="827" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="Q6VWhvQU8WJDtMMk_UGA-1" parent="1" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;outlineConnect=0;aspect=fixed;fontSize=24;" value="&lt;div&gt;&lt;br&gt;&lt;/div&gt;" vertex="1">
+          <mxGeometry height="160" width="80" x="280" y="80" as="geometry" />
+        </mxCell>
+        <mxCell id="Q6VWhvQU8WJDtMMk_UGA-4" parent="1" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;outlineConnect=0;aspect=fixed;fontSize=24;" value="" vertex="1">
+          <mxGeometry height="160" width="80" x="640" y="80" as="geometry" />
+        </mxCell>
+        <mxCell id="Q6VWhvQU8WJDtMMk_UGA-5" edge="1" parent="1" source="Q6VWhvQU8WJDtMMk_UGA-4" style="endArrow=classic;html=1;rounded=0;fontSize=24;" value="">
+          <mxGeometry height="50" relative="1" width="50" as="geometry">
+            <mxPoint x="680" y="270" as="sourcePoint" />
+            <mxPoint x="680" y="580" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="Q6VWhvQU8WJDtMMk_UGA-6" parent="1" style="text;html=1;whiteSpace=wrap;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;rounded=0;fontSize=24;" value="受信者" vertex="1">
+          <mxGeometry height="40" width="80" x="280" y="40" as="geometry" />
+        </mxCell>
+        <mxCell id="Q6VWhvQU8WJDtMMk_UGA-7" parent="1" style="text;html=1;whiteSpace=wrap;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;rounded=0;fontSize=24;" value="送信者" vertex="1">
+          <mxGeometry height="40" width="80" x="640" y="40" as="geometry" />
+        </mxCell>
+        <mxCell id="Q6VWhvQU8WJDtMMk_UGA-8" edge="1" parent="1" source="Q6VWhvQU8WJDtMMk_UGA-1" style="endArrow=classic;html=1;rounded=0;fontSize=24;" value="">
+          <mxGeometry height="50" relative="1" width="50" as="geometry">
+            <mxPoint x="790" y="440" as="sourcePoint" />
+            <mxPoint x="320" y="580" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="Q6VWhvQU8WJDtMMk_UGA-9" edge="1" parent="1" style="endArrow=classic;html=1;rounded=0;fontSize=24;" value="">
+          <mxGeometry height="50" relative="1" width="50" as="geometry">
+            <mxPoint x="680" y="340" as="sourcePoint" />
+            <mxPoint x="320" y="340" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="Q6VWhvQU8WJDtMMk_UGA-10" parent="1" style="text;html=1;whiteSpace=wrap;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;rounded=0;fontSize=24;" value="&lt;span style=&quot;background-color: transparent; color: light-dark(rgb(0, 0, 0), rgb(255, 255, 255));&quot;&gt;1. 鍵を生成&lt;/span&gt;" vertex="1">
+          <mxGeometry height="40" width="160" x="720" y="260" as="geometry" />
+        </mxCell>
+        <mxCell id="Q6VWhvQU8WJDtMMk_UGA-11" edge="1" parent="1" style="endArrow=classic;html=1;rounded=0;curved=1;fontSize=24;" value="">
+          <mxGeometry height="50" relative="1" width="50" as="geometry">
+            <Array as="points">
+              <mxPoint x="720" y="260" />
+              <mxPoint x="720" y="300" />
+            </Array>
+            <mxPoint x="680" y="260" as="sourcePoint" />
+            <mxPoint x="680" y="300" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="Q6VWhvQU8WJDtMMk_UGA-12" parent="1" style="text;html=1;whiteSpace=wrap;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;rounded=0;fontSize=24;" value="2. 鍵を共有" vertex="1">
+          <mxGeometry height="40" width="360" x="320" y="300" as="geometry" />
+        </mxCell>
+        <mxCell id="Q6VWhvQU8WJDtMMk_UGA-13" edge="1" parent="1" style="endArrow=classic;html=1;rounded=0;curved=1;fontSize=24;" value="">
+          <mxGeometry height="50" relative="1" width="50" as="geometry">
+            <Array as="points">
+              <mxPoint x="720" y="380" />
+              <mxPoint x="720" y="420" />
+            </Array>
+            <mxPoint x="680" y="380" as="sourcePoint" />
+            <mxPoint x="680" y="420" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="Q6VWhvQU8WJDtMMk_UGA-14" parent="1" style="text;html=1;whiteSpace=wrap;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;rounded=0;fontSize=24;" value="3. 受信者に送信したいメッセージを暗号化" vertex="1">
+          <mxGeometry height="80" width="260" x="720" y="360" as="geometry" />
+        </mxCell>
+        <mxCell id="Q6VWhvQU8WJDtMMk_UGA-15" edge="1" parent="1" style="endArrow=classic;html=1;rounded=0;fontSize=24;" value="">
+          <mxGeometry height="50" relative="1" width="50" as="geometry">
+            <mxPoint x="680" y="460" as="sourcePoint" />
+            <mxPoint x="320" y="460" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="Q6VWhvQU8WJDtMMk_UGA-16" parent="1" style="text;html=1;whiteSpace=wrap;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;rounded=0;fontSize=24;" value="4. 暗号文を送信" vertex="1">
+          <mxGeometry height="41" width="360" x="320" y="420" as="geometry" />
+        </mxCell>
+        <mxCell id="Q6VWhvQU8WJDtMMk_UGA-17" edge="1" parent="1" style="endArrow=classic;html=1;rounded=0;curved=1;fontSize=24;" value="">
+          <mxGeometry height="50" relative="1" width="50" as="geometry">
+            <Array as="points">
+              <mxPoint x="280" y="500" />
+              <mxPoint x="280" y="540" />
+            </Array>
+            <mxPoint x="320" y="500" as="sourcePoint" />
+            <mxPoint x="320" y="540" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="Q6VWhvQU8WJDtMMk_UGA-18" parent="1" style="text;html=1;whiteSpace=wrap;strokeColor=none;fillColor=none;align=right;verticalAlign=middle;rounded=0;fontSize=24;" value="5. 共有された鍵で暗号文を復号" vertex="1">
+          <mxGeometry height="80" width="190" x="90" y="480" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+  <diagram id="n7sgpd86wkYzC7lVVxnL" name="ページ-2">
+    <mxGraphModel dx="1174" dy="829" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1169" pageHeight="827" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="IJ0qW4bR6047AdXvCHF6-1" parent="1" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;outlineConnect=0;aspect=fixed;fontSize=24;" value="&lt;div&gt;&lt;br&gt;&lt;/div&gt;" vertex="1">
+          <mxGeometry height="160" width="80" x="320" y="80" as="geometry" />
+        </mxCell>
+        <mxCell id="IJ0qW4bR6047AdXvCHF6-2" parent="1" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;outlineConnect=0;aspect=fixed;fontSize=24;" value="" vertex="1">
+          <mxGeometry height="160" width="80" x="680" y="80" as="geometry" />
+        </mxCell>
+        <mxCell id="IJ0qW4bR6047AdXvCHF6-3" edge="1" parent="1" source="IJ0qW4bR6047AdXvCHF6-2" style="endArrow=classic;html=1;rounded=0;fontSize=24;" value="">
+          <mxGeometry height="50" relative="1" width="50" as="geometry">
+            <mxPoint x="720" y="270" as="sourcePoint" />
+            <mxPoint x="720" y="580" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="IJ0qW4bR6047AdXvCHF6-4" parent="1" style="text;html=1;whiteSpace=wrap;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;rounded=0;fontSize=24;" value="受信者" vertex="1">
+          <mxGeometry height="40" width="80" x="320" y="40" as="geometry" />
+        </mxCell>
+        <mxCell id="IJ0qW4bR6047AdXvCHF6-5" parent="1" style="text;html=1;whiteSpace=wrap;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;rounded=0;fontSize=24;" value="送信者" vertex="1">
+          <mxGeometry height="40" width="80" x="680" y="40" as="geometry" />
+        </mxCell>
+        <mxCell id="IJ0qW4bR6047AdXvCHF6-6" edge="1" parent="1" source="IJ0qW4bR6047AdXvCHF6-1" style="endArrow=classic;html=1;rounded=0;fontSize=24;" value="">
+          <mxGeometry height="50" relative="1" width="50" as="geometry">
+            <mxPoint x="830" y="440" as="sourcePoint" />
+            <mxPoint x="360" y="580" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="IJ0qW4bR6047AdXvCHF6-7" edge="1" parent="1" style="endArrow=none;html=1;rounded=0;fontSize=24;startArrow=classic;startFill=1;endFill=0;" value="">
+          <mxGeometry height="50" relative="1" width="50" as="geometry">
+            <mxPoint x="720" y="340" as="sourcePoint" />
+            <mxPoint x="360" y="340" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="IJ0qW4bR6047AdXvCHF6-8" parent="1" style="text;html=1;whiteSpace=wrap;strokeColor=none;fillColor=none;align=right;verticalAlign=middle;rounded=0;fontSize=24;" value="&lt;span style=&quot;background-color: transparent; color: light-dark(rgb(0, 0, 0), rgb(255, 255, 255));&quot;&gt;1. 鍵（公開鍵，&lt;br&gt;秘密鍵）を生成&lt;/span&gt;" vertex="1">
+          <mxGeometry height="80" width="200" x="120" y="240" as="geometry" />
+        </mxCell>
+        <mxCell id="IJ0qW4bR6047AdXvCHF6-10" parent="1" style="text;html=1;whiteSpace=wrap;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;rounded=0;fontSize=24;" value="2. 公開鍵を共有" vertex="1">
+          <mxGeometry height="40" width="360" x="360" y="300" as="geometry" />
+        </mxCell>
+        <mxCell id="IJ0qW4bR6047AdXvCHF6-11" edge="1" parent="1" style="endArrow=classic;html=1;rounded=0;curved=1;fontSize=24;" value="">
+          <mxGeometry height="50" relative="1" width="50" as="geometry">
+            <Array as="points">
+              <mxPoint x="760" y="380" />
+              <mxPoint x="760" y="420" />
+            </Array>
+            <mxPoint x="720" y="380" as="sourcePoint" />
+            <mxPoint x="720" y="420" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="IJ0qW4bR6047AdXvCHF6-12" parent="1" style="text;html=1;whiteSpace=wrap;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;rounded=0;fontSize=24;" value="3. 受信者に送信したいメッセージを公開鍵で暗号化" vertex="1">
+          <mxGeometry height="120" width="260" x="760" y="340" as="geometry" />
+        </mxCell>
+        <mxCell id="IJ0qW4bR6047AdXvCHF6-13" edge="1" parent="1" style="endArrow=classic;html=1;rounded=0;fontSize=24;" value="">
+          <mxGeometry height="50" relative="1" width="50" as="geometry">
+            <mxPoint x="720" y="460" as="sourcePoint" />
+            <mxPoint x="360" y="460" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="IJ0qW4bR6047AdXvCHF6-14" parent="1" style="text;html=1;whiteSpace=wrap;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;rounded=0;fontSize=24;" value="4. 暗号文を送信" vertex="1">
+          <mxGeometry height="41" width="360" x="360" y="420" as="geometry" />
+        </mxCell>
+        <mxCell id="IJ0qW4bR6047AdXvCHF6-15" edge="1" parent="1" style="endArrow=classic;html=1;rounded=0;curved=1;fontSize=24;" value="">
+          <mxGeometry height="50" relative="1" width="50" as="geometry">
+            <Array as="points">
+              <mxPoint x="320" y="500" />
+              <mxPoint x="320" y="540" />
+            </Array>
+            <mxPoint x="360" y="500" as="sourcePoint" />
+            <mxPoint x="360" y="540" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="IJ0qW4bR6047AdXvCHF6-16" parent="1" style="text;html=1;whiteSpace=wrap;strokeColor=none;fillColor=none;align=right;verticalAlign=middle;rounded=0;fontSize=24;" value="5. 秘密鍵で&lt;br&gt;暗号文を復号" vertex="1">
+          <mxGeometry height="80" width="200" x="120" y="480" as="geometry" />
+        </mxCell>
+        <mxCell id="IJ0qW4bR6047AdXvCHF6-17" edge="1" parent="1" style="endArrow=classic;html=1;rounded=0;entryX=0;entryY=0;entryDx=0;entryDy=0;curved=1;" target="IJ0qW4bR6047AdXvCHF6-10" value="">
+          <mxGeometry height="50" relative="1" width="50" as="geometry">
+            <Array as="points">
+              <mxPoint x="320" y="260" />
+              <mxPoint x="320" y="300" />
+            </Array>
+            <mxPoint x="360" y="260" as="sourcePoint" />
+            <mxPoint x="530" y="270" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+  <diagram id="Z8-tLKC19Bp9-hODKkt2" name="ページ-3">
+    <mxGraphModel dx="1174" dy="829" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1169" pageHeight="827" math="1" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="K8yoUsSb3RlVMtM9PMlb-1" parent="1" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;outlineConnect=0;aspect=fixed;fontSize=24;" value="&lt;div&gt;&lt;br&gt;&lt;/div&gt;" vertex="1">
+          <mxGeometry height="160" width="80" x="320" y="80" as="geometry" />
+        </mxCell>
+        <mxCell id="K8yoUsSb3RlVMtM9PMlb-2" parent="1" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;outlineConnect=0;aspect=fixed;fontSize=24;" value="" vertex="1">
+          <mxGeometry height="160" width="80" x="680" y="80" as="geometry" />
+        </mxCell>
+        <mxCell id="K8yoUsSb3RlVMtM9PMlb-3" edge="1" parent="1" source="K8yoUsSb3RlVMtM9PMlb-2" style="endArrow=classic;html=1;rounded=0;fontSize=24;" value="">
+          <mxGeometry height="50" relative="1" width="50" as="geometry">
+            <mxPoint x="720" y="270" as="sourcePoint" />
+            <mxPoint x="720" y="830" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="K8yoUsSb3RlVMtM9PMlb-4" parent="1" style="text;html=1;whiteSpace=wrap;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;rounded=0;fontSize=24;" value="受信者" vertex="1">
+          <mxGeometry height="40" width="80" x="320" y="40" as="geometry" />
+        </mxCell>
+        <mxCell id="K8yoUsSb3RlVMtM9PMlb-5" parent="1" style="text;html=1;whiteSpace=wrap;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;rounded=0;fontSize=24;" value="送信者" vertex="1">
+          <mxGeometry height="40" width="80" x="680" y="40" as="geometry" />
+        </mxCell>
+        <mxCell id="K8yoUsSb3RlVMtM9PMlb-6" edge="1" parent="1" source="K8yoUsSb3RlVMtM9PMlb-1" style="endArrow=classic;html=1;rounded=0;fontSize=24;" value="">
+          <mxGeometry height="50" relative="1" width="50" as="geometry">
+            <mxPoint x="830" y="440" as="sourcePoint" />
+            <mxPoint x="360" y="830" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="K8yoUsSb3RlVMtM9PMlb-7" edge="1" parent="1" style="endArrow=none;html=1;rounded=0;fontSize=24;startArrow=classic;startFill=1;endFill=0;" value="">
+          <mxGeometry height="50" relative="1" width="50" as="geometry">
+            <mxPoint x="720" y="340" as="sourcePoint" />
+            <mxPoint x="360" y="340" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="K8yoUsSb3RlVMtM9PMlb-8" parent="1" style="text;strokeColor=none;fillColor=none;align=right;verticalAlign=middle;rounded=0;fontSize=24;whiteSpace=wrap;html=1;" value="1. 鍵（公開鍵&amp;nbsp;\(\text{pk}_{\mathcal{PE}}\)，&lt;br&gt;秘密鍵 \(\text{sk}_{\mathcal{PE}}\)）を生成" vertex="1">
+          <mxGeometry height="80" width="240" x="80" y="240" as="geometry" />
+        </mxCell>
+        <mxCell id="K8yoUsSb3RlVMtM9PMlb-9" parent="1" style="text;html=1;whiteSpace=wrap;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;rounded=0;fontSize=24;" value="2. 公開鍵 \( \text{pk}_{\mathcal{PE}} \) を共有" vertex="1">
+          <mxGeometry height="40" width="360" x="360" y="300" as="geometry" />
+        </mxCell>
+        <mxCell id="K8yoUsSb3RlVMtM9PMlb-10" edge="1" parent="1" style="endArrow=classic;html=1;rounded=0;curved=1;fontSize=24;" value="">
+          <mxGeometry height="50" relative="1" width="50" as="geometry">
+            <Array as="points">
+              <mxPoint x="760" y="380" />
+              <mxPoint x="760" y="420" />
+            </Array>
+            <mxPoint x="720" y="380" as="sourcePoint" />
+            <mxPoint x="720" y="420" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="K8yoUsSb3RlVMtM9PMlb-11" parent="1" style="text;html=1;whiteSpace=wrap;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;rounded=0;fontSize=24;" value="3. 共通鍵暗号の鍵 \( \text{sk}_{\mathcal{SE}} \) を生成" vertex="1">
+          <mxGeometry height="80" width="260" x="760" y="360" as="geometry" />
+        </mxCell>
+        <mxCell id="K8yoUsSb3RlVMtM9PMlb-12" edge="1" parent="1" style="endArrow=classic;html=1;rounded=0;fontSize=24;" value="">
+          <mxGeometry height="50" relative="1" width="50" as="geometry">
+            <mxPoint x="720" y="540" as="sourcePoint" />
+            <mxPoint x="360" y="540" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="K8yoUsSb3RlVMtM9PMlb-13" parent="1" style="text;html=1;whiteSpace=wrap;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;rounded=0;fontSize=24;" value="5. 暗号化した \( \text{sk}_{\mathcal{SE}} \) を送信" vertex="1">
+          <mxGeometry height="41" width="360" x="360" y="500" as="geometry" />
+        </mxCell>
+        <mxCell id="K8yoUsSb3RlVMtM9PMlb-14" edge="1" parent="1" style="endArrow=classic;html=1;rounded=0;curved=1;fontSize=24;" value="">
+          <mxGeometry height="50" relative="1" width="50" as="geometry">
+            <Array as="points">
+              <mxPoint x="320" y="700" />
+              <mxPoint x="320" y="740" />
+            </Array>
+            <mxPoint x="360" y="700" as="sourcePoint" />
+            <mxPoint x="360" y="740" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="K8yoUsSb3RlVMtM9PMlb-15" parent="1" style="text;html=1;whiteSpace=wrap;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;rounded=0;fontSize=24;" value="8. \( \text{sk}_{\mathcal{SE}} \)&lt;span style=&quot;background-color: transparent; color: light-dark(rgb(0, 0, 0), rgb(255, 255, 255));&quot;&gt;&amp;nbsp;の暗号文を \( \text{sk}_{\mathcal{PE}} \) で復号する．&lt;/span&gt;" vertex="1">
+          <mxGeometry height="80" width="320" y="680" as="geometry" />
+        </mxCell>
+        <mxCell id="K8yoUsSb3RlVMtM9PMlb-16" edge="1" parent="1" style="endArrow=classic;html=1;rounded=0;entryX=0;entryY=0;entryDx=0;entryDy=0;curved=1;" target="K8yoUsSb3RlVMtM9PMlb-9" value="">
+          <mxGeometry height="50" relative="1" width="50" as="geometry">
+            <Array as="points">
+              <mxPoint x="320" y="260" />
+              <mxPoint x="320" y="300" />
+            </Array>
+            <mxPoint x="360" y="260" as="sourcePoint" />
+            <mxPoint x="530" y="270" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="K8yoUsSb3RlVMtM9PMlb-17" edge="1" parent="1" style="endArrow=classic;html=1;rounded=0;curved=1;fontSize=24;" value="">
+          <mxGeometry height="50" relative="1" width="50" as="geometry">
+            <Array as="points">
+              <mxPoint x="760" y="460" />
+              <mxPoint x="760" y="500" />
+            </Array>
+            <mxPoint x="720" y="460" as="sourcePoint" />
+            <mxPoint x="720" y="500" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="K8yoUsSb3RlVMtM9PMlb-18" parent="1" style="text;html=1;whiteSpace=wrap;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;rounded=0;fontSize=24;" value="4. \( \text{pk}_{\mathcal{PE}} \) で \( \text{sk}_{\mathcal{SE}} \) を暗号化" vertex="1">
+          <mxGeometry height="80" width="200" x="760" y="441" as="geometry" />
+        </mxCell>
+        <mxCell id="K8yoUsSb3RlVMtM9PMlb-19" parent="1" style="text;html=1;whiteSpace=wrap;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;rounded=0;fontSize=24;" value="6. \( \text{sk}_{\mathcal{SE}} \) でメッセージを暗号化" vertex="1">
+          <mxGeometry height="80" width="240" x="760" y="560" as="geometry" />
+        </mxCell>
+        <mxCell id="K8yoUsSb3RlVMtM9PMlb-20" edge="1" parent="1" style="endArrow=classic;html=1;rounded=0;curved=1;" value="">
+          <mxGeometry height="50" relative="1" width="50" as="geometry">
+            <Array as="points">
+              <mxPoint x="760" y="580" />
+              <mxPoint x="760" y="620" />
+            </Array>
+            <mxPoint x="720" y="580" as="sourcePoint" />
+            <mxPoint x="720" y="620" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="K8yoUsSb3RlVMtM9PMlb-21" edge="1" parent="1" style="endArrow=classic;html=1;rounded=0;" value="">
+          <mxGeometry height="50" relative="1" width="50" as="geometry">
+            <mxPoint x="720" y="660" as="sourcePoint" />
+            <mxPoint x="360" y="660" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="K8yoUsSb3RlVMtM9PMlb-22" parent="1" style="text;html=1;whiteSpace=wrap;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;rounded=0;fontSize=24;" value="7. 暗号文を送信" vertex="1">
+          <mxGeometry height="40" width="360" x="360" y="620" as="geometry" />
+        </mxCell>
+        <mxCell id="K8yoUsSb3RlVMtM9PMlb-24" parent="1" style="text;html=1;whiteSpace=wrap;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;rounded=0;fontSize=24;" value="9. \( \text{sk}_{\mathcal{SE}} \) を用いてメッセージの暗号文を復号する．" vertex="1">
+          <mxGeometry height="80" width="320" y="760" as="geometry" />
+        </mxCell>
+        <mxCell id="K8yoUsSb3RlVMtM9PMlb-25" edge="1" parent="1" style="endArrow=classic;html=1;rounded=0;curved=1;" value="">
+          <mxGeometry height="50" relative="1" width="50" as="geometry">
+            <Array as="points">
+              <mxPoint x="320" y="780" />
+              <mxPoint x="320" y="820" />
+            </Array>
+            <mxPoint x="360" y="780" as="sourcePoint" />
+            <mxPoint x="360" y="820" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
