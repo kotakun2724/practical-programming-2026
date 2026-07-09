@@ -1,0 +1,84 @@
+---
+sidebar_position: 2
+---
+
+# 前回課題解説
+
+## Euler's Totient
+
+> Given $N = p \cdot q$ and two primes:
+> $$
+> \begin{align*}
+>   &p = 857504083339712752489993810777 \\
+>   &q = 1029224947942998075080348647219
+> \end{align*}
+> $$
+> What is Euler's totient $\phi(N)$?
+
+$$
+\begin{align*}
+  &p = 857504083339712752489993810777 \\
+  &q = 1029224947942998075080348647219
+\end{align*}
+$$
+
+上記，$p, q$ の時，$\varphi(N = p \cdot q)$ を求める問題でした．
+
+[オイラーの $\varphi$ 関数の性質](../../lec11/Crypto/04-euler-phi-func.mdx#性質) の一つ目と三つ目を使用します．
+
+1. $p$ と $q$ はどちらも素数なので，$\varphi(p) = p - 1, \ \varphi(q) = q- 1$ です．
+
+2. $\gcd(p, q) = 1$ なので，$\varphi(p \cdot q) = \varphi(p) \cdot \varphi(q)$ です．
+
+1\. と 2\. を組み合わせると，
+
+$$
+\varphi(N) = (p-1)(q-1)
+$$
+
+となります．
+
+```python
+phi = (p - 1) * (q - 1)
+print(phi)
+```
+
+```shell
+$ python solve.py
+882564595536224140639625987657529300394956519977044270821168
+```
+
+## Private Keys
+
+> Given the two primes:
+> $$
+> \begin{align*}
+>   & p = 857504083339712752489993810777 \\
+>   & q = 1029224947942998075080348647219
+> \end{align*}
+> $$
+> and the exponent $e = 65537$, what is the Private key $d \equiv e^{-1} \bmod \phi(N)$.
+
+二つの素数 $p, q$ と $e$ が与えられ，$d \equiv e^{-1} \bmod \varphi(N)$ を求める問題です．
+
+$N = pq$ のオイラーの $\varphi$ 関数を求め，それを $\varphi(N)$ とします．$\varphi(N)$ の元で $e$ のモジュラー逆数を求めればそれが $d$ となります．
+
+この $d$ は RSA 暗号の復号時に重要な値です．
+
+```python
+p = 857504083339712752489993810777 
+q = 1029224947942998075080348647219
+e = 65537
+
+N = p * q
+phi = (p - 1) * (q - 1)
+
+d = recur_egcd(e, phi) % d
+print(d)
+```
+
+```shell
+$ python solve.py
+121832886702415731577073962957377780195510499965398469843281
+```
+
