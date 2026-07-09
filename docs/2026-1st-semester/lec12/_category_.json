@@ -3,6 +3,6 @@
     "position": 12,
     "link": {
         "type": "generated-index",
-        "description": "hoge"
+        "description": "Crypto では RSA 暗号について学び，Web ではXSS と CSRF の原理・手法を学び、クライアント側のブラウザを標的とする攻撃手法を理解します．"
     }
 }
