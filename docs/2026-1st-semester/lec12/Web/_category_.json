@@ -1,0 +1,8 @@
+{
+  "label": "Web",
+  "position": 2,
+  "link": {
+    "type": "generated-index",
+    "description": "XSS と CSRF の原理・手法を学び、クライアント側のブラウザを標的とする攻撃手法を理解します。"
+  }
+}

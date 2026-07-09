@@ -1,9 +1,14 @@
 ---
-sidebar_position: 4
-draft: true
+sidebar_position: 3
 ---
 
 # CSRF（Cross-Site Request Forgery）
+
+## 今回の目標
+
+1. **CSRF**の仕組みと危険性を理解する
+2. **XSSとの違い**を理解する
+3. 防御の基本（**CSRFトークン** / **SameSite Cookie**）を理解する
 
 ## CSRFとは
 
@@ -14,41 +19,16 @@ draft: true
 ### 前提条件
 
 この攻撃が成立するには：
+
 - 被害者が認証済みである（CookieにセッションIDが含まれている）
 - CSRFトークンが設定されていない
 - SameSite属性が設定されていないCookieを使用している
 - ブラウザが自動的にCookieを付与する仕様（これが根本原因）
 
-### 攻撃成功時の例
-
-```http
-POST /transfer HTTP/1.1
-Host: bank.example.com
-Cookie: session=abc123
-
-{"to": "attacker", "amount": 1000000}
-```
-
-レスポンス: `HTTP/1.1 200 OK {"status": "Transfer completed"}`
-
-### 攻撃失敗時の例
-
-```http
-HTTP/1.1 403 Forbidden
-{"error": "Invalid CSRF token"}
-```
-
-### 成功/失敗の判定基準
+### 攻撃成功/失敗の判定
 
 - **成功**: 意図しない操作が実行される（送金完了、パスワード変更完了等）
 - **失敗**: CSRFトークン検証エラー、403 Forbidden
-
-### 検出方法（防御側）
-
-- CSRFトークンの検証失敗ログ
-- 不審なRefererヘッダーの検出
-- ユーザーの操作パターン分析
-- 重要な操作前の再認証
 
 ## XSSとの違い
 
@@ -80,14 +60,12 @@ HTTP/1.1 403 Forbidden
 <body>
   <h1>無料の景品ゲット！</h1>
   
-  <!-- 隠しフォーム -->
   <form id="csrf" action="https://bank.com/transfer" method="POST">
     <input type="hidden" name="to" value="attacker_account">
     <input type="hidden" name="amount" value="1000000">
   </form>
   
   <script>
-    // ページ読み込み時に自動送信
     document.getElementById('csrf').submit();
   </script>
 </body>
@@ -134,30 +112,68 @@ HTTP/1.1 403 Forbidden
 Set-Cookie: session=abc123; SameSite=Strict
 ```
 
-クロスサイトリクエストではCookieが送信されません。
+SameSite属性は、**クロスサイトリクエストでCookieを送信するかどうか** を制御します。
+
+| 値 | 動作 | CSRF防御 |
+|---|---|---|
+| `Strict` | 同一サイトからのリクエストのみCookie送信 | 完全に防御 |
+| `Lax` | GETリクエストのみクロスサイトでも送信（POSTはブロック） | ほぼ防御（POST CSRFは防げる） |
+| `None` | クロスサイトでも常に送信（`Secure`属性必須） | 防御しない |
+
+**モダンブラウザでは `Lax` がデフォルト**です。SameSiteを指定しない場合でも、`Lax` 相当の動作になります。
+
+#### なぜLaxでPOST CSRFが防げるのか
+
+攻撃者の罠ページ（`https://attacker.com`）から `<form method="POST">` を送信しても、`SameSite=Lax` のCookieは付与されません。一方、`<a>` タグや `<img>` タグによるGETリクエストではCookieが送信されるため、GETベースのCSRFには注意が必要です。
+
+#### 実装例
+
+```
+# 悪い例: SameSiteなし（Laxがデフォルトだが、明示すべき）
+Set-Cookie: session=abc123
+
+# 良い例: 明示的にLaxを指定
+Set-Cookie: session=abc123; SameSite=Lax
+
+# より安全: Strict（ただしUXに影響あり）
+Set-Cookie: session=abc123; SameSite=Strict
+```
+
+:::note
+
+`SameSite=Strict` は、外部リンク（例: Google検索結果）からサイトにアクセスした際にもCookieが送信されないため、**ログイン状態が維持されない** というUX上の問題があります。多くのサイトでは `Lax` を使用しています。
+
+:::
+
+:::note
+
+### 検出方法
+
+- CSRFトークンの検証失敗ログ
+- 不審なRefererヘッダーの検出
+- ユーザーの操作パターン分析
+- 重要な操作前の再認証
+
+### 攻撃成功時のレスポンス例
+
+```http
+HTTP/1.1 200 OK
+Content-Type: application/json
+
+{"status": "Transfer completed", "to": "attacker", "amount": 1000000}
+```
+
+:::
 
 ## CTFでのポイント
 
-### 1. CSRFトークンの確認
-
-フォームにCSRFトークンがあるか確認します。
-
-### 2. Cookieの属性
-
-`SameSite` 属性が設定されているか確認します。
-
-### 3. 管理者の操作を模倣
-
-管理者だけが実行できる操作（flagの表示など）を、CSRFで実行させます。
-
-### 4. Botの動作
-
-CTFでは、管理者Botが罠ページにアクセスする設定になっていることがあります。
+1. **CSRFトークンの確認**: フォームにCSRFトークンがあるか確認する
+2. **Cookieの属性**: `SameSite` 属性が設定されているか確認する
+3. **管理者の操作を模倣**: 管理者だけが実行できる操作（flagの表示など）を、CSRFで実行させる
+4. **Botの動作**: CTFでは、管理者Botが罠ページにアクセスする設定になっていることがある
 
 ## まとめ
 
-CSRFは、認証済みのユーザーに意図しない操作を実行させる攻撃手法です。
+CSRFは、認証済みのユーザーに意図しない操作を実行させる攻撃手法です。CSRFトークンとSameSite Cookieの設定で防御可能です。
 
-CSRFトークンとSameSite Cookieの設定で防御可能です。
-
-次回は、認証・セッションの仕組みとJWTについて学びます。
+次は、学んだXSSとCSRFを使って演習問題を解きましょう。
