@@ -93,7 +93,7 @@ echo "eyJ1c2VyX2lkIjoxLCJyb2xlIjoiYWRtaW4ifQ" | base64 -d`}
 />
 
 :::note
-ペイロードに `_`（`base64url` の `+` に対応）が含まれても、最近の GNU `base64 -d` は受け付けます。標準Base64と異なり **`=` パディングが無くても復号できる** のも `base64 -d` の特徴です。
+ペイロードに `_`（`base64url` では `/` の代わり）が含まれても、最近の GNU `base64 -d` は受け付けます。標準Base64と異なり **`=` パディングが無くても復号できる** のも `base64 -d` の特徴です。
 :::
 
 ### jwt.io

