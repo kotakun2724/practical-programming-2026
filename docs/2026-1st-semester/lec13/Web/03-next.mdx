@@ -1,0 +1,102 @@
+---
+sidebar_position: 4
+---
+
+import Terminal from '@site/src/components/Terminal';
+
+# 演習: 認証とJWT
+
+今回の講義で学んだ認証の知識を使って、Daily AlpacaHack の問題を解いてみましょう。
+
+## 演習 1: One More Login Challenge（Medium）
+
+**問題リンク**: [https://alpacahack.com/daily/challenges/one-more-login-challenge](https://alpacahack.com/daily/challenges/one-more-login-challenge)
+
+### 問題概要
+
+MongoDBを使ったログイン機能があります。`admin` ユーザーのパスワードは推測できませんが、別の方法でログインできます。
+
+### 解法のヒント
+
+1. ログインフォームにアクセスします
+2. `application/json` でデータを送信できることに注目します
+3. JSONでは文字列以外の値（オブジェクトや配列）を送信できます
+4. MongoDBのNoSQL Injectionを試します
+
+<details>
+<summary>詳しいヒントと解説</summary>
+
+NoSQL Injection（MongoDB Injection）を使います。ログインフォームは MongoDB で `db.users.findOne({ username, password })` のようなクエリを投げています。
+
+ポイントは **JSON で送ると文字列以外の値（オブジェクト）も渡せる** こと。`password` に `{"$ne": ""}` を渡すと、MongoDB の演算子 `$ne`（≠）が解釈され、「password が空文字でない admin ユーザー」にマッチします。
+
+curl で JSON を送信：
+
+<Terminal
+  command={`curl -X POST https://サーバーのURL/login \\
+  -H "Content-Type: application/json" \\
+  -d '{"username":"admin","password":{"$ne":""}}'`}
+/>
+
+パスワードを知らなくても **「空文字でない」という条件にすり替える** だけで認証が通ります。SQL Injection と同じく「ユーザー入力をそのままクエリに流す」のが根本原因です。
+
+**よくあるミス**:
+
+- ブラウザのフォームからは JSON を送信できません。curl を使ってください
+- `Content-Type: application/json` ヘッダーを忘れずに
+- URLエンコードされたフォーム（`username=admin&password=...`）では文字列しか渡せず、`{"$ne": ""}` のような **オブジェクト** を送れません。JSON本文を使う必要があります
+
+</details>
+
+### 参考Writeup
+
+- [nozokareによるwriteup（GitHub）](https://github.com/nozokare/my-alpaca-ctf/blob/main/2026-04/16-daily-one-more-login-challenge/README.md)
+
+---
+
+## 演習 2: JWTのデコード練習
+
+### 課題
+
+以下のJWTをデコードして、ペイロードの内容を確認してください。
+
+```
+eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoxLCJyb2xlIjoiYWRtaW4ifQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQsW5cM
+```
+
+### 解答例
+
+<Terminal
+  command={`echo "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9" | base64 -d
+echo "eyJ1c2VyX2lkIjoxLCJyb2xlIjoiYWRtaW4ifQ" | base64 -d`}
+  output={`{"alg":"HS256","typ":"JWT"}
+{"user_id":1,"role":"admin"}`}
+/>
+
+追加で試してみましょう：
+
+- このトークンが **`HS256` で署名されている** ことを確認
+- `role` を `admin` → `user` に書き換えた **改竄トークン** を組立ててみる（署名が合わないはず）
+- [https://jwt.io](https://jwt.io) に貼り付けてGUIでも確認
+
+---
+
+## 次回予告
+
+次回は **認証応用** です。認証を突破した **後** の攻撃を扱います。
+
+- **特権昇格** — 認可の不備を突き、`user` 権限を `admin` にすり替える（IDOR、JWT改竄）
+- **セッションハイジャック** — 他人のセッションIDを奪取・推測して乗っ取る手法
+- **CTF攻略の総まとめ** — ここまでのWeb/Crypto技術をまとめる
+
+## 締め切り
+
+**次回講義の前日 23:59 まで**
+
+## まとめ
+
+1. **NoSQL Injection** で認証をバイパスできる
+2. JSON形式では、文字列以外の値（オブジェクト）を送信でき、MongoDBの演算子（`$ne`, `$gt` など）を悪用できる
+3. **JWT** のペイロードはBase64デコードで内容を確認できる
+4. JWTは **署名** で改竄を防ぐが、`alg: none` や **弱い秘密鍵** で突破される
+5. どの攻撃も **「クライアントから来る値（パラメータ・JSON・alg・鍵）を信頼しすぎる」** ことが根本原因
