@@ -1,8 +1,8 @@
 {
-    "label": "第13回: 認証・セッション基礎",
+    "label": "第13回: CTF実践 (Web / Crypto)",
     "position": 13,
     "link": {
         "type": "generated-index",
-        "description": "Webアプリケーションの認証・セッション管理の仕組み、JWTの構造と脆弱性を学びます。"
+        "description": "Cryptoでは，RSA 暗号が題材となる CTF の問題について，Web ではWebアプリケーションの認証・セッション管理の仕組み、JWTの構造と脆弱性を学びます。"
     }
 }
