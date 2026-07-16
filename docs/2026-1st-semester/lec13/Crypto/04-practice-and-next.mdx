@@ -1,0 +1,77 @@
+---
+sidebar_position: 5
+---
+
+# 今回の課題と次回予告
+
+## 次回予告
+
+- RSA 暗号に対する攻撃
+  - $N$ が小さい場合の素因数分解攻撃
+  - 公開指数 $e$ が極端に小さい場合の攻撃
+
+##  今回の課題
+
+以下の 2 問を解いてください．
+
+| プラットフォーム | カテゴリー | 問題名 | 内容 | リンク |
+|:-----------------|:---------|:-------|:-----|:-------|
+| AlpacaHack       | Crypto   | one-p-rsa | 素数が1つだけの特殊な RSA 暗号の解読 | [問題ページ](https://alpacahack.com/challenges/one-p-rsa) |
+| AlpacaHack       | Crypto   | Square RSA | 素数 $p, q$ が同一である RSA 暗号の解読 | [問題ページ](https://alpacahack.com/challenges/square-rsa) |
+
+### 問題のヒント
+
+両問題とも `tar.gz` ファイルが配布されています．
+
+`tar.gz` ファイルを手元にダウンロードし，
+
+```
+tar -zxvf one-p-rsa.tar.gz
+```
+
+を実行してください．
+
+one-p-rsa であれば，`chall.py` と `chall.txt` が存在するはずです．
+
+```chall.txt
+p = 70530...
+e = 65537
+ct = 1207...
+```
+
+`chall.txt` には `p`, `e`, `ct` が記載されています．これは，`chall.py`　を実行した結果です．
+
+`ct` は flag の暗号文であり，どういう手順で暗号化したのかは `chall.py` を見ることでわかります．
+
+この渡された数値を用いて flag を取得しましょう．
+
+<details>
+
+<summary>ソルバーの雛形</summary>
+
+```python
+from Crypto.Util.number import long_to_bytes
+
+# chall.txt で渡される数値
+p = ...
+e = ...
+ct = ...
+
+# int_my_flag を求めるためのコード
+...
+
+# 数値から文字列への変換
+int_my_flag = ...
+
+bytes_my_flag = long_to_bytes(int_my_flag)
+
+my_flag = bytes_my_flag.decode('utf-8')
+
+print(my_flag)
+```
+
+</details>
+
+## 締め切り
+
+**次回講義の前日 23:59 まで**

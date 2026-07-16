@@ -1,0 +1,108 @@
+---
+sidebar_position: 4
+---
+
+# PyCryptodome による文字列と数値の変換
+
+CTF の Crypto 分野（特に RSA 暗号など）では、文字列（テキスト）と巨大な整数（数値）の相互変換が必須となります．
+ここでは、暗号計算を効率的に行うための Python ライブラリ **PyCryptodome**（`Crypto` パッケージ）の核となる機能である `bytes_to_long` および `long_to_bytes` の仕組みと使い方について詳しく解説します．
+
+※本ライブラリは、[第9回の環境構築](../../lec09/Crypto/01-environment.mdx#必要なライブラリのインストール) でインストールしたものです．
+
+---
+
+## 文字列・バイト列・巨大整数の関係性
+
+RSA 暗号をはじめとする暗号アルゴリズムは、**数学的な冪乗や剰余演算（ $m^e \bmod N$ ）を行うため、平文は必ず「数値」である必要があります**．
+
+しかし、私たちが普段扱う flag やメッセージは「文字列（`str`）」です．そのため、暗号処理を行う前後に以下のステップでデータ形式を変換します．
+
+![flow](./assets/flow.drawio.svg)
+
+1. **文字列 (`str`) $\leftrightarrow$ バイト列 (`bytes`)**: Python 組み込みの `.encode()` / `.decode()` を使用します．
+2. **バイト列 (`bytes`) $\leftrightarrow$ 整数 (`int`)**: PyCryptodome の `bytes_to_long()` / `long_to_bytes()` を使用します．
+
+## 具体的なコード例と使い方
+
+`Crypto.Util.number` モジュールからインポートして使用します．
+
+```python
+from Crypto.Util.number import bytes_to_long, long_to_bytes
+
+# --- 1. 暗号化前の準備 (文字列 -> 整数) ---
+flag = "flag{welcome_to_crypto}"
+
+# (1) 文字列をバイト列に変換
+flag_bytes = flag.encode('utf-8')
+print("1. バイト列:", flag_bytes)
+
+# (2) バイト列を巨大整数に変換
+m = bytes_to_long(flag_bytes)
+print("2. 巨大整数 m:", m)
+
+
+# --- 2. 復号後の後処理 (整数 -> 文字列) ---
+# 復号によって整数 m が得られたと仮定
+decrypted_m = m
+
+# (1) 巨大整数をバイト列に逆変換
+restored_bytes = long_to_bytes(decrypted_m)
+print("3. 復元されたバイト列:", restored_bytes)
+
+# (2) バイト列を文字列にデコード
+restored_flag = restored_bytes.decode('utf-8')
+print("4. 復元された文字列:", restored_flag)
+```
+
+### 実行結果
+
+```text
+1. バイト列: b'flag{welcome_to_crypto}'
+2. 巨大整数 m: 2271813131707255160867823334690326462719277874987019557
+3. 復元されたバイト列: b'flag{welcome_to_crypto}'
+4. 復元された文字列: flag{welcome_to_crypto}
+```
+
+:::caution
+
+- **`TypeError: bytes_to_long` に `str` 型を渡してしまう**:
+  `bytes_to_long("flag")` のように文字列を直接渡すとエラーになります．必ず `"flag".encode()` または `b"flag"` のように**バイト列（`bytes`）**を渡してください．
+- **復号後の `.decode()` エラー**:
+  解読ロジックが間違っていて数値 `m` が正しく復号できていない場合、`long_to_bytes(m).decode('utf-8')` を実行した際に `UnicodeDecodeError` が発生します．エラーが出た場合は数値の計算が合っているか確認しましょう．
+
+:::
+
+## Crypto.Util.number のその他の便利な機能
+
+`bytes_to_long` / `long_to_bytes` 以外にも、演習や CTF で頻繁に使う便利な関数があります．
+
+### 素数の生成と判定 (`getPrime`, `isPrime`)
+
+```python
+from Crypto.Util.number import getPrime, isPrime
+
+# 512 ビットの巨大素数を生成
+p = getPrime(512)
+print("生成された素数 p:", p)
+
+# 素数判定
+print("p は素数か？:", isPrime(p))
+```
+
+### モジュラー逆数 (`inverse`)
+
+$$
+e \cdot d \equiv 1 \pmod{\varphi(N)}
+$$
+
+上記を満たす秘密鍵 $d$ を計算するために用います．
+
+```python
+from Crypto.Util.number import inverse
+
+e = 65537
+phi = 12345678901234567890
+
+d = inverse(e, phi)
+print("モジュラー逆数 d:", d)
+```
