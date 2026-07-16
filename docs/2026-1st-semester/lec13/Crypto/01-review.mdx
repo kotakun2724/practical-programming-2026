@@ -1,0 +1,83 @@
+---
+sidebar_position: 2
+---
+
+# 前回課題解説
+
+## 1. Public Keys
+
+> "Encrypt" the number $12$ using the exponent $e = 65537$ and the primes $p = 17$ and $q = 23$. What number do you get as the ciphertext?
+
+RSA 暗号を用いて $e = 65537, p = 17, q = 23$ の場合の，$12$ の暗号文を flag として提出する問題です．
+
+RSA 暗号の鍵生成アルゴリズムと暗号化アルゴリズムを使用します．
+
+```python
+def keygen(p, q, e):
+    return (p*q, e)
+    
+def enc(m: int, e: int, n: int):
+    return pow(m, e, n)
+
+n, e = keygen(17, 23, 65537)
+print(enc(12, 65537, n))
+```
+
+```shell
+$ python solve.py
+301
+```
+
+## 2. RSA Decryption
+
+> I've encrypted a secret number for your eyes only using your public key parameters:
+> 
+> $$
+> N = 882564595536224140639625987659416029426239230804614613279163
+> e = 65537
+> $$
+> 
+> Use the private key that you found for these parameters in the previous challenge to decrypt this ciphertext:
+> 
+> $$
+> c = 77578995801157823671636298847186723593814843845525223303932
+> $$
+
+$$
+N = 882564595536224140639625987659416029426239230804614613279163
+e = 65537
+$$
+
+ある数を上記のパラメータを用いて暗号化したのが $c$ です．そのある数を求める問題です．
+
+まず，$N$ を素因数分解しなければならないのですが，これは `Private Keys` での $p, q$ の合成数であることがわかっているので，素因数分解する必要はありません．
+
+ちなみに，このくらいの桁であれば pollard's rho 法等で素因数分解可能です．
+
+$p, q$ を用いてオイラーの $\varphi$ 関数を求め，秘密鍵 $d$ を求めます．
+
+```python
+def decryption_key(e, phi):
+    _, d, _ = egcd(e, phi)
+    return d % phi
+
+def dec(d, c, n):
+    return pow(c, d, n)
+
+n = 882564595536224140639625987659416029426239230804614613279163
+p = 857504083339712752489993810777
+q = 1029224947942998075080348647219
+e = 65537
+phi = (p-1) * (q-1)
+
+d = decryption_key(e, phi)
+
+c = 77578995801157823671636298847186723593814843845525223303932
+
+print(dec(d, c, n))
+```
+
+```shell
+$ python solve.py
+13371337
+```

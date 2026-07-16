@@ -1,0 +1,8 @@
+{
+    "label": "Cryptography",
+    "position": 1,
+    "link": {
+        "type": "generated-index",
+        "description": "RSA 暗号のパラメータに異常がある場合の挙動を学び、AlpacaHack の演習問題に取り組みます．"
+    }
+}
