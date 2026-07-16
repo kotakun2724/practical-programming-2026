@@ -1,0 +1,8 @@
+{
+  "label": "Web",
+  "position": 2,
+  "link": {
+    "type": "generated-index",
+    "description": "Webアプリケーションの認証・セッション管理の仕組みと、JWTの構造・脆弱性を学びます。"
+  }
+}
