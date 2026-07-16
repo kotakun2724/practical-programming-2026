@@ -1,0 +1,219 @@
+---
+sidebar_position: 3
+---
+
+import Terminal from '@site/src/components/Terminal';
+
+# JWT（JSON Web Token）
+
+## 今回の目標
+
+1. JWTの **3つの構造**（Header / Payload / Signature）を理解する
+2. **Base64Urlエンコード** をデコードして中身を確認できる
+3. 代表的な脆弱性（**noneアルゴリズム**・**弱い秘密鍵**・**ペイロード改竄**）を学ぶ
+
+## JWTとは
+
+**JWT（JSON Web Token）** は、JSONオブジェクトとして情報を安全に転送するためのトークン形式です。Webアプリケーションの認証によく使われます。
+
+### 前提条件
+
+今回扱う攻撃が成立するのは：
+
+- サーバーがJWTを受け入れ、**署名を検証している** が、実装に欠陥がある
+- `alg` の検証が甘い（`none` を許容する）
+- 秘密鍵が弱い（`secret`, `password` 等の辞書通りの値）
+- 検証をスキップする実装になっている
+
+### 攻撃成功/失敗の判定
+
+- **成功**: 改変したJWTで `role: "admin"` 権限のAPIが通る、`none` アルゴリズムで署名なしトークンが受理される
+- **失敗**: `401 Unauthorized` / `invalid signature` / `algorithm not allowed`
+
+## JWTの構造
+
+```
+eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoxLCJyb2xlIjoiYWRtaW4ifQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQsW5cM
+```
+
+JWTは3つの部分から成り立ちます：
+
+```
+[Header].[Payload].[Signature]
+```
+
+### 1. Header（ヘッダー）
+
+```json
+{
+  "alg": "HS256",
+  "typ": "JWT"
+}
+```
+
+- `alg`: 署名アルゴリズム（HS256など）
+- `typ`: トークンのタイプ
+
+### 2. Payload（ペイロード）
+
+```json
+{
+  "user_id": 1,
+  "role": "admin",
+  "exp": 1234567890
+}
+```
+
+- `user_id`, `role`: ユーザー情報
+- `exp`: 有効期限
+
+### 3. Signature（署名）
+
+```
+HMACSHA256(
+  base64UrlEncode(header) + "." +
+  base64UrlEncode(payload),
+  secret_key
+)
+```
+
+署名により、トークンの改竄を検出できます。**秘密鍵を知らなければ正しい署名を作れません** — これがJWTの安全性の根幹です。
+
+## Base64Urlエンコード
+
+JWTの各部分は **Base64Urlエンコード** されています。通常のBase64と違い、`+` を `-`、`/` を `_` に置き換え、末尾の `=`（パディング）を取り除いた形式です。
+
+### デコード例
+
+<Terminal
+  command={`echo "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9" | base64 -d
+echo "eyJ1c2VyX2lkIjoxLCJyb2xlIjoiYWRtaW4ifQ" | base64 -d`}
+  output={`{"alg":"HS256","typ":"JWT"}
+{"user_id":1,"role":"admin"}`}
+/>
+
+:::note
+ペイロードに `_`（`base64url` では `/` の代わり）が含まれても、最近の GNU `base64 -d` は受け付けます。標準Base64と異なり **`=` パディングが無くても復号できる** のも `base64 -d` の特徴です。
+:::
+
+### jwt.io
+
+Webサイト [https://jwt.io](https://jwt.io) でJWTのデコード・検証がGUIでできます。
+
+## JWTの脆弱性
+
+### 1. 署名の検証なし（Noneアルゴリズム）
+
+```json
+{
+  "alg": "none"
+}
+```
+
+署名アルゴリズムを `none` に設定することで、署名の検証をスキップできる脆弱性があります。実装が `alg` を **クライアント側** の指定通りに切り替えてしまう場合に成立します。
+
+#### 攻撃例
+
+`echo ... | base64` は末尾に `=` を付けるので、**パディング無しのBase64Urlにするため `tr -d '='` で `=` を削ります**。
+
+<Terminal
+  command={`echo -n '{"alg":"none","typ":"JWT"}' | base64 | tr -d '='
+echo -n '{"user_id":1,"role":"admin"}' | base64 | tr -d '='`}
+  output={`eyJhbGciOiJub25lIiwidHlwIjoiSldUIn0
+eyJ1c2VyX2lkIjoxLCJyb2xlIjoiYWRtaW4ifQ`}
+/>
+
+これらを `.` で繋ぎ、末尾に空の署名を置いたものが **`none` アルゴリズムの攻撃トークン** です：
+
+```
+eyJhbGciOiJub25lIiwidHlwIjoiSldUIn0.eyJ1c2VyX2lkIjoxLCJyb2xlIjoiYWRtaW4ifQ.
+```
+
+### 2. 弱い秘密鍵
+
+秘密鍵が `secret`, `password`, `key` などの一般的な辞書通りの値の場合、`jwt_tool` などのツールで **辞書攻撃** により鍵を特定できます。鍵が分かれば、任意のペイロードに **正しい署名** を付けて改竄トークンを作れます。
+
+```bash
+# jwt_tool で辞書攻撃（例）
+# jwt_tool <token> -d /usr/share/wordlists/rockyou.txt
+```
+
+### 3. ペイロードの改竄
+
+署名が正しく検証されていない（あるいは上記で鍵が特定された）場合、ペイロードを改竄できます。
+
+```json
+{
+  "user_id": 1,
+  "role": "user"
+}
+```
+
+を
+
+```json
+{
+  "user_id": 1,
+  "role": "admin"
+}
+```
+
+に変更し、再署名します。`secret_key` が分かっていれば正しい署名も作れるため、サーバーは改竄に気づけません。
+
+## 防御方法
+
+### 1. 署名の検証
+
+必ず署名を検証します。検証失敗時はトークンを拒否します。
+
+### 2. 強い秘密鍵
+
+```
+secret_key = 十分な長さのランダムな文字列
+```
+
+辞書通りの値（`secret` 等）は使わず、十分なエントロピーのある乱数を使います。
+
+### 3. アルゴリズムの固定
+
+```
+許可するアルゴリズム = ["HS256"] のみ
+```
+
+`none` や、クライアント側が指定する他のアルゴリズムを **許可しません**。サーバー側で **固定** するのが鉄則です。
+
+:::note
+
+### 検出方法
+
+- `alg: none` を含むJWTの受信ログ
+- 短時間に多数の署名検証失敗
+- ペイロードの `role` / `user_id` が短時間に不自然に変化する
+- 秘密鍵の漏洩・弱い鍵の使用監査
+
+### 攻撃成功時のレスポンス例
+
+```http
+HTTP/1.1 200 OK
+Content-Type: application/json
+
+{"status":"ok","user":"admin","flag":"FLAG{jwt_none_algorithm_bypass}"}
+```
+
+:::
+
+## CTFでのポイント
+
+1. **JWTをデコードする**: ペイロードの内容を確認
+2. **署名アルゴリズムを確認**: `none` に変更できるか試す
+3. **秘密鍵を推測**: 辞書攻撃（`secret`, `password` 等）
+4. **ペイロードを改竄**: `role` を `admin` に変更
+5. **有効期限を確認**: `exp` クレームの検証（期限切れトークンが受理されないか）
+
+## まとめ
+
+JWTは便利なトークン形式ですが、実装の不備により様々な脆弱性が生まれます。
+
+署名の検証、強い秘密鍵、適切なアルゴリズムの **固定** が重要です。どれも **「クライアントから来る `alg` や鍵を信頼しない」** ことに帰着します。
+
+次は、学んだ認証とJWTを使って演習問題を解きましょう。

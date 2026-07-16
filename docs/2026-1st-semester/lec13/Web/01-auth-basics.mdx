@@ -1,0 +1,287 @@
+---
+sidebar_position: 2
+---
+
+import Terminal from '@site/src/components/Terminal';
+
+# 認証の基礎
+
+## 今回の目標
+
+1. **認証**と**認可**の違いを理解する
+2. **Cookie**と**Session**の仕組みを理解する
+3. 代表的な**認証バイパス**（弱いパスワード・ブルートフォース・セッション推測・NoSQL Injection）を学ぶ
+
+## 認証（Authentication）と認可（Authorization）
+
+### 認証（Authentication）
+
+「あなたは誰ですか？」を確認するプロセスです。
+
+- ユーザー名とパスワード
+- ワンタイムパスワード
+
+### 認可（Authorization）
+
+「何をする権限がありますか？」を確認するプロセスです。
+
+- 管理者ページのアクセス権
+- ファイルの読み書き権限
+
+> 認証は「誰であるか」、認可は「何を許されるか」です。次回扱う **特権昇格** は、この **認可** の不備を突く攻撃です。
+
+### 前提条件
+
+今回扱う攻撃が成立するのは：
+
+- 認証ロジックが脆弱（弱いパスワードを許容・ロックなし等）
+- セッションIDが予測可能（連番など）
+- ユーザー入力がDBクエリにそのまま渡される（Injection）
+
+### 攻撃成功/失敗の判定
+
+- **成功**: 知らないはずのパスワードでログイン成功、他人のセッションでアクセス成功
+- **失敗**: `401 Unauthorized` / `403 Forbidden` / ログイン失敗回数上限によるロック
+
+## 認証方式とセッション管理の分類
+
+認証まわりは **2つの軸** で整理すると分かりやすいです。
+
+| 軸 | 意味 | 例 |
+|---|---|---|
+| 認証要素（何で確認するか） | 「何で」本人を証明するか | パスワード / OTP / 生体 / 証明書 |
+| クレデンシャルの運び方（どう送るか） | 「どう」HTTPで運ぶか | `Authorization` ヘッダ / `Cookie` ヘッダ / リクエストボディ |
+
+「認証方式」という言葉は、**狭義では HTTP認証スキーム**（`WWW-Authenticate` / `Authorization` の challenge-response 枠組み、[RFC 9110](https://www.rfc-editor.org/rfc/rfc9110) §11）を指します。これに乗るのは `Basic` / `Bearer` / `Digest` などで、IANA が[スキーム一覧](https://www.iana.org/assignments/http-authschemes/http-authschemes.xhtml)を管理しています。
+
+一方 **フォームベース認証は HTTP認証スキームではありません**。HTMLフォームでパスワードをPOSTし、サーバーが **セッション（Cookie or トークン）を発行** して以降のリクエストで状態を維持する、というアプリ層のパターンです。[OWASP](https://cheatsheetseries.owasp.org/cheatsheets/Authentication_Cheat_Sheet.html) も Authentication と [Session Management](https://cheatsheetseries.owasp.org/cheatsheets/Session_Management_Cheat_Sheet.html) を明確に分けて扱っており、Form 認証は **「ログイン時の入力」＋「その後のセッション管理」** の組み合わせで成り立ちます。
+
+以下では **HTTP認証スキーム** を先に扱い、その後 **フォームベース認証 → セッション管理** に進みます。CTF で実務的に出るのは Basic / Bearer（JWT）と Form の3つです。
+
+### Basic認証
+
+```
+Authorization: Basic dXNlcjpwYXNzd29yZA==
+```
+
+`dXNlcjpwYXNzd29yZA==` は `user:password` をBase64エンコード（データを文字列に変換する方式）したものです（[RFC 7617](https://www.rfc-editor.org/rfc/rfc7617)）。
+
+:::warning
+Base64はエンコードであり、暗号化ではありません。簡単にデコードされるため、HTTPSと併用する必要があります。
+:::
+
+#### URLに埋め込む形式
+
+Basic 認証は URL に直接クレデンシャルを書く歴史的な記法もあります：
+
+```
+https://user:password@target.com/secret
+```
+
+これを受け付けるクライアント（`curl` や bot、一部の古いブラウザ）は、これを `Authorization: Basic` ヘッダに変換して送信します。
+
+:::note
+**ブラウザの挙動は微妙に分かれます。** モダンブラウザは URL 内の `user:password@` を **非推奨・strip** する方向で動いており、アドレスバーに入力してもそのまま送信はしません。ただし Chrome などは strip した上で、サーバが `401` でチャレンジしてくると **ネイティブの Basic 認証ダイアログを出す** ことがあるので「動いたように見える」ことがあります（Firefox は確認プロンプトを出します）。
+:::
+
+CTF 的に重要なのは **ブラウザで動くかどうかよりも「漏れる」こと** です。クレデンシャル付き URL は以下に漏れやすいので、問題文のURLやログ・Refererに残っていないか要チェックです：
+
+- **Referer ヘッダ** — 認証後のページから他サイトへ遷移すると `https://user:password@...` が Referer として送信される
+- **アクセスログ** — サーバ／プロキシのアクセスログに URL ごと平文で記録される
+- **URL 履歴・ブックマーク** — ブラウザや `~/.bash_history` に残る
+- **`curl`・bot** — そのまま `Authorization: Basic` として送信する
+
+### Bearer（トークン認証）
+
+ログイン成功時にサーバーが **トークン** を発行し、以降のリクエストに同梱させます（[RFC 6750](https://www.rfc-editor.org/rfc/rfc6750)）。
+
+```
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+```
+
+トークンは **ステートレス**（サーバーがセッション状態を保存しない）なので、署名検証の実装ミスが直接認証バイパスに直結します。トークンの中身（JWT）については次ページで詳しく扱います。
+
+### Digest認証（参考）
+
+パスワードを **ハッシュ** して送る方式（[RFC 7616](https://www.rfc-editor.org/rfc/rfc7616)）。Basicよりはマシですが、平文パスワード相当の問題は残り、現代ではほぼ使われません。CTFでも出番は稀です。
+
+<details>
+<summary>HTTP認証スキームの一覧（参考）</summary>
+
+IANA が[スキーム一覧](https://www.iana.org/assignments/http-authschemes/http-authschemes.xhtml)を管理しています。CTF 基礎で実務的に出るのは **Basic / Bearer** の2つだけですが、参考までに主なものを挙げます。
+
+| スキーム | クレデンシャルの中身 | 備考 |
+|---|---|---|
+| `Basic` | `base64(user:password)` | 平文同等・TLS必須。**CTFで頻出** |
+| `Bearer` | トークン文字列 | OAuth 2.0 / JWT。**次ページで扱う** |
+| `Digest` | パスワードの **ハッシュ応答** | Basicより強いが現代では希少（MD5 or SHA-256） |
+| `HOBA` | デジタル署名 | HTTP Origin-Bound Auth、ほぼ使われない |
+| `Mutual` | サーバーと相互認証 | RFC 8120、希少 |
+| `Negotiate` / `NTLM` | Windows の Kerberos/NTLM | 企業環境向き、CTFでは稀 |
+| `VAPID` | Web Push の自主性検証 | 範囲外 |
+| `SCRAM` | Salted Challenge-Response | RFC 7804、希少 |
+| `AWS4-HMAC-SHA256` | AWS S3 の署名 | AWS 固有 |
+
+CTF では、`Authorization` ヘッダの `<スキーム>` 部分を **サーバーが厳密に検証せず**、`Basic` 以外でも `Bearer` 扱いしてしまうような実装ミスが稀にあるため、ヘッダの中身とスキーム名は一応意識しておくとよいです。
+
+</details>
+
+### フォームベース認証（アプリ層）
+
+HTTP認証スキームではなく、HTMLフォームで `POST` し本文に `username` / `password` を入れるアプリ層のログインパターンです。成功するとサーバーが **セッション（Cookie / トークン）を発行** し、以降はそれで状態を維持します（→ セッション管理）。
+
+```html
+<form method="POST" action="/login">
+  <input type="text" name="username">
+  <input type="password" name="password">
+  <button type="submit">ログイン</button>
+</form>
+```
+
+送信形式が柔軟（`application/x-www-form-urlencoded` / `multipart` / `application/json`）で、**JSON で送れる** 場合は文字列以外の値（オブジェクト）も渡せるため **NoSQL Injection** に繋がります（後述）。
+
+## セッション管理
+
+フォームベース認証などでログインが通った **後**、サーバーはクライアントに「状態を維持するための何か」を渡します。これがセッション管理です。
+
+### 1. Cookieベースのセッション
+
+```
+Set-Cookie: session_id=abc123; HttpOnly; Secure
+```
+
+サーバー側でセッション情報を管理し、CookieでセッションIDをやり取りします。状態はサーバーに持つので **ステートフル** です。
+
+### 2. トークンベースのセッション
+
+```json
+{
+  "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+}
+```
+
+JWTなどのトークンを使い、クライアント側で状態を管理します（HTTP認証スキームで言えば **Bearer** で運ぶ）。状態をサーバーに持たない **ステートレス** で、トークンの署名検証が信頼の要になります。
+
+## よくある脆弱性
+
+### 1. 弱いパスワード
+
+```
+admin / password
+admin / admin123
+```
+
+デフォルトの認証情報や辞書通りのパスワードは、すぐに突破されます。
+
+### 2. パスワードのブルートフォース
+
+<Terminal
+  command={`curl -X POST https://target.com/login \\
+  -d "username=admin&password=123456"
+curl -X POST https://target.com/login \\
+  -d "username=admin&password=password"`}
+/>
+
+ログイン失敗回数に制限（アカウントロック）がない場合、全パターンを試すだけで破れます。
+
+### 3. セッションIDの推測
+
+```
+session_id=1
+session_id=2
+session_id=3
+```
+
+セッションIDが連番で生成されている場合、他のユーザーのセッションを推測して乗っ取れます。セッションIDは **十分な長さの乱数** で発行する必要があります。
+
+### 4. NoSQL Injection
+
+MongoDBなどのNoSQLデータベースでは、JSON形式でクエリを送信できる場合があります。
+
+```javascript
+// サーバー側のコード（Node.js + MongoDB）
+db.users.findOne({ username: username, password: password })
+```
+
+ここで、JSONで `{"username": "admin", "password": {"$ne": ""}}` を送信すると：
+
+```javascript
+// 展開後のクエリ
+db.users.findOne({ username: "admin", password: { $ne: "" } })
+// → passwordが空文字でないadminユーザーにマッチ
+```
+
+`$ne` はMongoDBの演算子で「等しくない」を意味します。これにより、パスワードを知らずに認証をバイパスできます。SQL Injection と同じく **「ユーザー入力をそのままクエリに流す」** のが根本原因です。
+
+## 実践: 認証バイパス
+
+<Terminal
+  command={`curl -X POST https://target.com/login \\
+  -H "Content-Type: application/json" \\
+  -d '{"username":"admin","password":{"$ne":""}}'`}
+  output={`HTTP/1.1 200 OK
+Content-Type: application/json
+
+{"status":"logged_in","user":"admin"}`}
+/>
+
+## 防御方法
+
+### 1. 強いパスワードポリシー
+
+- 最低8文字以上
+- 大文字・小文字・数字・記号を含む
+
+### 2. アカウントロック / レートリミット
+
+```
+5回連続ログイン失敗 → 30分間ロック
+```
+
+ブルートフォースを防ぐため、失敗回数に上限を設けます。
+
+### 3. セッション管理
+
+- `HttpOnly` フラグでJavaScriptからのアクセスを禁止（XSSでの窃取を防ぐ）
+- `Secure` フラグでHTTPSのみで送信
+- 適切な有効期限の設定
+- セッションIDは **十分な長さの乱数** で発行
+
+### 4. NoSQL Injection対策
+
+ユーザー入力は **必ず文字列として扱い**、演算子（`$ne` 等）を解釈させないようにします。入力値が期待通りの型（文字列かどうか）を検証します。
+
+:::note
+
+### 検出方法
+
+- ログイン失敗ログの急増（ブルートフォースの兆候）
+- 短時間に多数の異なるパスワード試行
+- 不審なJSON構造（`{"$ne": ...}` 等）を含むリクエスト
+- Webアプリケーションファイアウォール（WAF）による異常パターン検知
+
+### 攻撃成功時のレスポンス例
+
+```http
+HTTP/1.1 200 OK
+Content-Type: application/json
+
+{"status":"logged_in","user":"admin","flag":"FLAG{nosql_injection_bypass}"}
+```
+
+:::
+
+## CTFでのポイント
+
+1. **デフォルトの認証情報**を試す: `admin/admin`, `admin/password`
+2. **ブルートフォース**を試す: 弱いパスワード
+3. **セッションID**を観察する: 推測可能なパターン（連番など）
+4. **認証バイパス**を試す: URLの操作、パラメータの改竄、NoSQL Injection
+
+## まとめ
+
+認証とセッション管理は、Webセキュリティの重要な要素です。
+
+弱い実装は、認証バイパスやセッションハイジャックの原因となります。攻撃の根本原因はどれも **「ユーザーからの入力を信頼しすぎる」** ことです。
+
+次は、**JWT（JSON Web Token）** について詳しく学びます。JWTはトークンベースの認証で使われる仕組みで、適切に実装しないと署名のバイパスやペイロードの改竄を許す可能性があります。
