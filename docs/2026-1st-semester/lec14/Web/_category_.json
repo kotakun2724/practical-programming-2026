@@ -1,0 +1,8 @@
+{
+  "label": "Web",
+  "position": 2,
+  "link": {
+    "type": "generated-index",
+    "description": "特権昇格など認証後の攻撃手法を学び、Web CTF の総まとめを行います。"
+  }
+}

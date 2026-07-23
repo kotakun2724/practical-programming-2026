@@ -3,6 +3,6 @@
     "position": 14,
     "link": {
         "type": "generated-index",
-        "description": "特権昇格、セッションハイジャックなどの高度な攻撃手法を学び、CTF攻略の総まとめを行います。"
+        "description": "特権昇格などの認証後の攻撃手法を学び、CTF攻略の総まとめを行います。"
     }
 }
