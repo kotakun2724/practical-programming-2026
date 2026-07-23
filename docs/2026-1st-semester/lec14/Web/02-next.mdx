@@ -1,0 +1,159 @@
+---
+sidebar_position: 3
+---
+
+import Terminal from '@site/src/components/Terminal';
+
+# 演習: 総合問題
+
+今回の講義を含む、これまでに学んだ全ての知識を使って、Daily AlpacaHack の問題を解いてみましょう。
+
+## 総まとめ: 問題の分類と攻略
+
+全7回で学んだ攻撃手法を、「問題の挙動」から逆引きできるように整理します。
+
+| 問題の挙動 | 疑われる脆弱性 | 最初に試すこと | 講義 |
+|---|---|---|---|
+| ログインフォームがある | SQL Injection, NoSQL Injection | `admin'--`, `{"$ne":""}` | lec11, lec13 |
+| ファイル読み込みがある | ディレクトリトラバーサル, LFI | `../`, `....//` | lec10 |
+| 入力値が画面に表示される | XSS | `<script>alert(1)</script>` | lec12 |
+| 管理者Botが指定URLにアクセスする | XSS, CSRF | Cookie窃取、管理者の権限での操作 | lec12 |
+| User-AgentやIPでアクセス制御 | ヘッダー偽装 | `X-Forwarded-For`, `User-Agent` | lec10 |
+| Cookieにデータが含まれる | Cookie改竄, JWT脆弱性 | Base64デコード、構造確認 | lec09, lec13 |
+| コマンド実行の結果が返る | Command Injection | `; ls`, `$(cat /flag)` | lec11 |
+| リソースをIDで指定する | IDOR（水平権限昇格） | `id` を他の値に書き換え | lec10, lec14 |
+
+### ツール
+
+| 場面 | ツール |
+|---|---|
+| リクエストの送信・改変 | curl（lec09） |
+| ブラウザでの観察 | 開発者ツール（lec08） |
+| JWTの解析 | jwt.io（lec13） |
+
+発展ツールとして、リクエストの傍受・改変には **Burp Suite**、SQL Injection の自動化には **sqlmap**、隠しパスの列挙には **gobuster / dirsearch** が実戦ではよく使われます（本講義の範囲外）。
+
+## 演習 1: No Content（Easy）
+
+**問題リンク**: [https://alpacahack.com/daily/challenges/no-content](https://alpacahack.com/daily/challenges/no-content)
+
+### 問題概要
+
+`/` にアクセスすると flag がレスポンスボディに書き込まれますが、`Content-Length` ヘッダーが誤って `0` に設定されているため、通常の HTTP クライアントではボディを読み取れません。
+
+### 解法のヒント
+
+1. まず `curl -i` でレスポンスを観察してみましょう（lec09 の復習）
+2. `Content-Length: 0` なのに、サーバーはボディを送ってきているようです
+3. curl やブラウザは `Content-Length` を信じてボディを切り捨ててしまいます。ヘッダーの値を信じずにボディまで読む方法を探しましょう
+
+<details>
+<summary>詳しいヒントと解説</summary>
+
+HTTP レスポンスはテキストベースのプロトコルで、ヘッダーとボディはどちらも単なるバイト列です。`Content-Length: 0` と書かれていても実際にはボディが送信されている、という **ヘッダーと実態の不一致** がテーマの問題です。
+
+curl には `--ignore-content-length` オプションがあり、`Content-Length` を無視してボディを読み続けます。
+
+<Terminal command={`curl -sS --ignore-content-length <サーバーのURL>/`} />
+
+別解として、HTTP はテキストプロトコルなので、`nc`（平文 HTTP）や `openssl s_client`（HTTPS）で TCP レベルから生のレスポンスを読んでも取得できます。
+
+<Terminal
+  command={`printf 'GET / HTTP/1.1\\r\\nHost: <ホスト>\\r\\nConnection: close\\r\\n\\r\\n' | nc <ホスト> 80`}
+/>
+
+「クライアントはヘッダーを **信じて** 解釈する」という HTTP の性質を突く問題です。curl のオプション1つで読めること、そして TCP レベルではヘッダーの嘘が通用しないことを確認しましょう。
+
+</details>
+
+---
+
+## 演習 2: Kakuzuke（Medium）
+
+**問題リンク**: [https://alpacahack.com/daily/challenges/kakuzuke](https://alpacahack.com/daily/challenges/kakuzuke)
+
+### 問題概要
+
+`choice` パラメータ（5文字以下の制約あり）でファイルパスを指定し、`choices/` 以下のファイルを読み出せます。`/flag.txt` を読み取ることが目標です。
+
+### 解法のヒント
+
+1. `express.urlencoded({extended: false})` は同一キーを配列としてパースします
+2. `choice=&choice=/../../../flag.txt` を送信すると、配列が展開されます
+3. 配列は文字列化されると `,/../../../flag.txt` になります（カンマ区切り）
+4. `path.join("choices/", ",/../../../flag.txt")` は `choices/../../../flag.txt` として解釈されます
+5. 5文字制限は配列の長さ（=2）でチェックされるため、各要素の文字数制限を回避できます
+
+<details>
+<summary>詳しいヒントと解説</summary>
+
+`application/x-www-form-urlencoded` で同一キーを複数送信すると、配列としてパースされます。
+
+```
+choice=&choice=/../../../flag.txt
+```
+
+配列はサーバー側で文字列化されると `,/../../../flag.txt` になります。`path.join` はこのカンマをパスの一部として扱い、正規化します。
+
+また、5文字制限は配列の要素数（=2）でチェックされるため、各要素の文字数制限を回避できます。
+
+LFI（Local File Inclusion）と、配列を使ったフィルタバイパスの問題です。`express.urlencoded` の配列パース仕様を悪用することで、5文字の制限を回避してディレクトリトラバーサルを実現できます。lec10 で学んだ「パラメータ改竄」の発展形です。
+
+</details>
+
+### 参考Writeup
+
+- [goroshirowによるwriteup（GitHub）](https://github.com/goroshirow/CTF-WriteUps/tree/main/AlpacaHack/2026May/Kakuzuke)
+
+---
+
+## 最終課題: 好きな問題を解く
+
+### 課題
+
+Daily AlpacaHackのWebカテゴリから、まだ解いていない問題を1つ選んで解いてください。
+
+### 演習で使用した問題（復習用）
+
+- **Bars** (Easy): クライアント制限回避（lec08）
+- **Message For You** (Easy): Flask cookieデコード（lec09）
+- **Flag for Switch** (Easy): User-Agent偽装（lec09）
+- **Alpaca Rangers 2** (Easy): ディレクトリトラバーサル（lec10）
+- **Alpaca Rangers** (Medium): LFI + ストリームラッパー（lec10）
+- **Flag for localhost** (Easy): XFFヘッダー偽装（lec10）
+- **Another Login Challenge** (Medium): プロトタイプチェーン悪用（lec10）
+- **secret-table-2** (Medium): SQL Injection（lec11）
+- **curl as a service** (Medium): 引数インジェクション（lec11）
+- **Alert my Flag** (Medium): XSSフィルターバイパス（lec12）
+- **Nano Services** (Medium): XSS + HttpOnly Cookieバイパス（lec12）
+- **One More Login Challenge** (Medium): NoSQL Injection（lec13）
+
+### 未演習の推奨問題（自学用）
+
+- **Cache Me If You Can** (Easy): HTTPキャッシュの制御
+
+## 締め切り
+
+**最終課題の提出期限は別途案内します**
+
+## まとめ
+
+全7回の講義で、Web CTFの基礎を学びました。
+
+### 学んだこと
+
+1. **HTTPの基礎**: リクエスト/レスポンス、メソッド、ヘッダー、Cookie（lec08, lec09）
+2. **ツールの使い方**: ブラウザ開発者ツール、curl（lec08, lec09）
+3. **セッション管理**: Cookie、Session、JWT（lec09, lec13）
+4. **リクエスト操作**: パラメータ改竄、ヘッダー偽装、ディレクトリトラバーサル（lec10）
+5. **Injection攻撃**: SQL Injection、Command Injection、NoSQL Injection（lec11, lec13）
+6. **クライアント側の攻撃**: XSS、CSRF、フィルターバイパス（lec12）
+7. **認証とその後の攻撃**: 認証バイパス、特権昇格（lec13, lec14）
+
+### これからの学習
+
+- Daily AlpacaHackで毎日問題を解く
+- Writeupを読んで、新しい手法を学ぶ
+- CTFイベントに参加する
+
+**Happy Hacking!**

@@ -383,7 +383,7 @@ ALPN ネゴシエーションや HTTP/2 の挙動を理解するうえで、curl
 curl -b cookies.txt -L                  https://target/home`}
 />
 
-### 6. セッション Cookie だけ切り捨てる: `-j`
+### 5. セッション Cookie だけ切り捨てる: `-j`
 
 ファイルから読み込んだ Cookie のうち、**有効期限が設定されていない（セッション中だけ生きる）Cookie だけを捨てる**オプションです。
 ブラウザを閉じて再起動したのと同じ状態でリクエストを送りたいときに使います。
@@ -401,7 +401,7 @@ curl -sS -b /tmp/cookies_test.txt -v https://example.com -o /dev/null 2>&1 | gre
 
 上の実行では `session_cookie=...` が消え、`persistent_cookie=...` だけが残ります。
 
-### 5. ワンライナーで総当たり
+### 6. ワンライナーで総当たり
 
 <Terminal
   command={`for path in admin flag.txt robots.txt .env; do
