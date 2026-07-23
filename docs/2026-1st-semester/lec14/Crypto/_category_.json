@@ -1,0 +1,8 @@
+{
+    "label": "Cryptography",
+    "position": 1,
+    "link": {
+        "type": "generated-index",
+        "description": "RSA 暗号に対する代表的な攻撃手法を学びます"
+    }
+}

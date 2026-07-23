@@ -1,0 +1,59 @@
+---
+sidebar_position: 4
+---
+
+# 今回の課題
+
+##  今回の課題
+
+以下の 2 問を解いてください．
+
+| プラットフォーム | カテゴリー | 問題名 | 内容 | リンク |
+|:-----------------|:---------|:-------|:-----|:-------|
+| AlpacaHack       | Crypto   | Small N | 二つの素数の積 $N$ が小さい場合の RSA 暗号 | [問題ページ](https://alpacahack.com/challenges/small-n) |
+| AlpacaHack       | Crypto   | Small e | $e$ が小さい場合の RSA 暗号 | [問題ページ](https://alpacahack.com/challenges/small-e) |
+
+解説は行わないので，各自 writeup を読む等してください．
+
+### 問題のヒント
+
+講義資料を見ましょう．
+
+<details>
+
+<summary>ソルバーの雛形</summary>
+
+```python
+from Crypto.Util.number import long_to_bytes
+
+# chall.txt で渡される数値
+p = ...
+e = ...
+ct = ...
+
+# int_my_flag を求めるためのコード
+...
+
+# 数値から文字列への変換
+int_my_flag = ...
+
+bytes_my_flag = long_to_bytes(int_my_flag)
+
+my_flag = bytes_my_flag.decode('utf-8')
+
+print(my_flag)
+```
+
+</details>
+
+## 締め切り
+
+**07/29 23:59 まで**
+
+(1週間後の水曜 23:59 まで) 
+
+---
+
+2 学期実践的プログラミングは本講義で終了です．
+
+お疲れ様でした．

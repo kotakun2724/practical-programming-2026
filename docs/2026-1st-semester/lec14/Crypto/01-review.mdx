@@ -1,0 +1,138 @@
+---
+sidebar_position: 2
+---
+
+# 前回課題解説
+
+## one-p-rsa
+
+> 通常のRSAは2つの素数を使いますが、今回は一つだけのようです
+
+<details>
+
+<summary>chall.py</summary>
+
+```python
+from Crypto.Util.number import *
+import os
+
+flag = os.getenv("FLAG", "flag{example}").encode()
+m = bytes_to_long(flag)
+
+p = getPrime(512)
+e = 65537
+ct = pow(m, e, p)
+
+print(f"{p = }")
+print(f"{e = }")
+print(f"{ct = }")
+```
+
+</details>
+
+<details>
+
+<summary>chall.txt</summary>
+
+```text
+p = 7053006329937394640578809003529950424006540078407576710977610896377332570587931209266308841802166045389105874282224525157800335000482365019181031916131567
+e = 65537
+ct = 1207620648204721029719345249590236571809041832424398358565952316975026187064905972160827378199683620133257513725775137874934857698854513919128707181952938
+```
+
+</details>
+
+本来 $N$ を二つの相異なる素数の積としますが，今回は $N$ は一つの素数のみで生成されています．つまり，$N = p$ となっています．
+
+[前回の講義](../../lec13/Crypto/02-rsa-abnormal-params.mdx#1.素数が1つだけの場合) での内容をそのままコードにすることで，この問題は解けます．
+
+```python
+from Crypto.Util.number import long_to_bytes
+
+p = ...
+e = 65537
+ct = ...
+
+# 秘密鍵 d を求める．
+# phi = p - 1 となる
+# pow 関数は第二引数に -1 を指定することで，e^{-1} mod (p-1) を計算してくれます．
+d = pow(e, -1, p-1)
+
+# 復号
+int_my_flag = pow(ct, d, p)
+
+# 文字列に変換
+bytes_my_flag = long_to_bytes(int_my_flag)
+my_flag = bytes_my_flag.decode('utf-8')
+print(my_flag)
+```
+
+## Square RSA
+
+> RSA 暗号で素数を使い回すことにしました!
+
+<details>
+
+<summary>chall.py</summary>
+
+```python
+import os
+from Crypto.Util.number import getPrime, bytes_to_long
+
+flag = os.environ.get("FLAG", "Alpaca{****** REDACTED ******}").encode()
+assert len(flag) == 30
+
+p = getPrime(128)
+n = p * p  # !?
+
+e = 65537
+m = bytes_to_long(flag)
+c = pow(m, e, n)
+
+print(f"{n = }")
+print(f"{c = }")
+```
+
+</details>
+
+<details>
+
+<summary>output.txt</summary>
+
+```python
+n = 66579369096057840799275275806551056825754855027296356876541315429102104919401
+c = 23240514848563033397887056861198100244595942784363115352574337396646368790635
+```
+
+</details>
+
+この問題では，$N$ は二つの素数の積ですが，$p$ が使い回されています．つまり，$N = p*p$ です．
+
+[前回講義](../../lec13/Crypto/02-rsa-abnormal-params.mdx#2.素数が同一である場合) での内容をそのままコードにすることで，この問題も解けます．
+
+```python
+from Crypto.Util.number import long_to_bytes
+import math
+
+n = ...
+c = ...
+
+# math ライブラリに平方根を求めてくれる関数があるので，それを用います．
+p = math.isqrt(n)
+assert p*p == n # 期待通りに平方根を求めることができたかどうかを確認する．
+
+# オイラーのトーシェント関数を求める
+phi = p*p - p
+
+e = 65537
+
+# 秘密鍵 d を求める
+d = pow(e, -1, phi)
+
+# 復号
+int_my_flag = pow(c, d, n)
+
+bytes_my_flag = long_to_bytes(int_my_flag)
+my_flag = bytes_my_flag.decode('utf-8')
+print(my_flag)
+```
