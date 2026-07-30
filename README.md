@@ -26,6 +26,8 @@ This command generates static content into the `build` directory and can be serv
 
 ## Deployment
 
+GitHub Actions (`.github/workflows/deploy.yml`) is configured to deploy automatically to GitHub Pages when changes are pushed to `main`.
+
 Using SSH:
 
 ```bash
