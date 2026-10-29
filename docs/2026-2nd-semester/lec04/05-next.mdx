@@ -1,0 +1,107 @@
+---
+sidebar_position: 6
+---
+
+# 次回予告と課題
+
+## 次回の内容
+
+**第5回: グラフの基礎（予定）**
+
+グラフの表現（隣接リスト／隣接行列）、BFS / DFS、最短経路の入口などを扱う予定です。
+進度に応じて内容は調整します。
+
+## 今回の課題
+
+:::important[提出方法]
+AOJ で問題を解いて **AC（Accepted）** を取得してください。
+AOJ のユーザーページで提出状況を確認できます。
+:::
+
+### 必須課題: AOJ ALDS1_10_A / ALDS1_10_C
+
+| 問題番号 | 問題名 | 内容 | リンク |
+|:---------|:-------|:-----|:-------|
+| ALDS1_10_A | Fibonacci Number | DP でフィボナッチ（`F(0)=1, F(1)=1`） | [問題ページ](https://judge.u-aizu.ac.jp/onlinejudge/description.jsp?id=ALDS1_10_A) |
+| ALDS1_10_C | Longest Common Subsequence | 2文字列の LCS 長 | [問題ページ](https://judge.u-aizu.ac.jp/onlinejudge/description.jsp?id=ALDS1_10_C) |
+
+### 各問題のヒント
+
+#### ALDS1_10_A: Fibonacci Number
+
+初期値が数学の教科書と違う点に注意（`F(0)=1, F(1)=1`）。
+
+```c
+dp[0] = 1;
+dp[1] = 1;
+for (int i = 2; i <= n; i++) {
+    dp[i] = dp[i - 1] + dp[i - 2];
+}
+```
+
+#### ALDS1_10_C: Longest Common Subsequence
+
+`dp[i][j]` = `X` の先頭 `i` 文字と `Y` の先頭 `j` 文字の LCS 長。
+
+```c
+if (X[i - 1] == Y[j - 1]) {
+    dp[i][j] = dp[i - 1][j - 1] + 1;
+} else {
+    dp[i][j] = max(dp[i - 1][j], dp[i][j - 1]);
+}
+```
+
+クエリが複数あるので、毎回 `dp` を適切に初期化してください。
+
+### 推奨課題
+
+余裕があれば以下にも挑戦してください：
+
+- ALDS1_10_B: Matrix Chain Multiplication（区間 DP）
+- 前回の ALDS1_5_A を、メモ化または DP で高速化して再提出
+- 問題一覧: [ALDS1 コース](https://judge.u-aizu.ac.jp/onlinejudge/finder.jsp?course=ALDS1)
+
+### 締め切り
+
+**次回講義の前日 23:59 まで**
+
+---
+
+## 困ったときは
+
+### よくあるエラー
+
+| エラー | 原因 | 対処法 |
+|:-------|:-----|:-------|
+| WA | フィボナッチの初期値が違う | `F(0)=1, F(1)=1` か確認 |
+| WA | LCS の添字ずれ | `X[i-1]` / `Y[j-1]` と `dp[i][j]` の対応を確認 |
+| TLE | メモ化忘れの再帰 | メモ配列に保存・再利用しているか確認 |
+| RE | 配列サイズ不足 | `dp` のサイズが制約を満たすか確認 |
+
+### 質問するときは
+
+```
+【問題番号】
+ALDS1_10_C
+
+【やりたいこと】
+LCS の長さを求めたいが、サンプルと合わない
+
+【提出結果】
+Wrong Answer
+
+【ソースコード】
+（コードを貼り付け）
+```
+
+## 連絡先
+
+- **Slack**: #2026-practical-programming
+- **講師**: 伊藤 航大
+
+質問は Slack で気軽にどうぞ！
+同じ疑問を持つ人がいるかもしれないので、DMよりチャンネルへの投稿を推奨します。
+
+---
+
+お疲れ様でした！メモ化と DP は、アルゴリズム学習で特に重要な武器です。次回もよろしくお願いします 🚀

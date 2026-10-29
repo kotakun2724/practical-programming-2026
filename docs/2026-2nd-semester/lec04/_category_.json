@@ -1,0 +1,8 @@
+{
+    "label": "第4回: 動的計画法とメモ化",
+    "position": 4,
+    "link": {
+        "type": "generated-index",
+        "description": "前回課題の解説に続き、メモ化と動的計画法（DP）で再帰の指数的な計算量を O(N) / O(N^2) に高速化する手法を学びます。"
+    }
+}

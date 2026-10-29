@@ -1,0 +1,194 @@
+---
+sidebar_position: 2
+---
+
+# 前回課題解説
+
+このページでは、第3回の必須課題 **ALDS1_3_A / ALDS1_5_A / ALDS1_5_B** の解説と解答コードをまとめます。
+まだ AC できていない問題があれば、このページを見ながら理解を固めてから今回の内容に進みましょう。
+
+## ALDS1_3_A: Stack
+
+逆ポーランド記法（RPN）で書かれた式を、スタックで評価します。
+
+### 方針
+
+- トークンが**数値**なら `push`
+- トークンが**演算子**なら 2 回 `pop` して計算し、結果を `push`
+- 入力終了後、スタックに残った値が答え
+
+:::warning[pop の順序]
+2回 `pop` するとき、**最初に取り出した方が右側**（`b`）、次が左側（`a`）です。
+`a - b` を `b - a` と書いて WA になる人が多いです。
+:::
+
+### 解答コード（C）
+
+```c
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+int stack[1000];
+int top = 0;
+
+void push(int x) { stack[top++] = x; }
+int  pop(void)   { return stack[--top]; }
+
+int main(void) {
+    char s[16];
+    while (scanf("%s", s) != EOF) {
+        if (s[0] == '+' || s[0] == '-' || s[0] == '*') {
+            int b = pop();
+            int a = pop();
+            if (s[0] == '+') push(a + b);
+            else if (s[0] == '-') push(a - b);
+            else push(a * b);
+        } else {
+            push(atoi(s));
+        }
+    }
+    printf("%d\n", pop());
+    return 0;
+}
+```
+
+### 例
+
+入力 `1 2 + 3 4 - *` の場合:
+
+```
+push 1 → [1]
+push 2 → [1, 2]
++      → pop 2, pop 1 → push 3 → [3]
+push 3 → [3, 3]
+push 4 → [3, 3, 4]
+-      → pop 4, pop 3 → push -1 → [3, -1]
+*      → pop -1, pop 3 → push -3 → [-3]
+答え: -3
+```
+
+---
+
+## ALDS1_5_A: Exhaustive Search
+
+整数集合 `A` からいくつかの要素を選んで、ターゲット `m` を作れるかを判定します。
+
+### 方針
+
+「`i` 番目の要素を**使わない**／**使う**」の2択を再帰で全探索します。
+
+- `m == 0` → 成功（作り切った）
+- `i >= n` → 失敗（要素が尽きた）
+- それ以外 → `solve(i+1, m)` または `solve(i+1, m - a[i])`
+
+### 解答コード（C）
+
+```c
+#include <stdio.h>
+
+int n;
+int a[50];
+
+int solve(int i, int m) {
+    if (m == 0) return 1;
+    if (i >= n) return 0;
+    /* i 番目を使わない / 使う */
+    if (solve(i + 1, m)) return 1;
+    if (m >= a[i] && solve(i + 1, m - a[i])) return 1;
+    return 0;
+}
+
+int main(void) {
+    scanf("%d", &n);
+    for (int i = 0; i < n; i++) scanf("%d", &a[i]);
+
+    int q;
+    scanf("%d", &q);
+    for (int i = 0; i < q; i++) {
+        int m;
+        scanf("%d", &m);
+        if (solve(0, m)) printf("yes\n");
+        else printf("no\n");
+    }
+    return 0;
+}
+```
+
+:::tip[今回の伏線]
+この全探索は最悪 `O(2^N)` です。`N` が大きくなると TLE します。
+**同じ `(i, m)` を何度も計算している**ことが原因で、今日学ぶメモ化／DP で高速化できます。
+:::
+
+---
+
+## ALDS1_5_B: Merge Sort
+
+マージソートを実装し、**マージ時の比較回数**も出力します。
+
+### 方針
+
+1. 配列を半分に分割して再帰ソート
+2. 番兵 `INT_MAX` を使ってマージ
+3. マージの `for` ループ1回ごとに比較回数を `+1`
+
+### 解答コード（C）
+
+```c
+#include <stdio.h>
+#include <limits.h>
+
+int cnt = 0;
+int L[250001], R[250001];  /* N/2 + 1 以上（番兵分） */
+
+void merge(int *a, int left, int mid, int right) {
+    int n1 = mid - left;
+    int n2 = right - mid;
+
+    for (int i = 0; i < n1; i++) L[i] = a[left + i];
+    for (int i = 0; i < n2; i++) R[i] = a[mid + i];
+    L[n1] = INT_MAX;
+    R[n2] = INT_MAX;
+
+    int i = 0, j = 0;
+    for (int k = left; k < right; k++) {
+        cnt++;
+        if (L[i] <= R[j]) a[k] = L[i++];
+        else              a[k] = R[j++];
+    }
+}
+
+void merge_sort(int *a, int left, int right) {
+    if (right - left <= 1) return;
+    int mid = (left + right) / 2;
+    merge_sort(a, left, mid);
+    merge_sort(a, mid, right);
+    merge(a, left, mid, right);
+}
+
+int main(void) {
+    int n;
+    scanf("%d", &n);
+
+    int a[500000];
+    for (int i = 0; i < n; i++) scanf("%d", &a[i]);
+
+    merge_sort(a, 0, n);
+
+    for (int i = 0; i < n; i++) {
+        if (i > 0) printf(" ");
+        printf("%d", a[i]);
+    }
+    printf("\n%d\n", cnt);
+    return 0;
+}
+```
+
+:::warning[配列サイズ]
+`N <= 500000` なので、`L` / `R` は少なくとも `N/2 + 1`（番兵分）を確保してください。
+小さすぎると **RE** になります。
+:::
+
+---
+
+前回課題の理解ができたら、次は同じ再帰を**速くする**方法＝メモ化に進みましょう。
