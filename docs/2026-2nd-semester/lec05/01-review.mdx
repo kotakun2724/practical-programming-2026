@@ -1,0 +1,128 @@
+---
+sidebar_position: 2
+---
+
+# 前回課題解説
+
+このページでは、第4回の必須課題 **ALDS1_10_A / ALDS1_10_C** の解説と解答コードをまとめます。
+
+## ALDS1_10_A: Fibonacci Number
+
+### 方針
+
+`F(0)=1, F(1)=1, F(n)=F(n-1)+F(n-2)` を、小さい方から順に配列へ埋めていきます（ボトムアップ DP）。
+
+:::warning[初期値に注意]
+AOJ のこの問題は `F(0)=1` です。数学でよく使う `F(0)=0` で書くと WA になります。
+:::
+
+### 解答コード（C）
+
+```c
+#include <stdio.h>
+
+int main(void) {
+    int n;
+    scanf("%d", &n);
+
+    int dp[45];
+    dp[0] = 1;
+    dp[1] = 1;
+    for (int i = 2; i <= n; i++) {
+        dp[i] = dp[i - 1] + dp[i - 2];
+    }
+    printf("%d\n", dp[n]);
+    return 0;
+}
+```
+
+### メモ化版（参考）
+
+```c
+#include <stdio.h>
+#include <string.h>
+
+int memo[45];
+
+int fib(int n) {
+    if (n <= 1) return 1;
+    if (memo[n] != -1) return memo[n];
+    return memo[n] = fib(n - 1) + fib(n - 2);
+}
+
+int main(void) {
+    int n;
+    scanf("%d", &n);
+    memset(memo, -1, sizeof(memo));
+    printf("%d\n", fib(n));
+    return 0;
+}
+```
+
+`n <= 44` なので答えは `int` に収まります（`F(44) = 1134903170`）。
+
+---
+
+## ALDS1_10_C: Longest Common Subsequence
+
+### 方針
+
+`dp[i][j]` = 「`X` の先頭 `i` 文字」と「`Y` の先頭 `j` 文字」の LCS の長さ、とします。
+
+| 条件 | 遷移 |
+|:---|:---|
+| `X[i-1] == Y[j-1]` | `dp[i][j] = dp[i-1][j-1] + 1` |
+| それ以外 | `dp[i][j] = max(dp[i-1][j], dp[i][j-1])` |
+
+初期値は `dp[0][j] = dp[i][0] = 0`、答えは `dp[n][m]` です。
+
+### 解答コード（C）
+
+```c
+#include <stdio.h>
+#include <string.h>
+
+int dp[1001][1001];  /* 約4MB。関数内ではなくグローバルに置く */
+
+int max2(int a, int b) { return a > b ? a : b; }
+
+int main(void) {
+    int q;
+    scanf("%d", &q);
+    while (q--) {
+        char X[1001], Y[1001];
+        scanf("%s %s", X, Y);
+        int n = (int)strlen(X);
+        int m = (int)strlen(Y);
+
+        for (int i = 0; i <= n; i++) dp[i][0] = 0;
+        for (int j = 0; j <= m; j++) dp[0][j] = 0;
+
+        for (int i = 1; i <= n; i++) {
+            for (int j = 1; j <= m; j++) {
+                if (X[i - 1] == Y[j - 1]) dp[i][j] = dp[i - 1][j - 1] + 1;
+                else dp[i][j] = max2(dp[i - 1][j], dp[i][j - 1]);
+            }
+        }
+        printf("%d\n", dp[n][m]);
+    }
+    return 0;
+}
+```
+
+### 例
+
+`X = "abcbdab"`, `Y = "bdcaba"` の LCS は `"bcba"` などで、長さは **4** です。
+
+:::warning[大きな配列はグローバルに]
+`int dp[1001][1001]` は約 4MB あります。`main` の中（スタック領域）に置くと、
+環境によってはスタックが溢れて **RE** になります。大きな配列はグローバル変数にしましょう。
+:::
+
+:::tip[計算量]
+1クエリあたり `O(|X| × |Y|)`。最大でも `1000 × 1000 = 10^6` 程度なので、`q <= 150` でも間に合います。
+:::
+
+---
+
+前回課題の理解ができたら、今回の主題であるグラフに進みましょう。

@@ -1,0 +1,126 @@
+---
+sidebar_position: 6
+---
+
+# 練習問題
+
+グラフの表現・DFS・BFS を、実際に手を動かして確かめましょう。
+
+## 練習 1: 次数を数える
+
+無向グラフの隣接行列 `M`（頂点 `1..n`）が与えられたとき、各頂点の**次数**（つながっている辺の本数）を出力してください。
+
+```c
+for (int u = 1; u <= n; u++) {
+    int deg = 0;
+    // ここを実装
+    printf("%d %d\n", u, deg);
+}
+```
+
+<details>
+<summary>解答例</summary>
+
+```c
+for (int u = 1; u <= n; u++) {
+    int deg = 0;
+    for (int v = 1; v <= n; v++) {
+        if (M[u][v]) deg++;
+    }
+    printf("%d %d\n", u, deg);
+}
+```
+
+</details>
+
+---
+
+## 練習 2: 連結成分の個数を数える
+
+無向グラフの**連結成分**（互いに行き来できる頂点のまとまり）がいくつあるかを、DFS で数えてください。
+
+```
+  1 --- 2     4 --- 5     6
+  |
+  3
+→ 連結成分は {1,2,3}, {4,5}, {6} の 3 個
+```
+
+```c
+int count_components(void) {
+    int cnt = 0;
+    // ここを実装（dfs と visited を使う）
+    return cnt;
+}
+```
+
+<details>
+<summary>解答例</summary>
+
+```c
+int count_components(void) {
+    int cnt = 0;
+    for (int u = 1; u <= n; u++) {
+        if (!visited[u]) {
+            dfs(u);   /* u とつながる頂点をすべて訪問済みにする */
+            cnt++;
+        }
+    }
+    return cnt;
+}
+```
+
+DFS を1回呼ぶたびに、1つの連結成分がまるごと訪問済みになります。
+
+</details>
+
+---
+
+## 練習 3: BFS で最短距離を求める
+
+上の練習2のグラフ（無向）で、頂点 `1` から各頂点への最短距離を BFS で求めてください。
+到達できない頂点は `-1` とします。
+
+<details>
+<summary>期待される出力と解答例</summary>
+
+```
+1 0
+2 1
+3 1
+4 -1
+5 -1
+6 -1
+```
+
+ALDS1_11_C の解答例と同じコードで、無向グラフの場合は辺を両方向（`M[u][v] = M[v][u] = 1`）に登録します。
+
+</details>
+
+---
+
+## AOJ ALDS1_11_A: Graph
+
+隣接リストで与えられたグラフを隣接行列で出力します。[グラフの基本と表現方法](./graph-basics) の解答例を参考にしてください。
+
+[問題ページ（ALDS1_11_A）](https://judge.u-aizu.ac.jp/onlinejudge/description.jsp?id=ALDS1_11_A)
+
+## AOJ ALDS1_11_B: Depth First Search
+
+各頂点の発見時刻と完了時刻を出力します。
+
+- 時刻は発見・完了のたびに `++t`
+- 隣接頂点は**番号の小さい順**に調べる
+- 到達できない頂点があるので、未訪問の頂点から改めて DFS する
+
+[問題ページ（ALDS1_11_B）](https://judge.u-aizu.ac.jp/onlinejudge/description.jsp?id=ALDS1_11_B)
+
+## AOJ ALDS1_11_C: Breadth First Search
+
+頂点 `1` からの最短距離を出力します。到達できない頂点は `-1` です。
+
+[問題ページ（ALDS1_11_C）](https://judge.u-aizu.ac.jp/onlinejudge/description.jsp?id=ALDS1_11_C)
+
+---
+
+実装に慣れてきたら、次のページの**今回の課題**にも挑戦してみましょう！

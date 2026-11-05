@@ -140,6 +140,7 @@ int main(void) {
 
 int cnt = 0;
 int L[250001], R[250001];  /* N/2 + 1 以上（番兵分） */
+int a[500000];
 
 void merge(int *a, int left, int mid, int right) {
     int n1 = mid - left;
@@ -170,7 +171,6 @@ int main(void) {
     int n;
     scanf("%d", &n);
 
-    int a[500000];
     for (int i = 0; i < n; i++) scanf("%d", &a[i]);
 
     merge_sort(a, 0, n);

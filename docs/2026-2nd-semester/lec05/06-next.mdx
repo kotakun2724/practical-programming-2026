@@ -1,0 +1,119 @@
+---
+sidebar_position: 7
+---
+
+# 次回予告と課題
+
+## 次回の内容
+
+**第6回: 最短経路問題（予定）**
+
+辺に「重み（距離やコスト）」があるグラフで、最短経路を求める **ダイクストラ法** などを扱う予定です。
+今回の BFS は「すべての辺の重みが 1」の場合の最短経路だったので、その発展になります。
+進度に応じて内容は調整します。
+
+## 今回の課題
+
+:::important[提出方法]
+AOJ で問題を解いて **AC（Accepted）** を取得してください。
+AOJ のユーザーページで提出状況を確認できます。
+:::
+
+### 必須課題: AOJ ALDS1_11_A / ALDS1_11_B / ALDS1_11_C
+
+| 問題番号 | 問題名 | 内容 | リンク |
+|:---------|:-------|:-----|:-------|
+| ALDS1_11_A | Graph | 隣接リスト → 隣接行列 | [問題ページ](https://judge.u-aizu.ac.jp/onlinejudge/description.jsp?id=ALDS1_11_A) |
+| ALDS1_11_B | Depth First Search | DFS の発見時刻・完了時刻 | [問題ページ](https://judge.u-aizu.ac.jp/onlinejudge/description.jsp?id=ALDS1_11_B) |
+| ALDS1_11_C | Breadth First Search | BFS で最短距離 | [問題ページ](https://judge.u-aizu.ac.jp/onlinejudge/description.jsp?id=ALDS1_11_C) |
+
+### 各問題のヒント
+
+#### ALDS1_11_A: Graph
+
+入力の `u k v1 ... vk` を読みながら `M[u][vi] = 1` とし、最後に行列を空白区切りで出力します。
+
+#### ALDS1_11_B: Depth First Search
+
+```c
+void dfs(int u) {
+    color[u] = 1;
+    d[u] = ++t;
+    for (int v = 1; v <= n; v++) {
+        if (M[u][v] && color[v] == 0) dfs(v);
+    }
+    color[u] = 2;
+    f[u] = ++t;
+}
+```
+
+`main` では `for (u = 1; u <= n; u++) if (color[u] == 0) dfs(u);` で全頂点をカバーします。
+
+#### ALDS1_11_C: Breadth First Search
+
+`d[]` を `-1` で初期化し、頂点 `1` をキューに入れてから BFS します。
+
+```c
+while (head < tail) {
+    int u = q[head++];
+    for (int v = 1; v <= n; v++) {
+        if (M[u][v] && d[v] == -1) {
+            d[v] = d[u] + 1;
+            q[tail++] = v;
+        }
+    }
+}
+```
+
+### 推奨課題
+
+余裕があれば以下にも挑戦してください：
+
+- ALDS1_11_D: Connected Components（連結成分。頂点数が多いので隣接リストが必要）
+- 問題一覧: [ALDS1 コース](https://judge.u-aizu.ac.jp/onlinejudge/finder.jsp?course=ALDS1)
+
+### 締め切り
+
+**次回講義の前日 23:59 まで**
+
+---
+
+## 困ったときは
+
+### よくあるエラー
+
+| エラー | 原因 | 対処法 |
+|:-------|:-----|:-------|
+| WA | 到達できない頂点を DFS していない | 未訪問の全頂点から DFS を開始する |
+| WA | 時刻のカウントずれ | 発見時・完了時の両方で `++t` しているか確認 |
+| WA | 未到達の頂点を `-1` にしていない | `d[]` を `-1` で初期化しているか確認 |
+| RE | 配列の添字範囲外 | 頂点番号 `1..n` に対して `n + 1` 以上確保しているか確認 |
+| TLE / RE | 頂点数が多い問題で隣接行列を使った | 隣接リストに切り替える（ALDS1_11_D など） |
+
+### 質問するときは
+
+```
+【問題番号】
+ALDS1_11_B
+
+【やりたいこと】
+DFS の発見時刻と完了時刻を出力したいが、サンプルと合わない
+
+【提出結果】
+Wrong Answer
+
+【ソースコード】
+（コードを貼り付け）
+```
+
+## 連絡先
+
+- **Slack**: #2026-practical-programming
+- **講師**: 伊藤 航大
+
+質問は Slack で気軽にどうぞ！
+同じ疑問を持つ人がいるかもしれないので、DMよりチャンネルへの投稿を推奨します。
+
+---
+
+お疲れ様でした！グラフは、これから学ぶ多くのアルゴリズムの土台になります。次回もよろしくお願いします 🚀

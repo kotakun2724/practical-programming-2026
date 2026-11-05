@@ -1,0 +1,8 @@
+{
+    "label": "第5回: グラフの基礎（DFS・BFS）",
+    "position": 5,
+    "link": {
+        "type": "generated-index",
+        "description": "前回課題の解説に続き、グラフの表現（隣接行列・隣接リスト）、深さ優先探索（DFS）、幅優先探索（BFS）を学びます。"
+    }
+}
