@@ -1,0 +1,260 @@
+---
+sidebar_position: 2
+---
+
+# 前回課題解説
+
+このページでは、第5回の必須課題 **ALDS1_11_A / ALDS1_11_B / ALDS1_11_C** と、推奨課題 **ALDS1_11_D** の解説と解答コードをまとめます。
+
+## ALDS1_11_A: Graph
+
+### 方針
+
+入力 `u k v1 ... vk` を読みながら `M[u][vi] = 1` とし、最後に行列を空白区切りで出力します。
+
+### 解答コード（C）
+
+```c
+#include <stdio.h>
+
+int M[101][101];
+
+int main(void) {
+    int n;
+    scanf("%d", &n);
+    for (int i = 0; i < n; i++) {
+        int u, k;
+        scanf("%d %d", &u, &k);
+        for (int j = 0; j < k; j++) {
+            int v;
+            scanf("%d", &v);
+            M[u][v] = 1;
+        }
+    }
+
+    for (int u = 1; u <= n; u++) {
+        for (int v = 1; v <= n; v++) {
+            if (v > 1) printf(" ");
+            printf("%d", M[u][v]);
+        }
+        printf("\n");
+    }
+    return 0;
+}
+```
+
+:::warning[行末の空白]
+`printf("%d ", M[u][v]);` のように毎回後ろに空白を出すと、行末に余計な空白が残ります。
+AOJ では **Presentation Error / WA** になることがあるので、「2個目以降の前に空白」を出す書き方にしましょう。
+:::
+
+---
+
+## ALDS1_11_B: Depth First Search
+
+### 方針
+
+`color[]` で「未訪問・訪問中・完了」を管理し、訪問したときに `d[u] = ++t`、隣接頂点を調べ終えたときに `f[u] = ++t` とします。
+
+### 解答コード（C）
+
+```c
+#include <stdio.h>
+
+int n;
+int M[101][101];
+int color[101];   /* 0: 未訪問, 1: 訪問中, 2: 完了 */
+int d[101], f[101];
+int t = 0;
+
+void dfs(int u) {
+    color[u] = 1;
+    d[u] = ++t;
+    for (int v = 1; v <= n; v++) {
+        if (M[u][v] && color[v] == 0) dfs(v);
+    }
+    color[u] = 2;
+    f[u] = ++t;
+}
+
+int main(void) {
+    scanf("%d", &n);
+    for (int i = 0; i < n; i++) {
+        int u, k;
+        scanf("%d %d", &u, &k);
+        for (int j = 0; j < k; j++) {
+            int v;
+            scanf("%d", &v);
+            M[u][v] = 1;
+        }
+    }
+
+    for (int u = 1; u <= n; u++) {
+        if (color[u] == 0) dfs(u);
+    }
+
+    for (int u = 1; u <= n; u++) {
+        printf("%d %d %d\n", u, d[u], f[u]);
+    }
+    return 0;
+}
+```
+
+### 例（サンプル入力1）
+
+```
+1 → 2 → 4 → 3（行き止まり、4 → 2 → 1 に戻る）
+頂点  d  f
+ 1    1  8
+ 2    2  7
+ 3    4  5
+ 4    3  6
+```
+
+`d[u] < d[v] < f[v] < f[u]` のように、**子孫の区間は親の区間の中に入れ子になる**ことが分かります。
+
+---
+
+## ALDS1_11_C: Breadth First Search
+
+### 方針
+
+`d[]` を `-1` で初期化し、頂点 `1` をキューに入れて BFS します。`d[v] == -1` が「未訪問」を表します。
+
+### 解答コード（C）
+
+```c
+#include <stdio.h>
+
+int n;
+int M[101][101];
+int d[101];
+int q[101];
+
+int main(void) {
+    scanf("%d", &n);
+    for (int i = 0; i < n; i++) {
+        int u, k;
+        scanf("%d %d", &u, &k);
+        for (int j = 0; j < k; j++) {
+            int v;
+            scanf("%d", &v);
+            M[u][v] = 1;
+        }
+    }
+
+    for (int i = 1; i <= n; i++) d[i] = -1;
+
+    int head = 0, tail = 0;
+    d[1] = 0;
+    q[tail++] = 1;
+
+    while (head < tail) {
+        int u = q[head++];
+        for (int v = 1; v <= n; v++) {
+            if (M[u][v] && d[v] == -1) {
+                d[v] = d[u] + 1;
+                q[tail++] = v;
+            }
+        }
+    }
+
+    for (int u = 1; u <= n; u++) {
+        printf("%d %d\n", u, d[u]);
+    }
+    return 0;
+}
+```
+
+:::tip[キューの大きさ]
+各頂点がキューに入るのは**1回だけ**（`d[v]` を設定したときだけ）なので、キューの大きさは頂点数 `n` あれば足ります。
+:::
+
+---
+
+## （推奨）ALDS1_11_D: Connected Components
+
+### 方針
+
+友達関係（無向グラフ）が与えられ、「`s` と `t` は友達をたどってつながっているか」に答える問題です。
+頂点ごとに**グループ番号**をつけておけば、各質問は `group[s] == group[t]` で `O(1)` で答えられます。
+
+制約は `n <= 100000`, `m <= 100000` です。
+
+- 隣接行列は `100000 × 100000` で大きすぎるので、**隣接リスト**を使う
+- 再帰の DFS は深さが最大 `10^5` になりスタックが溢れる可能性があるので、**BFS**（キュー）でグループ分けする
+
+### 解答コード（C）
+
+```c
+#include <stdio.h>
+
+#define MAXN 100000
+#define MAXM 200000   /* 無向なので辺は 2 倍 */
+
+/* 配列で作る隣接リスト: head[u] から nxt[] をたどると u の辺を列挙できる */
+int head[MAXN], to[MAXM], nxt[MAXM], ecnt = 0;
+int group[MAXN];
+int q[MAXN];
+
+void add_edge(int u, int v) {
+    to[ecnt] = v;
+    nxt[ecnt] = head[u];
+    head[u] = ecnt++;
+}
+
+int main(void) {
+    int n, m;
+    scanf("%d %d", &n, &m);
+    for (int i = 0; i < n; i++) { head[i] = -1; group[i] = -1; }
+    for (int i = 0; i < m; i++) {
+        int s, t;
+        scanf("%d %d", &s, &t);
+        add_edge(s, t);
+        add_edge(t, s);
+    }
+
+    int g = 0;
+    for (int s = 0; s < n; s++) {
+        if (group[s] != -1) continue;
+        int qh = 0, qt = 0;
+        group[s] = g;
+        q[qt++] = s;
+        while (qh < qt) {
+            int u = q[qh++];
+            for (int e = head[u]; e != -1; e = nxt[e]) {
+                int v = to[e];
+                if (group[v] == -1) {
+                    group[v] = g;
+                    q[qt++] = v;
+                }
+            }
+        }
+        g++;
+    }
+
+    int qn;
+    scanf("%d", &qn);
+    while (qn--) {
+        int s, t;
+        scanf("%d %d", &s, &t);
+        printf("%s\n", group[s] == group[t] ? "yes" : "no");
+    }
+    return 0;
+}
+```
+
+:::note[配列で作る隣接リスト]
+第5回の `adj[101][101]` 方式は、頂点数が大きいと `n × n` のメモリが必要になってしまいます。
+`head[] / to[] / nxt[]` の3つの配列を使うと、メモリは `O(V + E)` で済みます。
+この書き方は今回の ALDS1_12_C でも使います。
+:::
+
+:::warning[頂点番号は 0 から]
+ALDS1_11_A〜C は頂点番号が `1..n` でしたが、ALDS1_11_D と今回の ALDS1_12 は **`0..n-1`** です。
+問題ごとに必ず確認しましょう。
+:::
+
+---
+
+前回課題の理解ができたら、今回の主題である最短経路問題に進みましょう。

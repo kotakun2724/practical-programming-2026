@@ -1,0 +1,231 @@
+---
+sidebar_position: 5
+---
+
+# 優先度付きキューによる高速化
+
+## 優先度付きキュー
+
+**優先度付きキュー（priority queue）** は、次の2つの操作ができるデータ構造です。
+
+| 操作 | 意味 | 二分ヒープでの計算量 |
+|:---|:---|:---|
+| `push(x)` | 値 `x` を追加する | `O(log N)` |
+| `pop()` | **最小**の値を取り出す | `O(log N)` |
+
+| データ構造 | 取り出し順 | 主な用途 |
+|:---|:---|:---|
+| スタック（第3回） | 後入れ先出し（LIFO） | DFS、再帰 |
+| キュー（第5回） | 先入れ先出し（FIFO） | BFS |
+| 優先度付きキュー（今回） | **小さい順** | ダイクストラ法 |
+
+## 二分ヒープ
+
+優先度付きキューは、**二分ヒープ**という木構造で実装するのが一般的です。
+
+- 完全二分木（上の段から、左から順に詰めた木）
+- **`親の値 <= 子の値`** が常に成り立つ（だから根が最小）
+
+```
+         1            配列での表現
+       /   \          添字: 0  1  2  3  4  5
+      3     2         値  : 1  3  2  7  4  5
+     / \   /
+    7   4 5           i の親: (i - 1) / 2
+                      i の子: 2i + 1, 2i + 2
+```
+
+木を配列に詰めて持つので、ポインタは不要です。
+
+### push: 末尾に追加して上に移動
+
+末尾に入れて、親より小さい間は親と入れ替えながら上に上がります。
+
+### pop: 根を取り出し、末尾を根に置いて下に移動
+
+根（最小値）を取り出したら、末尾の要素を根に置き、**小さい方の子**より大きい間は入れ替えながら下に下がります。
+
+どちらも木の高さ分しか動かないので `O(log N)` です。
+
+### 実装（C）
+
+ダイクストラ法で使うので、「距離 `d`」と「頂点 `v`」の組を入れ、`d` が小さい順に取り出します。
+
+```c
+typedef struct { int d; int v; } Item;
+Item heap[MAXE + 1];
+int hsize = 0;
+
+void push(int d, int v) {
+    int i = hsize++;
+    while (i > 0) {
+        int p = (i - 1) / 2;
+        if (heap[p].d <= d) break;   /* 親の方が小さければ止まる */
+        heap[i] = heap[p];           /* 親を下ろす */
+        i = p;
+    }
+    heap[i].d = d;
+    heap[i].v = v;
+}
+
+Item pop(void) {
+    Item top = heap[0];
+    Item last = heap[--hsize];
+    int i = 0;
+    while (1) {
+        int c = 2 * i + 1;           /* 左の子 */
+        if (c >= hsize) break;
+        if (c + 1 < hsize && heap[c + 1].d < heap[c].d) c++;   /* 小さい方の子 */
+        if (heap[c].d >= last.d) break;
+        heap[i] = heap[c];           /* 子を上げる */
+        i = c;
+    }
+    heap[i] = last;
+    return top;
+}
+```
+
+:::tip[C++ なら標準ライブラリがある]
+C++ では `std::priority_queue` が使えます。最小値を取り出すには
+`priority_queue<pair<int,int>, vector<pair<int,int>>, greater<pair<int,int>>>` と書きます。
+今回は仕組みを理解するために C で自作しています。
+:::
+
+## ヒープを使ったダイクストラ法
+
+「未確定の頂点のうち `d` が最小のもの」を、全探索ではなくヒープから取り出します。
+
+1. `d[始点] = 0` とし、`(0, 始点)` をヒープに入れる
+2. ヒープから `(du, u)` を取り出す
+3. `du > d[u]` なら、それは**古い情報**なので読み飛ばす
+4. `u` から出る辺 `u → v` で緩和し、更新できたら `(d[v], v)` をヒープに入れる
+5. ヒープが空になるまで 2〜4 を繰り返す
+
+:::note[古い情報を読み飛ばす理由]
+同じ頂点 `v` の距離が何度も更新されると、ヒープには `(5, v)`, `(3, v)` のように**同じ頂点が複数**入ります。
+小さい `(3, v)` が先に取り出されて `v` は確定するので、あとから出てくる `(5, v)` は無視してよいのです。
+ヒープの中身を直接書き換えるより、こちらの方が簡単に実装できます。
+:::
+
+## AOJ ALDS1_12_C: Single Source Shortest Path II
+
+入力形式・出力形式は ALDS1_12_B と同じですが、制約が大きくなっています。
+
+- `n <= 10000`
+- `|E| < 500000`
+
+隣接行列（`10000 × 10000`）は使えないので、**隣接リスト + 二分ヒープ**で解きます。
+
+### 解答例（C）
+
+```c
+#include <stdio.h>
+
+#define MAXV 10000
+#define MAXE 500000
+#define INF 2000000000
+
+/* 重み付きの隣接リスト */
+int head[MAXV];
+int to[MAXE], cost[MAXE], nxt[MAXE];
+int ecnt = 0;
+
+void add_edge(int u, int v, int c) {
+    to[ecnt] = v;
+    cost[ecnt] = c;
+    nxt[ecnt] = head[u];
+    head[u] = ecnt++;
+}
+
+/* 優先度付きキュー（二分ヒープ） */
+typedef struct { int d; int v; } Item;
+Item heap[MAXE + 1];
+int hsize = 0;
+
+void push(int d, int v) {
+    int i = hsize++;
+    while (i > 0) {
+        int p = (i - 1) / 2;
+        if (heap[p].d <= d) break;
+        heap[i] = heap[p];
+        i = p;
+    }
+    heap[i].d = d;
+    heap[i].v = v;
+}
+
+Item pop(void) {
+    Item top = heap[0];
+    Item last = heap[--hsize];
+    int i = 0;
+    while (1) {
+        int c = 2 * i + 1;
+        if (c >= hsize) break;
+        if (c + 1 < hsize && heap[c + 1].d < heap[c].d) c++;
+        if (heap[c].d >= last.d) break;
+        heap[i] = heap[c];
+        i = c;
+    }
+    heap[i] = last;
+    return top;
+}
+
+int d[MAXV];
+
+int main(void) {
+    int n;
+    scanf("%d", &n);
+    for (int i = 0; i < n; i++) head[i] = -1;
+
+    for (int i = 0; i < n; i++) {
+        int u, k;
+        scanf("%d %d", &u, &k);
+        for (int j = 0; j < k; j++) {
+            int v, c;
+            scanf("%d %d", &v, &c);
+            add_edge(u, v, c);
+        }
+    }
+
+    for (int i = 0; i < n; i++) d[i] = INF;
+    d[0] = 0;
+    push(0, 0);
+
+    while (hsize > 0) {
+        Item cur = pop();
+        int u = cur.v;
+        if (cur.d > d[u]) continue;   /* 古い情報は読み飛ばす */
+
+        for (int e = head[u]; e != -1; e = nxt[e]) {
+            int v = to[e];
+            if (d[u] + cost[e] < d[v]) {
+                d[v] = d[u] + cost[e];
+                push(d[v], v);
+            }
+        }
+    }
+
+    for (int i = 0; i < n; i++) printf("%d %d\n", i, d[i]);
+    return 0;
+}
+```
+
+:::warning[ヒープの大きさ]
+`push` は緩和に成功するたびに行うので、ヒープには最大で**辺の数 + 1** 個の要素が入ります。
+`heap[]` を頂点数 `MAXV` で確保すると RE になるので注意しましょう。
+:::
+
+:::warning[大きな配列はグローバルに]
+`heap[]` だけで約 4MB あります。第4回の LCS と同じく、`main` の中ではなく**グローバル変数**に置きましょう。
+:::
+
+## 計算量の比較
+
+| 実装 | 計算量 | 向いている場面 |
+|:---|:---|:---|
+| 隣接行列 + 全探索（ALDS1_12_B） | `O(V^2)` | 頂点が少ない、辺がとても多い（密なグラフ） |
+| 隣接リスト + 二分ヒープ（ALDS1_12_C） | `O((V + E) log V)` | 頂点が多く、辺が少なめ（疎なグラフ） |
+
+ALDS1_12_C の最大ケースでは、`V^2 = 10^8` に対して `(V + E) log V ≈ 5 × 10^5 × 14 ≈ 7 × 10^6` と、10倍以上速くなります。
+
+次は、練習問題でダイクストラ法を手を動かして確かめましょう。

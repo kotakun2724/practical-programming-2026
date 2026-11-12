@@ -1,0 +1,126 @@
+---
+sidebar_position: 7
+---
+
+# 次回予告と課題
+
+## 次回の内容
+
+**第7回: 最小全域木（予定）**
+
+すべての頂点をつなぐ辺の選び方のうち、重みの合計が最小になるもの（**最小全域木**）を求める
+**プリム法**・**クラスカル法**と、クラスカル法で使う **Union-Find（素集合データ構造）** を扱う予定です。
+今回の優先度付きキューもまた登場します。進度に応じて内容は調整します。
+
+## 今回の課題
+
+:::important[提出方法]
+AOJ で問題を解いて **AC（Accepted）** を取得してください。
+AOJ のユーザーページで提出状況を確認できます。
+:::
+
+### 必須課題: AOJ ALDS1_12_B / ALDS1_12_C
+
+| 問題番号 | 問題名 | 内容 | リンク |
+|:---------|:-------|:-----|:-------|
+| ALDS1_12_B | Single Source Shortest Path I | ダイクストラ法（隣接行列・`O(V^2)`） | [問題ページ](https://judge.u-aizu.ac.jp/onlinejudge/description.jsp?id=ALDS1_12_B) |
+| ALDS1_12_C | Single Source Shortest Path II | ダイクストラ法（隣接リスト + 二分ヒープ） | [問題ページ](https://judge.u-aizu.ac.jp/onlinejudge/description.jsp?id=ALDS1_12_C) |
+
+### 各問題のヒント
+
+#### ALDS1_12_B: Single Source Shortest Path I
+
+`d[]` を `INF`、`d[0] = 0` で初期化し、「未確定で最小の頂点を確定 → 緩和」を `n` 回繰り返します。
+
+```c
+for (int step = 0; step < n; step++) {
+    int u = -1;
+    for (int i = 0; i < n; i++) {
+        if (!done[i] && d[i] != INF && (u == -1 || d[i] < d[u])) u = i;
+    }
+    if (u == -1) break;
+    done[u] = 1;
+    for (int v = 0; v < n; v++) {
+        if (M[u][v] != -1 && d[u] + M[u][v] < d[v]) d[v] = d[u] + M[u][v];
+    }
+}
+```
+
+#### ALDS1_12_C: Single Source Shortest Path II
+
+隣接リスト（`head / to / cost / nxt`）でグラフを持ち、二分ヒープから距離の小さい順に取り出します。
+
+```c
+push(0, 0);
+while (hsize > 0) {
+    Item cur = pop();
+    int u = cur.v;
+    if (cur.d > d[u]) continue;
+    for (int e = head[u]; e != -1; e = nxt[e]) {
+        int v = to[e];
+        if (d[u] + cost[e] < d[v]) {
+            d[v] = d[u] + cost[e];
+            push(d[v], v);
+        }
+    }
+}
+```
+
+ALDS1_12_C のコードは ALDS1_12_B にもそのまま提出できます。両方で AC を確認してみましょう。
+
+### 推奨課題
+
+余裕があれば以下にも挑戦してください：
+
+- GRL_1_A: Single Source Shortest Path（始点が `0` 以外、到達できない頂点は `INF` と出力）
+- GRL_1_B: Single Source Shortest Path (Negative Edges)（ベルマン–フォード法。負の閉路の検出）
+- GRL_1_C: All Pairs Shortest Path（ワーシャル–フロイド法。全頂点対の最短距離）
+- 問題一覧: [ALDS1 コース](https://judge.u-aizu.ac.jp/onlinejudge/finder.jsp?course=ALDS1) / [GRL コース](https://judge.u-aizu.ac.jp/onlinejudge/finder.jsp?course=GRL)
+
+### 締め切り
+
+**次回講義の前日 23:59 まで**
+
+---
+
+## 困ったときは
+
+### よくあるエラー
+
+| エラー | 原因 | 対処法 |
+|:-------|:-------|:-----|
+| WA | 頂点番号を `1..n` で扱っている | ALDS1_12 は `0..n-1`。ループの範囲を確認 |
+| WA | 重み 0 の辺を「辺なし」と判定している | 「辺なし」は `-1` などで区別する |
+| WA | `INF + c` がオーバーフローして負になった | `d[u] == INF` の頂点からは緩和しない |
+| TLE | ALDS1_12_C で `O(V^2)` の実装を使った | 隣接リスト + 二分ヒープに切り替える |
+| TLE | 古い情報を読み飛ばしていない | `if (cur.d > d[u]) continue;` を入れる |
+| RE | ヒープの配列が小さい | ヒープは**辺の数 + 1** 以上確保する |
+| RE | 大きな配列を `main` の中に置いた | グローバル変数にする |
+
+### 質問するときは
+
+```
+【問題番号】
+ALDS1_12_C
+
+【やりたいこと】
+二分ヒープを使ってダイクストラ法を実装したいが、TLE になる
+
+【提出結果】
+Time Limit Exceeded
+
+【ソースコード】
+（コードを貼り付け）
+```
+
+## 連絡先
+
+- **Slack**: #2026-practical-programming
+- **講師**: 伊藤 航大
+
+質問は Slack で気軽にどうぞ！
+同じ疑問を持つ人がいるかもしれないので、DMよりチャンネルへの投稿を推奨します。
+
+---
+
+お疲れ様でした！ダイクストラ法は、カーナビや乗換案内でも使われている実用的なアルゴリズムです。次回もよろしくお願いします 🚀
