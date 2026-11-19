@@ -1,0 +1,237 @@
+---
+sidebar_position: 6
+---
+
+# 演習: グラフ・最短経路
+
+第5回（グラフの基礎・DFS・BFS）と第6回（最短経路問題）の内容を使う問題です。
+
+## 1160: How Many Islands? ★★
+
+[問題ページ（1160）](https://judge.u-aizu.ac.jp/onlinejudge/description.jsp?id=1160)
+
+### 問題の概要
+
+幅 `w`、高さ `h` の地図が与えられます。各マスは `1`（陸）か `0`（海）です。
+**縦・横・斜め**に隣り合う陸どうしは同じ島とみなすとき、島の数を数えてください。
+
+- `1 <= w, h <= 50`
+- 複数のデータセットがあり、`0 0` で入力が終わります
+
+```
+1 0 1 0 0
+1 0 0 0 0        → 島は 3 つ
+1 0 1 0 1          （左の縦長の島、上の真ん中の島、中央から右へ斜めにつながった島）
+1 0 0 1 0
+```
+
+### 考え方
+
+マスを頂点、隣り合う陸どうしを辺と考えると、**グラフの連結成分の数**を数える問題になります（第5回の練習2と同じです）。
+
+<details>
+<summary>ヒント</summary>
+
+左上から順にマスを見て、まだ数えていない陸を見つけたら、
+
+1. 島の数を 1 増やす
+2. そのマスから **DFS** で、つながっている陸をすべて「数えた」ことにする（`0` に塗りつぶす）
+
+を繰り返します。隣接行列や隣接リストを作らなくても、8方向の隣のマスを直接調べれば DFS できます。
+
+</details>
+
+<details>
+<summary>解答例（C）</summary>
+
+```c
+#include <stdio.h>
+
+int w, h;
+int c[50][50];
+
+/* (y, x) とつながる陸地をすべて 0（海）に塗りつぶす */
+void dfs(int y, int x) {
+    c[y][x] = 0;
+    for (int dy = -1; dy <= 1; dy++) {
+        for (int dx = -1; dx <= 1; dx++) {
+            int ny = y + dy, nx = x + dx;
+            if (0 <= ny && ny < h && 0 <= nx && nx < w && c[ny][nx] == 1) dfs(ny, nx);
+        }
+    }
+}
+
+int main(void) {
+    while (scanf("%d %d", &w, &h) == 2 && (w != 0 || h != 0)) {
+        for (int y = 0; y < h; y++)
+            for (int x = 0; x < w; x++) scanf("%d", &c[y][x]);
+
+        int cnt = 0;
+        for (int y = 0; y < h; y++) {
+            for (int x = 0; x < w; x++) {
+                if (c[y][x] == 1) {
+                    dfs(y, x);   /* 1回の DFS で島1つ分が消える */
+                    cnt++;
+                }
+            }
+        }
+        printf("%d\n", cnt);
+    }
+    return 0;
+}
+```
+
+:::warning[入力の順番に注意]
+入力は「幅 `w`、高さ `h`」の順です。配列 `c[y][x]` の `y` が行（高さ方向）、`x` が列（幅方向）になるように読み込みましょう。
+:::
+
+:::tip[範囲外チェック]
+地図の端のマスでは、隣が地図の外になります。`0 <= ny < h` かつ `0 <= nx < w` を確認してから配列にアクセスしましょう。
+:::
+
+</details>
+
+---
+
+## GRL_1_A: Single Source Shortest Path ★★
+
+[問題ページ（GRL_1_A）](https://judge.u-aizu.ac.jp/onlinejudge/description.jsp?id=GRL_1_A)
+
+### 問題の概要
+
+重み付き有向グラフで、始点 `r` から各頂点への最短距離を求めてください。到達できない頂点には `INF` と出力します。
+
+- `1 <= |V| <= 100000`
+- `0 <= |E| <= 500000`
+- `0 <= 重み <= 10000`
+
+ALDS1_12_C とほぼ同じですが、次の点が違います。
+
+| | ALDS1_12_C | GRL_1_A |
+|:---|:---|:---|
+| 入力 | 頂点ごとに `u k v1 c1 ...` | 最初に `頂点数 辺数 r`、続いて辺ごとに `s t d` |
+| 始点 | 頂点 `0` | 頂点 `r` |
+| 到達できない頂点 | なし | `INF` と出力 |
+| 頂点数の上限 | `10000` | `100000` |
+| 出力 | `番号 距離` | `距離` のみ |
+
+<details>
+<summary>ヒント</summary>
+
+[前回課題解説](./review) の ALDS1_12_C のコードを、次のように直せば解けます。
+
+- `MAXV` を `100000` にする
+- 入力の読み方を「辺ごとに `s t d`」に変える
+- `d[r] = 0` から始める
+- 出力で `d[i] == INF` なら `INF` と出力する
+
+</details>
+
+<details>
+<summary>解答例（C）</summary>
+
+```c
+#include <stdio.h>
+
+#define MAXV 100000
+#define MAXE 500000
+#define INF 2000000000
+
+int head[MAXV];
+int to[MAXE], cost[MAXE], nxt[MAXE];
+int ecnt = 0;
+
+void add_edge(int u, int v, int c) {
+    to[ecnt] = v;
+    cost[ecnt] = c;
+    nxt[ecnt] = head[u];
+    head[u] = ecnt++;
+}
+
+typedef struct { int d; int v; } Item;
+Item heap[MAXE + 1];
+int hsize = 0;
+
+void push(int d, int v) {
+    int i = hsize++;
+    while (i > 0) {
+        int p = (i - 1) / 2;
+        if (heap[p].d <= d) break;
+        heap[i] = heap[p];
+        i = p;
+    }
+    heap[i].d = d;
+    heap[i].v = v;
+}
+
+Item pop(void) {
+    Item top = heap[0];
+    Item last = heap[--hsize];
+    int i = 0;
+    while (1) {
+        int c = 2 * i + 1;
+        if (c >= hsize) break;
+        if (c + 1 < hsize && heap[c + 1].d < heap[c].d) c++;
+        if (heap[c].d >= last.d) break;
+        heap[i] = heap[c];
+        i = c;
+    }
+    heap[i] = last;
+    return top;
+}
+
+int d[MAXV];
+
+int main(void) {
+    int V, E, r;
+    scanf("%d %d %d", &V, &E, &r);
+    for (int i = 0; i < V; i++) head[i] = -1;
+    for (int i = 0; i < E; i++) {
+        int s, t, c;
+        scanf("%d %d %d", &s, &t, &c);
+        add_edge(s, t, c);
+    }
+
+    for (int i = 0; i < V; i++) d[i] = INF;
+    d[r] = 0;
+    push(0, r);
+
+    while (hsize > 0) {
+        Item cur = pop();
+        int u = cur.v;
+        if (cur.d > d[u]) continue;
+        for (int e = head[u]; e != -1; e = nxt[e]) {
+            int v = to[e];
+            if (d[u] + cost[e] < d[v]) {
+                d[v] = d[u] + cost[e];
+                push(d[v], v);
+            }
+        }
+    }
+
+    for (int i = 0; i < V; i++) {
+        if (d[i] == INF) printf("INF\n");
+        else printf("%d\n", d[i]);
+    }
+    return 0;
+}
+```
+
+</details>
+
+---
+
+## さらに挑戦したい人へ
+
+ここまで解けた人は、次の問題にも挑戦してみましょう（解答例はありません）。
+
+| 問題 | 内容 | ヒント |
+|:---|:---|:---|
+| [GRL_1_B](https://judge.u-aizu.ac.jp/onlinejudge/description.jsp?id=GRL_1_B) | 負の辺がある最短経路 | ベルマン–フォード法。すべての辺での緩和を `V - 1` 回繰り返す |
+| [GRL_1_C](https://judge.u-aizu.ac.jp/onlinejudge/description.jsp?id=GRL_1_C) | 全頂点対の最短経路 | ワーシャル–フロイド法。3重ループの DP |
+| [ALDS1_6_C](https://judge.u-aizu.ac.jp/onlinejudge/description.jsp?id=ALDS1_6_C) | クイックソートと安定性 | 第3回のクイックソート |
+| [DPL_1_A](https://judge.u-aizu.ac.jp/onlinejudge/description.jsp?id=DPL_1_A) | コイン問題 | 金額ごとの最小枚数を DP で求める |
+
+---
+
+演習お疲れ様でした！最後に、[後期のまとめ](./summary) を確認しましょう。

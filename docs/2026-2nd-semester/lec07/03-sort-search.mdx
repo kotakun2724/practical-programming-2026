@@ -1,0 +1,145 @@
+---
+sidebar_position: 4
+---
+
+# 演習: 計算量・ソート・探索
+
+第2回（計算量・ソート・探索）の内容を使う問題です。
+
+## ALDS1_1_D: Maximum Profit ★
+
+[問題ページ（ALDS1_1_D）](https://judge.u-aizu.ac.jp/onlinejudge/description.jsp?id=ALDS1_1_D)
+
+### 問題の概要
+
+時刻 `t = 0, 1, ..., n-1` の価格 `R_t` が与えられます。
+`j > i` となる `R_j - R_i` の最大値（ある時刻に買って、それより後に売ったときの最大の利益）を求めてください。
+
+- `2 <= n <= 200000`
+- `1 <= R_t <= 10^9`
+- 利益がマイナスになることもあります（ずっと値下がりする場合）
+
+### 考え方
+
+全ペア `(i, j)` を調べると `O(n^2)` で、`n = 200000` では `4 × 10^10` 回となり間に合いません。
+
+<details>
+<summary>ヒント</summary>
+
+「時刻 `j` に売る」と決めたとき、最も得をするのは「`j` より前の**最安値**で買った」場合です。
+左から順に見ながら、「これまでの最安値」を1つの変数で覚えておけば、`O(n)` で解けます。
+
+</details>
+
+<details>
+<summary>解答例（C）</summary>
+
+```c
+#include <stdio.h>
+
+int main(void) {
+    int n;
+    scanf("%d", &n);
+    int minv, r;
+    scanf("%d", &minv);
+    int ans = -2000000000;
+    for (int j = 1; j < n; j++) {
+        scanf("%d", &r);
+        if (r - minv > ans) ans = r - minv;   /* 今日売るときの最大利益 */
+        if (r < minv) minv = r;               /* これまでの最安値を更新 */
+    }
+    printf("%d\n", ans);
+    return 0;
+}
+```
+
+:::warning[答えの初期値]
+答えがマイナスになることがあるので、`ans = 0` で初期化すると WA になります。
+十分小さい値（または `R_1 - R_0`）で初期化しましょう。
+:::
+
+</details>
+
+---
+
+## ALDS1_4_D: Allocation ★★★
+
+[問題ページ（ALDS1_4_D）](https://judge.u-aizu.ac.jp/onlinejudge/description.jsp?id=ALDS1_4_D)
+
+### 問題の概要
+
+重さ `w_i` の荷物 `n` 個が、ベルトコンベアから**順番に**流れてきます。
+これを `k` 台のトラックに、**連続する荷物**ごとに積み込みます。各トラックの積載量は最大積載量 `P` を超えてはいけません。
+すべての荷物を積めるような `P` の最小値を求めてください。
+
+- `1 <= n, k <= 100000`
+- `1 <= w_i <= 10000`
+
+### 考え方
+
+`P` を決めれば、「`k` 台で積めるか」は前から貪欲に積むだけで `O(n)` で判定できます。
+
+<details>
+<summary>ヒント</summary>
+
+`P` が大きいほど積みやすくなるので、「積める／積めない」は次のように**途中で一度だけ切り替わり**ます。
+
+```
+P    :  1  2  ...  9  10  11  12  ...
+積める:  ×  ×  ...  ×   ○   ○   ○  ...
+```
+
+この切り替わる位置を、第2回で学んだ**二分探索**で求めます（「答えを二分探索する」という典型的な手法です）。
+計算量は `O(n log(答えの最大値))` です。
+
+</details>
+
+<details>
+<summary>解答例（C）</summary>
+
+```c
+#include <stdio.h>
+
+int n, k;
+int w[100000];
+
+/* 最大積載量 P で、k 台以内に全部積めるか */
+int can(long long P) {
+    int cnt = 1;
+    long long load = 0;
+    for (int i = 0; i < n; i++) {
+        if (w[i] > P) return 0;
+        if (load + w[i] > P) {   /* 次のトラックへ */
+            cnt++;
+            load = 0;
+        }
+        load += w[i];
+    }
+    return cnt <= k;
+}
+
+int main(void) {
+    scanf("%d %d", &n, &k);
+    for (int i = 0; i < n; i++) scanf("%d", &w[i]);
+
+    long long lo = 0, hi = 1000000000;   /* can(lo) は偽、can(hi) は真 */
+    while (hi - lo > 1) {
+        long long mid = (lo + hi) / 2;
+        if (can(mid)) hi = mid;
+        else lo = mid;
+    }
+    printf("%lld\n", hi);
+    return 0;
+}
+```
+
+:::tip[lo と hi の決め方]
+「`lo` では必ず積めない」「`hi` では必ず積める」ように初期値を決め、その関係を保ったまま範囲を半分にしていきます。
+最後に残った `hi` が答えです。荷物の重さの合計は最大 `10^9` なので、`hi = 10^9` なら必ず積めます。
+:::
+
+</details>
+
+---
+
+次は、再帰・分割統治・DP の問題に進みましょう。
